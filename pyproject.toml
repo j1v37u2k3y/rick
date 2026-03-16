@@ -1,0 +1,60 @@
+[project]
+name = "rick-mcp"
+dynamic = ["version"]
+description = "Rick MCP Server — The server IS the resume. I'm still building. Are you? Semper Fidelis."
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=1.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "__version__.__version__"}
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "S", "B"]
+ignore = ["S101", "E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+no_strict_optional = true
+
+[[tool.mypy.overrides]]
+module = "rick_mcp"
+# FastMCP uses dict literals for tool annotations (ToolAnnotations type mismatch)
+# and dict .get() returns need type narrowing after guard clauses
+disable_error_code = ["arg-type", "assignment"]
+
+[tool.coverage.run]
+source = ["rick_mcp"]
+omit = ["tests/*", "venv/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_empty = true

@@ -1,0 +1,17 @@
+.idea/
+venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+dist/
+*.egg-info/
+.mypy_cache/
+.badges/
+
+# Private content — lives in ~/.rick_mcp/soul/
+SOUL.md
+my book.txt
