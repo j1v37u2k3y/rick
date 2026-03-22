@@ -245,19 +245,26 @@ async def rick_demo() -> str:
     """Guided tour of Rick MCP. Fires one tool from each category with curated examples."""
     from rick_mcp.models import (
         AttackChainInput,
+        C2CompareInput,
         CheatsheetInput,
+        DetectionRulesInput,
         HardenInput,
+        IncidentResponseInput,
+        LogAnalysisInput,
         MentorInput,
         ReconInput,
         ROEInput,
+        ScopingInput,
         ToolRecInput,
         VulnInput,
     )
+    from rick_mcp.server import resource_count, tool_count
     from rick_mcp.tools.career import rick_mentorship
-    from rick_mcp.tools.defensive import rick_hardening
-    from rick_mcp.tools.engagement import rick_roe
+    from rick_mcp.tools.defensive import rick_detection_rules, rick_hardening, rick_incident_response, rick_log_analysis
+    from rick_mcp.tools.engagement import rick_roe, rick_scoping
     from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
     from rick_mcp.tools.offensive_chains import rick_attack_chain
+    from rick_mcp.tools.offensive_extended import rick_c2_compare
     from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet
 
     sections: list[str] = []
@@ -265,12 +272,13 @@ async def rick_demo() -> str:
     sections.append("")
     sections.append(
         "Rick is the father. jiveturkey is the son. The MCP is Rick. "
-        "20 tools, 23 resources, built with Marine Corps precision. "
+        f"{tool_count()} tools, {resource_count()} resources, built with Marine Corps precision. "
         "Here's one from each category."
     )
     sections.append("")
 
     demos = [
+        # Offensive — Recon & Assessment
         (
             "RECON — Reconnaissance Playbook",
             "rick_recon(target_type='active_directory')",
@@ -281,10 +289,16 @@ async def rick_demo() -> str:
             "rick_vuln_assess(vuln_category='injection')",
             rick_vuln_assess(VulnInput(vuln_category="injection")),
         ),
+        # Offensive — Attack Methodology
         (
             "ATTACK CHAIN — MITRE ATT&CK Kill Chain",
             "rick_attack_chain(scenario='external_to_da')",
             rick_attack_chain(AttackChainInput(scenario="external_to_da")),
+        ),
+        (
+            "C2 COMPARE — Framework Comparison",
+            "rick_c2_compare(scenario='stealth')",
+            rick_c2_compare(C2CompareInput(scenario="stealth")),
         ),
         (
             "TOOL RECOMMEND — Scenario-Aware Recommendations",
@@ -296,16 +310,39 @@ async def rick_demo() -> str:
             "rick_cheatsheet(tool='nmap')",
             rick_cheatsheet(CheatsheetInput(tool="nmap")),
         ),
+        # Defensive & Detection
         (
             "HARDENING — Defensive Blueprint",
             "rick_hardening(technology='active_directory', priority='critical')",
             rick_hardening(HardenInput(technology="active_directory", priority="critical")),
         ),
         (
+            "INCIDENT RESPONSE — IR Playbook",
+            "rick_incident_response(incident_type='ransomware')",
+            rick_incident_response(IncidentResponseInput(incident_type="ransomware")),
+        ),
+        (
+            "DETECTION RULES — Sigma/YARA Templates",
+            "rick_detection_rules(attack_pattern='credential_dumping')",
+            rick_detection_rules(DetectionRulesInput(attack_pattern="credential_dumping")),
+        ),
+        (
+            "LOG ANALYSIS — What to Look For",
+            "rick_log_analysis(log_source='dns')",
+            rick_log_analysis(LogAnalysisInput(log_source="dns")),
+        ),
+        # Engagement Lifecycle
+        (
+            "SCOPING — Engagement Calculator",
+            "rick_scoping(engagement_type='red_team', target_count=3, complexity='high')",
+            rick_scoping(ScopingInput(engagement_type="red_team", target_count=3, complexity="high")),
+        ),
+        (
             "ROE — Rules of Engagement",
             "rick_roe(engagement_type='red_team', client_name='Demo Corp', duration_days=15)",
             rick_roe(ROEInput(engagement_type="red_team", client_name="Demo Corp", duration_days=15)),
         ),
+        # Career & Mentorship
         (
             "MENTORSHIP — Learning Path",
             "rick_mentorship(topic='getting_started')",
@@ -333,20 +370,26 @@ async def rick_demo() -> str:
     sections.append("")
     sections.append("**Not shown in this demo:**")
     sections.append("- `rick_cve` — Live NVD CVE lookup (requires network)")
-    sections.append("- `rick_tracker` — Stateful engagement tracker (create, findings, export)")
+    sections.append("- `rick_tracker` — Stateful engagement tracker (create, findings, export as JSON/CSV/Markdown)")
     sections.append("- `rick_health` — Self-healing health check (fix=True to repair)")
     sections.append("- `rick_threat_model` — STRIDE threat modeling for 8 system types")
     sections.append("- `rick_pivot_plan` — Lateral movement playbook by position")
+    sections.append("- `rick_payload_guide` — Payload methodology mapped to MITRE ATT&CK")
+    sections.append("- `rick_cloud_attack_path` — Cloud attack paths for Azure, AWS, GCP")
+    sections.append("- `rick_wireless` — Wireless attack playbooks (WiFi, Bluetooth, RFID)")
     sections.append("- `rick_report_template` — Pentest report section templates")
     sections.append("- `rick_engagement_proposal` — SOW/proposal generator")
     sections.append("- `rick_client_onboarding` — Client onboarding packet")
     sections.append("- `rick_compatibility_check` — Job posting fit analyzer")
     sections.append("- `rick_cover_letter` — Cover letter generator (3 tones)")
     sections.append("- `rick_debrief` — Post-engagement debrief template")
+    sections.append("- `rick_capabilities` — Full capability map")
     sections.append("")
-    sections.append("**23 identity resources** available via `profile://`, `doc://`, and `resume://` URIs.")
+    sections.append(
+        f"**{resource_count()} identity resources** available via `profile://`, `doc://`, and `resume://` URIs."
+    )
     sections.append("")
-    sections.append("Run `rick_status` for the full count. Run `rick_health` to verify everything's operational.")
+    sections.append("Run `rick_capabilities` for the full map. Run `rick_health` to verify everything's operational.")
     sections.append("")
     sections.append("*I'm still building. Are you? — Semper Fidelis.*")
 

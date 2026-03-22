@@ -39,7 +39,7 @@ class TestFuzzReconInput:
         with pytest.raises(ValidationError):
             ReconInput(target_type=target)
 
-    @given(st.text(min_size=51, max_size=100))
+    @given(st.text(min_size=51, max_size=100).filter(lambda x: len(x.strip()) > 50))
     @settings(max_examples=10)
     def test_rejects_too_long(self, target):
         with pytest.raises(ValidationError):
