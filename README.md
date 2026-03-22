@@ -1,14 +1,14 @@
-# Rick MCP Server v1.0
+# Rick MCP Server v2.0
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-259%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-406%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 Rick is the father. jiveturkey is the son. The MCP is Rick.
 
-A Model Context Protocol server that IS the resume. 20 tools. 23 resources. The code IS the craft.
+A Model Context Protocol server that IS the resume. 31 tools. 25 resources. The code IS the craft.
 
 From frontier reconnaissance to cyber reconnaissance — same mission, different battlefield.
 
@@ -18,9 +18,9 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a living system that an AI can query, reason about, and use as a tool. An LLM can ask Rick who jiveturkey is and
 get structured identity data back. It can pull the book — raw, unfiltered, with all the carriage returns intact. It can
-query values, mantras, methodology — all as structured resources an AI can reason over. And there are 20 functional
+query values, mantras, methodology — all as structured resources an AI can reason over. And there are 31 functional
 tools that *do things* — generate ROE docs, model threats, look up CVEs, track engagements, recommend tools, write cover
-letters matched to job postings.
+letters matched to job postings, generate IR playbooks, compare C2 frameworks, and scope entire engagements.
 
 A webpage can't do any of that. A PDF resume definitely can't.
 
@@ -30,6 +30,7 @@ A webpage can't do any of that. A PDF resume definitely can't.
 - **Functional proof of skill** — the code IS the portfolio, not a description of one
 - **An interactive operator** — say "check if jiveturkey's a fit for this job posting" and Rick runs the analysis
 - **A teaching tool** — newcomers can ask Rick for mentorship paths, cheatsheets, attack chains
+- **A purple team platform** — offensive AND defensive tools, attack chains AND detection rules
 
 The closest analogy isn't a webpage. It's closer to an API that represents a person — except it also has opinions,
 heritage, and a theme song.
@@ -51,8 +52,27 @@ git clone https://github.com/j1v37u2k3y/rick.git
 cd rick
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+make setup
 ```
+
+`make setup` installs all dependencies, activates pre-commit hooks, and creates the private content directory.
+
+### Give Rick His Soul (Optional)
+
+Rick works without these files, but with them he has a soul. These are private — they never enter git.
+
+```bash
+# The setup command creates ~/.rick_mcp/soul/ for you.
+# Add your private content:
+
+~/.rick_mcp/soul/SOUL.md        # Core principles and values
+~/.rick_mcp/soul/my book.txt    # Memoirs — the book, raw and unfiltered
+~/.rick_mcp/soul/PROFILE.md     # Current state, what's on the horizon, key learnings
+```
+
+Rick's prompts (`be_rick`, `mentor_mode`, etc.) pull live from these files at call time. Update the soul, update Rick's voice. The `doc://soul`, `doc://the-book`, and `doc://profile` resources serve this content to any MCP client.
+
+If these files don't exist, Rick falls back to project-root copies (if present) or returns a default message.
 
 ### Use with Claude Code
 
@@ -64,7 +84,7 @@ cd rick
 claude
 ```
 
-Then run `/mcp` to verify the connection.
+Then run `/mcp` to verify the connection. Try `rick_capabilities` to see everything Rick can do.
 
 ### Run the Server Standalone
 
@@ -102,34 +122,80 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 20 Functional Tools
+## Tools — 31 Functional Tools
 
-| Tool                       | What It Does                                                                             |
-|----------------------------|------------------------------------------------------------------------------------------|
-| `rick_recon`               | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)     |
-| `rick_vuln_assess`         | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, privesc, etc.)     |
-| `rick_roe`                 | Rules of Engagement generator — scope, authorization, escalation, deliverables           |
-| `rick_report_template`     | Pentest report section templates — executive summary, findings, methodology, remediation |
-| `rick_tool_recommend`      | Scenario-aware security tool recommendations                                             |
-| `rick_engagement_proposal` | SOW/proposal generator for 7 engagement types                                            |
-| `rick_client_onboarding`   | Client onboarding packet — checklists, ground rules, comms protocol                      |
-| `rick_compatibility_check` | Analyze a job posting or engagement brief against jiveturkey's profile                   |
-| `rick_cover_letter`        | Targeted cover letter generator with 3 tones                                             |
-| `rick_attack_chain`        | MITRE ATT&CK kill chain mapper — 6 attack scenarios                                      |
-| `rick_pivot_plan`          | Pivoting and lateral movement playbook by compromised position                           |
-| `rick_hardening`           | Defensive hardening blueprints for 9 technologies                                        |
-| `rick_cheatsheet`          | Field manual cheatsheets for 10 core offensive tools                                     |
-| `rick_debrief`             | Post-engagement debrief template                                                         |
-| `rick_mentorship`          | Learning paths and mentorship for newcomers to offensive security                        |
-| `rick_threat_model`        | STRIDE threat modeling for 8 system types                                                |
-| `rick_status`              | Server status — version, callsign, tool/resource counts, operational readiness           |
-| `rick_health`              | Health check — verifies all tools, resources, formatting, version are operational        |
-| `rick_cve`                 | NVD CVE lookup — search by CVE ID or keyword, returns CVSS scores and details            |
-| `rick_tracker`             | Engagement tracker — create engagements, track findings, export as JSON                  |
+### Offensive — Recon & Assessment
+
+| Tool                  | What It Does                                                                         |
+|-----------------------|--------------------------------------------------------------------------------------|
+| `rick_recon`          | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile) |
+| `rick_vuln_assess`    | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, etc.)          |
+| `rick_tool_recommend` | Scenario-aware security tool recommendations                                         |
+| `rick_threat_model`   | STRIDE threat modeling for 8 system types                                            |
+
+### Offensive — Attack Methodology
+
+| Tool                     | What It Does                                                              |
+|--------------------------|---------------------------------------------------------------------------|
+| `rick_attack_chain`      | MITRE ATT&CK kill chain mapper — 6 attack scenarios                       |
+| `rick_pivot_plan`        | Pivoting and lateral movement playbook by compromised position            |
+| `rick_cheatsheet`        | Field manual cheatsheets for 10 core offensive tools                      |
+| `rick_c2_compare`        | C2 framework comparison — Cobalt Strike vs Sliver vs Mythic vs Havoc      |
+| `rick_payload_guide`     | Payload methodology — evasion, encoding, delivery vectors by MITRE ATT&CK |
+| `rick_cloud_attack_path` | Cloud-specific attack paths for Azure, AWS, GCP                           |
+| `rick_wireless`          | Wireless attack playbooks — WiFi, Bluetooth, RFID                         |
+
+### Defensive & Detection
+
+| Tool                     | What It Does                                                                       |
+|--------------------------|------------------------------------------------------------------------------------|
+| `rick_hardening`         | Defensive hardening blueprints for 9 technologies                                  |
+| `rick_incident_response` | IR playbooks for 5 incident types (ransomware, breach, insider, BEC, supply chain) |
+| `rick_detection_rules`   | Sigma/YARA rule templates for 6 attack patterns                                    |
+| `rick_log_analysis`      | Log review methodology for 6 log sources                                           |
+
+### Engagement Lifecycle
+
+| Tool                       | What It Does                                                                   |
+|----------------------------|--------------------------------------------------------------------------------|
+| `rick_scoping`             | Engagement scoping calculator — hours, team size, rate card, timeline          |
+| `rick_roe`                 | Rules of Engagement generator — scope, authorization, escalation, deliverables |
+| `rick_engagement_proposal` | SOW/proposal generator for 7 engagement types                                  |
+| `rick_client_onboarding`   | Client onboarding packet — checklists, ground rules, comms protocol            |
+| `rick_report_template`     | Pentest report section templates (PlexTrac-compatible)                         |
+| `rick_debrief`             | Post-engagement debrief template                                               |
+| `rick_tracker`             | Engagement tracker — create, findings, export (JSON/CSV/Markdown)              |
+
+### Career & Mentorship
+
+| Tool                       | What It Does                                                           |
+|----------------------------|------------------------------------------------------------------------|
+| `rick_compatibility_check` | Analyze a job posting or engagement brief against jiveturkey's profile |
+| `rick_cover_letter`        | Targeted cover letter generator with 3 tones                           |
+| `rick_mentorship`          | Learning paths for 9 topics — getting started through advanced         |
+
+### Research
+
+| Tool       | What It Does                                              |
+|------------|-----------------------------------------------------------|
+| `rick_cve` | NVD CVE lookup — search by ID or keyword, cached 24 hours |
+
+### Meta
+
+| Tool                | What It Does                                                                   |
+|---------------------|--------------------------------------------------------------------------------|
+| `rick_capabilities` | Full capability map — every tool organized by mission phase                    |
+| `rick_status`       | Server status — version, callsign, tool/resource counts, operational readiness |
+| `rick_health`       | Health check with optional self-healing (`fix=True`)                           |
+| `rick_demo`         | Guided tour — fires one tool from each category                                |
+| `rick_mode`         | Activate persona modes (be_rick, pentest_mode, mentor_mode, etc.)              |
 
 ## Example Usage
 
 Once connected, try asking:
+
+**See what Rick can do:**
+> "Run rick_capabilities"
 
 **Recon a target:**
 > "Run rick_recon for a web_app target"
@@ -140,15 +206,26 @@ Once connected, try asking:
 **Plan an attack chain:**
 > "Show me the external_to_da attack chain"
 
+**Compare C2 frameworks:**
+> "Run rick_c2_compare for a stealth scenario"
+
 **Get tool recommendations:**
 > "What tools do I need for an internal network pentest with Active Directory?"
 
+**Scope an engagement:**
+> "Run rick_scoping for a red_team engagement, 5 targets, high complexity"
+
 **Generate engagement docs:**
 > "Create a rick_roe for a red_team engagement for Acme Corp, 20 days"
-> "Generate a rick_engagement_proposal for a full_scope assessment"
 
 **Hardening guidance:**
 > "Give me the rick_hardening blueprint for active_directory, critical priority only"
+
+**Incident response:**
+> "Run rick_incident_response for a ransomware incident"
+
+**Detection rules:**
+> "Generate rick_detection_rules for credential_dumping"
 
 **Mentorship:**
 > "Run rick_mentorship for getting_started in offensive security"
@@ -156,12 +233,11 @@ Once connected, try asking:
 **Check job fit:**
 > "Run rick_compatibility_check against this job posting: [paste job description]"
 
-**Generate a cover letter:**
-> "Use rick_cover_letter for BigCorp, Senior Pentester role, key requirements: OSCP web app cloud"
-
-## Resources — 23 Identity Resources
+## Resources — 25 Identity Resources
 
 Access these via MCP resource URIs:
+
+### Profile (11)
 
 - `profile://rick_and_jiveturkey` — The connection. Rick is the father, jiveturkey is the operator.
 - `profile://summary` — Quick reference card
@@ -173,15 +249,22 @@ Access these via MCP resource URIs:
 - `profile://mantras` — Operational mantras and philosophy
 - `profile://human` — Father, cycle breaker, poet, ever evolving
 - `profile://entertainment` — Humor as operational tool
+- `profile://timeline` — Career timeline from USMC barracks to offensive security
+
+### Documents (9)
+
 - `doc://working-with-me` — Complete engagement guide
 - `doc://the-book` — Memoirs of jiveturkey
 - `doc://soul` — Core principles and values
-- `doc://operator` — Full mission parameters and Working With Me guide
 - `doc://profile` — Current state, horizon, key learnings
 - `doc://achievements` — The full build log
 - `doc://contributing` — How to contribute
 - `doc://changelog` — Version history
 - `doc://security` — Security policy and responsible disclosure
+- `doc://war-stories` — Anonymized engagement narratives from the field
+
+### Resume (4)
+
 - `resume://overview` — The MCP as living resume
 - `resume://evidence` — Skill-to-tool mapping
 - `resume://portfolio` — External portfolio links
@@ -192,14 +275,14 @@ Access these via MCP resource URIs:
 ### Run Tests
 
 ```bash
-make test        # 259 tests
-make coverage    # Tests + coverage report (99%+)
+make test        # 406 tests across 4 test files
+make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
 ### Run All Checks
 
 ```bash
-make check       # Lint + format + typecheck + tests
+make check       # Lint + format + typecheck + file-length + tests
 ```
 
 ### Auto-fix Issues
@@ -210,16 +293,18 @@ make fix         # Auto-fix lint and formatting
 
 ### Available Make Commands
 
-| Command          | Description                                       |
-|------------------|---------------------------------------------------|
-| `make check`     | Full pipeline — lint, format, typecheck, tests    |
-| `make fix`       | Auto-fix lint and format issues                   |
-| `make test`      | Run 259 tests                                     |
-| `make coverage`  | Tests with coverage report (80% minimum enforced) |
-| `make typecheck` | mypy static type analysis                         |
-| `make lint`      | ruff lint check                                   |
-| `make smoke`     | Fire every tool once — live operational check     |
-| `make clean`     | Remove build/test artifacts                       |
+| Command            | Description                                                 |
+|--------------------|-------------------------------------------------------------|
+| `make setup`       | Install deps, pre-commit hooks, create private content dir  |
+| `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
+| `make fix`         | Auto-fix lint and format issues                             |
+| `make test`        | Run 406 tests                                               |
+| `make coverage`    | Tests with coverage report (80% minimum enforced)           |
+| `make typecheck`   | mypy static type analysis                                   |
+| `make lint`        | ruff lint check                                             |
+| `make file-length` | Verify no Python file exceeds 1500 lines                    |
+| `make smoke`       | Fire every tool once — live operational check               |
+| `make clean`       | Remove build/test artifacts                                 |
 
 ### Pre-commit Hooks
 
@@ -230,16 +315,17 @@ Pre-commit hooks are installed automatically. Every commit runs:
 - Large file detection
 - Private key detection
 - Merge conflict detection
+- **File length check** (1500 line max per Python file)
 - Ruff lint + format
 - Full test suite
 
 ### CI/CD
 
-GitHub Actions runs on every push/PR against Python 3.10, 3.12, and 3.14.
+GitHub Actions runs on every push/PR against Python 3.10, 3.12, and 3.14. Includes Docker build verification.
 
 ## Achievements
 
-Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 20 tools, 259 tests, 97% coverage, full CI/CD pipeline.
+Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 31 tools, 406 tests, full CI/CD pipeline.
 
 ## The Operator
 
@@ -254,6 +340,7 @@ Access `doc://soul` and `doc://the-book` through Rick's MCP resources for the pr
 - [FastMCP](https://github.com/jlowin/fastmcp) — MCP server framework
 - [Pydantic v2](https://docs.pydantic.dev/) — Input validation
 - [pytest](https://docs.pytest.org/) — Testing
+- [Hypothesis](https://hypothesis.readthedocs.io/) — Property-based fuzz testing
 - [ruff](https://docs.astral.sh/ruff/) — Linting and formatting
 - [mypy](https://mypy-lang.org/) — Static type checking
 - [pre-commit](https://pre-commit.com/) — Git hooks

@@ -34,7 +34,7 @@ A webpage sits there and waits to be read. Rick responds.
 
 Rick is a living system that an AI can query, reason about, and use as a tool. An LLM asks Rick who jiveturkey is and
 gets structured identity data back. It pulls the book — raw, unfiltered, carriage returns intact. It queries values,
-mantras, methodology — all as resources an AI can reason over. And there are 22 functional tools that *do things* —
+mantras, methodology — all as resources an AI can reason over. And there are 31 functional tools that *do things* —
 generate ROE docs, model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job
 postings.
 
@@ -43,15 +43,29 @@ jiveturkey.rocks is where people go to learn about jiveturkey. Rick is where AI 
 Most people send a PDF resume. jiveturkey sends a running server that proves every claim it makes. `make check` and it
 all lights up green.
 
+## v2.0.0 — The Full Build (March 2026)
+
+22 tools became 30. The defensive side got real — incident response playbooks, Sigma/YARA detection rules, log analysis
+guides. Offensive expanded into wireless, cloud attack paths, C2 framework comparison, payload methodology. The
+engagement lifecycle closed with a scoping calculator. War stories came from the field. A career timeline told the full
+journey.
+
+Code quality hardened: typed formatting helpers, CVE response caching, tracker exports in CSV and Markdown.
+Testing infrastructure expanded with MCP protocol-level integration tests, Hypothesis property-based fuzzing, and Docker
+build verification in CI. 406 tests. All green.
+
 ## The Numbers
 
-- 22 tools
-- 22 resources
+- 31 tools
+- 25 resources
 - 5 MCP prompts
-- 285 tests
-- Full CI/CD pipeline
+- 406 tests
+- Full CI/CD pipeline with Docker verification
+- Integration tests through MCP protocol layer
+- Property-based fuzz testing on all input models
 - Content in markdown, not Python strings
 - Private content support for sensitive files
+- 24-hour CVE response cache
 - Zero hardcoded secrets
 
 ## The Philosophy

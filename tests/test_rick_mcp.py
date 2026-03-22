@@ -24,7 +24,6 @@ from rick_mcp import (
     CheatsheetInput,
     CompatInput,
     CoverInput,
-    CVEInput,
     DebriefInput,
     HardenInput,
     HealthInput,
@@ -37,20 +36,18 @@ from rick_mcp import (
     ReportInput,
     ResponseFormat,
     ROEInput,
+    ThreatModelInput,
     ToolRecInput,
-    TrackerInput,
     VulnInput,
     _fmt,
     _safe_tool,
     _sanitize,
     logger,
-    mcp,
     rick_attack_chain,
     rick_cheatsheet,
     rick_client_onboarding,
     rick_compatibility_check,
     rick_cover_letter,
-    rick_cve,
     rick_debrief,
     rick_demo,
     rick_engagement_proposal,
@@ -63,8 +60,8 @@ from rick_mcp import (
     rick_report_template,
     rick_roe,
     rick_status,
+    rick_threat_model,
     rick_tool_recommend,
-    rick_tracker,
     rick_vuln_assess,
 )
 
@@ -77,7 +74,7 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "1.0.0"
+        assert __version__ == "2.0.0"
         assert __version__ in STARTUP_BANNER
 
     def test_callsign(self):
@@ -105,7 +102,7 @@ class TestConstants:
         assert MISSION_PHASES[-1]["name"] == "Remediation Strategy"
 
     def test_startup_banner(self):
-        assert "RICK MCP v1.0" in STARTUP_BANNER
+        assert "RICK MCP v2.0" in STARTUP_BANNER
         assert "SEMPER FIDELIS" in STARTUP_BANNER
 
 
@@ -1078,7 +1075,6 @@ class TestRickThreatModel:
         ],
     )
     async def test_valid_targets(self, target):
-        from rick_mcp import ThreatModelInput, rick_threat_model
 
         result = await rick_threat_model(ThreatModelInput(target=target))
         assert CALLSIGN in result
@@ -1086,28 +1082,24 @@ class TestRickThreatModel:
 
     @pytest.mark.asyncio
     async def test_invalid_target(self):
-        from rick_mcp import ThreatModelInput, rick_threat_model
 
         result = await rick_threat_model(ThreatModelInput(target="nope"))
         assert "Error" in result
 
     @pytest.mark.asyncio
     async def test_with_context(self):
-        from rick_mcp import ThreatModelInput, rick_threat_model
 
         result = await rick_threat_model(ThreatModelInput(target="web_app", context="Django app with PostgreSQL"))
         assert "Django" in result
 
     @pytest.mark.asyncio
     async def test_json_format(self):
-        from rick_mcp import ThreatModelInput, rick_threat_model
 
         result = await rick_threat_model(ThreatModelInput(target="api", response_format=ResponseFormat.JSON))
         parsed = json.loads(result)
         assert "stride" in parsed
 
     def test_input_rejects_extra_fields(self):
-        from rick_mcp import ThreatModelInput
 
         with pytest.raises(ValidationError):
             ThreatModelInput(target="web_app", extra="nope")
@@ -1123,14 +1115,16 @@ class TestRickStatus:
     async def test_status_output(self):
         result = await rick_status()
         assert CALLSIGN in result
-        assert "1.0.0" in result
+        assert "2.0.0" in result
         assert "OPERATIONAL" in result
 
     @pytest.mark.asyncio
-    async def test_status_has_counts(self):
+    async def test_status_has_dynamic_counts(self):
+        from rick_mcp.server import resource_count, tool_count
+
         result = await rick_status()
-        assert "22" in result  # resource count
-        assert "22" in result  # tool count
+        assert str(tool_count()) in result
+        assert str(resource_count()) in result
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1153,6 +1147,23 @@ class TestNewResources:
         result = await res_security()
         assert "Security" in result
         assert "jiveturkey.rocks/about" in result
+
+    @pytest.mark.asyncio
+    async def test_res_war_stories(self):
+        from rick_mcp import res_war_stories
+
+        result = await res_war_stories()
+        assert "War Stories" in result
+        assert "Lesson" in result
+
+    @pytest.mark.asyncio
+    async def test_res_timeline(self):
+        from rick_mcp import res_timeline
+
+        result = await res_timeline()
+        assert "USMC" in result
+        assert "OSCP" in result
+        assert "2003" in result
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1435,414 +1446,3 @@ class TestRickHealth:
     def test_health_input_rejects_extra(self):
         with pytest.raises(ValidationError):
             HealthInput(fix=True, extra="nope")
-
-
-# ═══════════════════════════════════════════════════════════════
-#  TOOL 19: rick_cve — NVD CVE Lookup (mocked)
-# ═══════════════════════════════════════════════════════════════
-
-
-class TestRickCVE:
-    @pytest.mark.asyncio
-    async def test_cve_lookup_mocked(self):
-        mock_response = json.dumps(
-            {
-                "totalResults": 1,
-                "vulnerabilities": [
-                    {
-                        "cve": {
-                            "id": "CVE-2021-44228",
-                            "descriptions": [{"lang": "en", "value": "Apache Log4j2 RCE vulnerability"}],
-                            "metrics": {
-                                "cvssMetricV31": [{"cvssData": {"baseScore": 10.0, "baseSeverity": "CRITICAL"}}]
-                            },
-                            "weaknesses": [{"description": [{"value": "CWE-502"}]}],
-                            "references": [{"url": "https://example.com"}],
-                        }
-                    }
-                ],
-            }
-        ).encode()
-
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.return_value.__enter__ = lambda s: s
-            mock_urlopen.return_value.__exit__ = lambda s, *a: None
-            mock_urlopen.return_value.read.return_value = mock_response
-
-            result = await rick_cve(CVEInput(query="CVE-2021-44228"))
-            assert "CVE-2021-44228" in result
-            assert "10.0" in result
-
-    @pytest.mark.asyncio
-    async def test_cve_keyword_mocked(self):
-        mock_response = json.dumps(
-            {
-                "totalResults": 0,
-                "vulnerabilities": [],
-            }
-        ).encode()
-
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.return_value.__enter__ = lambda s: s
-            mock_urlopen.return_value.__exit__ = lambda s, *a: None
-            mock_urlopen.return_value.read.return_value = mock_response
-
-            result = await rick_cve(CVEInput(query="nonexistent-thing-xyz"))
-            assert "No CVEs found" in result
-
-    @pytest.mark.asyncio
-    async def test_cve_http_error(self):
-        import urllib.error
-
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = urllib.error.HTTPError(url="", code=403, msg="Forbidden", hdrs=None, fp=None)
-            result = await rick_cve(CVEInput(query="CVE-2021-44228"))
-            assert "Error" in result
-            assert "403" in result
-
-    @pytest.mark.asyncio
-    async def test_cve_url_error(self):
-        import urllib.error
-
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = urllib.error.URLError("Connection refused")
-            result = await rick_cve(CVEInput(query="CVE-2021-44228"))
-            assert "Error" in result
-            assert "NVD API" in result
-
-    @pytest.mark.asyncio
-    async def test_cve_timeout(self):
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = TimeoutError()
-            result = await rick_cve(CVEInput(query="CVE-2021-44228"))
-            assert "timed out" in result
-
-    def test_cve_input_validation(self):
-        with pytest.raises(ValidationError):
-            CVEInput(query="")
-
-    def test_cve_input_max_results_bounds(self):
-        with pytest.raises(ValidationError):
-            CVEInput(query="test", max_results=0)
-        with pytest.raises(ValidationError):
-            CVEInput(query="test", max_results=21)
-
-    def test_cve_input_rejects_extra(self):
-        with pytest.raises(ValidationError):
-            CVEInput(query="test", extra="nope")
-
-    @pytest.mark.asyncio
-    async def test_cve_json_format(self):
-        mock_response = json.dumps(
-            {
-                "totalResults": 1,
-                "vulnerabilities": [
-                    {
-                        "cve": {
-                            "id": "CVE-2021-44228",
-                            "descriptions": [{"lang": "en", "value": "Test"}],
-                            "metrics": {},
-                            "weaknesses": [],
-                            "references": [],
-                        }
-                    }
-                ],
-            }
-        ).encode()
-
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.return_value.__enter__ = lambda s: s
-            mock_urlopen.return_value.__exit__ = lambda s, *a: None
-            mock_urlopen.return_value.read.return_value = mock_response
-
-            result = await rick_cve(CVEInput(query="CVE-2021-44228", response_format=ResponseFormat.JSON))
-            parsed = json.loads(result)
-            assert isinstance(parsed, dict)
-            assert "results" in parsed
-
-
-# ═══════════════════════════════════════════════════════════════
-#  TOOL 20: rick_tracker — Engagement Tracker
-# ═══════════════════════════════════════════════════════════════
-
-
-@pytest.fixture
-def tracker_dir(tmp_path):
-    """Use a temp directory for tracker tests."""
-    eng_dir = tmp_path / ".rick_mcp" / "engagements"
-    eng_dir.mkdir(parents=True)
-    with patch("pathlib.Path.home", return_value=tmp_path):
-        yield eng_dir
-
-
-class TestRickTracker:
-    @pytest.mark.asyncio
-    async def test_create_engagement(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(
-                TrackerInput(
-                    action="create",
-                    data=json.dumps({"client": "Test Corp", "type": "pentest", "id": "ENG-TEST-001"}),
-                )
-            )
-        assert "ENG-TEST-001" in result
-        assert "Test Corp" in result
-
-    @pytest.mark.asyncio
-    async def test_add_finding(self, tracker_dir):
-        # Create engagement first
-        eng = {
-            "id": "ENG-TEST-002",
-            "client": "Test Corp",
-            "type": "pentest",
-            "status": "active",
-            "findings": [],
-            "created_at": "2026-01-01T00:00:00",
-        }
-        (tracker_dir / "ENG-TEST-002.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(
-                TrackerInput(
-                    action="add_finding",
-                    engagement_id="ENG-TEST-002",
-                    data=json.dumps({"title": "SQLi in Login", "severity": "critical"}),
-                )
-            )
-        assert "F-001" in result
-        assert "SQLi in Login" in result
-
-    @pytest.mark.asyncio
-    async def test_update_finding(self, tracker_dir):
-        eng = {
-            "id": "ENG-TEST-003",
-            "client": "Test Corp",
-            "type": "pentest",
-            "status": "active",
-            "findings": [{"id": "F-001", "title": "Test", "severity": "high", "status": "open"}],
-            "created_at": "2026-01-01T00:00:00",
-        }
-        (tracker_dir / "ENG-TEST-003.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(
-                TrackerInput(
-                    action="update_finding",
-                    engagement_id="ENG-TEST-003",
-                    data=json.dumps({"finding_id": "F-001", "status": "remediated"}),
-                )
-            )
-        assert "F-001" in result
-        assert "Updated" in result
-
-    @pytest.mark.asyncio
-    async def test_status_single(self, tracker_dir):
-        eng = {
-            "id": "ENG-TEST-004",
-            "client": "Test Corp",
-            "type": "pentest",
-            "status": "active",
-            "findings": [
-                {"id": "F-001", "title": "Test", "severity": "critical", "status": "open"},
-                {"id": "F-002", "title": "Test2", "severity": "high", "status": "open"},
-            ],
-            "created_at": "2026-01-01T00:00:00",
-        }
-        (tracker_dir / "ENG-TEST-004.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="status", engagement_id="ENG-TEST-004"))
-        assert "ENG-TEST-004" in result
-        assert "critical" in result
-
-    @pytest.mark.asyncio
-    async def test_status_all(self, tracker_dir):
-        for i in range(3):
-            eng = {
-                "id": f"ENG-ALL-{i}",
-                "client": "Test",
-                "type": "pentest",
-                "status": "active",
-                "findings": [],
-            }
-            (tracker_dir / f"ENG-ALL-{i}.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="status"))
-        assert "3" in result
-
-    @pytest.mark.asyncio
-    async def test_export(self, tracker_dir):
-        eng = {"id": "ENG-EXPORT", "client": "Test", "findings": []}
-        (tracker_dir / "ENG-EXPORT.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="export", engagement_id="ENG-EXPORT"))
-        parsed = json.loads(result)
-        assert parsed["id"] == "ENG-EXPORT"
-
-    @pytest.mark.asyncio
-    async def test_invalid_action(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="invalid"))
-        assert "Error" in result
-        assert "Unknown action" in result
-
-    @pytest.mark.asyncio
-    async def test_add_finding_missing_engagement(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="add_finding", engagement_id="NONEXISTENT"))
-        assert "Error" in result
-        assert "not found" in result
-
-    @pytest.mark.asyncio
-    async def test_add_finding_no_id(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="add_finding"))
-        assert "Error" in result
-        assert "engagement_id required" in result
-
-    @pytest.mark.asyncio
-    async def test_update_finding_not_found(self, tracker_dir):
-        eng = {
-            "id": "ENG-UPD",
-            "findings": [{"id": "F-001", "title": "Test", "severity": "high", "status": "open"}],
-        }
-        (tracker_dir / "ENG-UPD.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(
-                TrackerInput(
-                    action="update_finding",
-                    engagement_id="ENG-UPD",
-                    data=json.dumps({"finding_id": "F-999"}),
-                )
-            )
-        assert "Error" in result
-        assert "not found" in result
-
-    @pytest.mark.asyncio
-    async def test_export_missing(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="export", engagement_id="NOPE"))
-        assert "Error" in result
-
-    @pytest.mark.asyncio
-    async def test_export_no_id(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="export"))
-        assert "Error" in result
-        assert "engagement_id required" in result
-
-    @pytest.mark.asyncio
-    async def test_create_invalid_json(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="create", data="not json"))
-        assert "Error" in result
-        assert "Invalid JSON" in result
-
-    @pytest.mark.asyncio
-    async def test_status_no_engagements(self, tracker_dir):
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(TrackerInput(action="status"))
-        assert "No engagements found" in result
-
-    @pytest.mark.asyncio
-    async def test_update_finding_missing_finding_id(self, tracker_dir):
-        eng = {"id": "ENG-MIS", "findings": []}
-        (tracker_dir / "ENG-MIS.json").write_text(json.dumps(eng))
-
-        with patch("pathlib.Path.home", return_value=tracker_dir.parent.parent):
-            result = await rick_tracker(
-                TrackerInput(
-                    action="update_finding",
-                    engagement_id="ENG-MIS",
-                    data=json.dumps({"status": "closed"}),
-                )
-            )
-        assert "Error" in result
-        assert "finding_id required" in result
-
-    def test_tracker_input_rejects_extra(self):
-        with pytest.raises(ValidationError):
-            TrackerInput(action="status", extra="nope")
-
-
-# ═══════════════════════════════════════════════════════════════
-#  PYDANTIC MODEL VALIDATION — Extra field rejection across all
-# ═══════════════════════════════════════════════════════════════
-
-
-class TestInputValidation:
-    """Every input model uses ConfigDict(extra='forbid') — verify they all reject unknown fields."""
-
-    @pytest.mark.parametrize(
-        "model_cls,kwargs",
-        [
-            (ReconInput, {"target_type": "web_app", "extra": "nope"}),
-            (VulnInput, {"vuln_category": "xss", "extra": "nope"}),
-            (ROEInput, {"engagement_type": "pentest", "extra": "nope"}),
-            (ReportInput, {"section": "finding", "extra": "nope"}),
-            (ToolRecInput, {"scenario": "web app test", "extra": "nope"}),
-            (ProposalInput, {"engagement_type": "red_team", "extra": "nope"}),
-            (OnboardInput, {"extra": "nope"}),
-            (CompatInput, {"description": "a valid description for testing", "extra": "nope"}),
-            (CoverInput, {"company_name": "X", "role_title": "Y", "extra": "nope"}),
-            (AttackChainInput, {"scenario": "external_to_da", "extra": "nope"}),
-            (PivotInput, {"position": "container", "extra": "nope"}),
-            (HardenInput, {"technology": "linux_server", "extra": "nope"}),
-            (CheatsheetInput, {"tool": "nmap", "extra": "nope"}),
-            (DebriefInput, {"engagement_type": "pentest", "key_findings": "test", "extra": "nope"}),
-            (MentorInput, {"topic": "mindset", "extra": "nope"}),
-            (CVEInput, {"query": "test", "extra": "nope"}),
-            (HealthInput, {"fix": True, "extra": "nope"}),
-            (ModeInput, {"mode": "be_rick", "extra": "nope"}),
-            (TrackerInput, {"action": "status", "extra": "nope"}),
-        ],
-    )
-    def test_extra_fields_rejected(self, model_cls, kwargs):
-        with pytest.raises(ValidationError):
-            model_cls(**kwargs)
-
-
-# ═══════════════════════════════════════════════════════════════
-#  RESPONSE FORMAT — Both formats work for all tools
-# ═══════════════════════════════════════════════════════════════
-
-
-class TestResponseFormats:
-    @pytest.mark.asyncio
-    async def test_enum_values(self):
-        assert ResponseFormat.MARKDOWN == "markdown"
-        assert ResponseFormat.JSON == "json"
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "tool_fn,params",
-        [
-            (rick_recon, ReconInput(target_type="web_app", response_format=ResponseFormat.JSON)),
-            (rick_vuln_assess, VulnInput(vuln_category="xss", response_format=ResponseFormat.JSON)),
-            (rick_roe, ROEInput(engagement_type="pentest", response_format=ResponseFormat.JSON)),
-            (rick_report_template, ReportInput(section="finding", response_format=ResponseFormat.JSON)),
-            (rick_tool_recommend, ToolRecInput(scenario="web app test", response_format=ResponseFormat.JSON)),
-            (rick_engagement_proposal, ProposalInput(engagement_type="red_team", response_format=ResponseFormat.JSON)),
-            (rick_client_onboarding, OnboardInput(response_format=ResponseFormat.JSON)),
-            (rick_hardening, HardenInput(technology="linux_server", response_format=ResponseFormat.JSON)),
-            (rick_cheatsheet, CheatsheetInput(tool="nmap", response_format=ResponseFormat.JSON)),
-            (rick_mentorship, MentorInput(topic="mindset", response_format=ResponseFormat.JSON)),
-        ],
-    )
-    async def test_json_output_is_valid(self, tool_fn, params):
-        result = await tool_fn(params)
-        parsed = json.loads(result)
-        assert isinstance(parsed, dict)
-
-
-# ═══════════════════════════════════════════════════════════════
-#  MCP SERVER — Registration integrity
-# ═══════════════════════════════════════════════════════════════
-
-
-class TestMCPServer:
-    def test_server_name(self):
-        assert mcp.name == "rick_mcp"

@@ -1,14 +1,43 @@
-"""NVD CVE lookup tool."""
+"""NVD CVE lookup tool with file-based caching."""
 
+import hashlib
 import json
+import time
+from pathlib import Path
 
 from rick_mcp.constants import CALLSIGN
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize
 from rick_mcp.models import CVEInput
 
+CACHE_DIR = Path.home() / ".rick_mcp" / "cve_cache"
+CACHE_TTL = 86400  # 24 hours
+
+
+def _cache_key(url: str) -> str:
+    """Generate a deterministic cache key from a URL."""
+    return hashlib.sha256(url.encode()).hexdigest()
+
+
+def _cache_get(key: str) -> dict | None:
+    """Retrieve cached response if fresh."""
+    path = CACHE_DIR / f"{key}.json"
+    if path.exists() and (time.time() - path.stat().st_mtime) < CACHE_TTL:
+        try:
+            result: dict = json.loads(path.read_text(encoding="utf-8"))
+            return result
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
+
+
+def _cache_set(key: str, data: dict) -> None:
+    """Store API response in cache."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    (CACHE_DIR / f"{key}.json").write_text(json.dumps(data), encoding="utf-8")
+
 
 async def rick_cve(params: CVEInput) -> str:
-    """Query the NVD API for CVE details. Lookup by CVE ID or search by keyword."""
+    """Query the NVD API for CVE details. Lookup by CVE ID or search by keyword. Results cached 24h."""
     import urllib.parse
     import urllib.request
 
@@ -26,16 +55,22 @@ async def rick_cve(params: CVEInput) -> str:
     if not url.startswith("https://"):
         return "Error: URL scheme must be HTTPS."
 
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "rick_mcp/1.0"})  # noqa: S310
-        with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
-            data = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        return f"Error: NVD API returned HTTP {e.code}. Rate limit is 5 requests/30s without API key."
-    except urllib.error.URLError as e:
-        return f"Error: Could not reach NVD API: {e.reason}"
-    except TimeoutError:
-        return "Error: NVD API request timed out (15s limit)."
+    # Check cache first
+    cache_k = _cache_key(url)
+    data = _cache_get(cache_k)
+
+    if data is None:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "rick_mcp/1.0"})  # noqa: S310
+            with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
+                data = json.loads(resp.read().decode("utf-8"))
+            _cache_set(cache_k, data)
+        except urllib.error.HTTPError as e:
+            return f"Error: NVD API returned HTTP {e.code}. Rate limit is 5 requests/30s without API key."
+        except urllib.error.URLError as e:
+            return f"Error: Could not reach NVD API: {e.reason}"
+        except TimeoutError:
+            return "Error: NVD API request timed out (15s limit)."
 
     vulns = data.get("vulnerabilities", [])
     if not vulns:

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from rick_mcp.formatting import _read_md
+from rick_mcp.formatting import _read_data, _read_md
 
 
 async def res_wwm() -> str:
@@ -60,6 +60,11 @@ async def res_security() -> str:
     return _read_md("SECURITY.md")
 
 
+async def res_war_stories() -> str:
+    """Anonymized engagement narratives — the stories from the field."""
+    return _read_data("docs", "war_stories")
+
+
 def register(mcp):
     """Register resources on the MCP server."""
     mcp.resource("doc://working-with-me")(res_wwm)
@@ -70,3 +75,4 @@ def register(mcp):
     mcp.resource("doc://contributing")(res_contributing)
     mcp.resource("doc://changelog")(res_changelog)
     mcp.resource("doc://security")(res_security)
+    mcp.resource("doc://war-stories")(res_war_stories)
