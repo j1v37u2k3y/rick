@@ -12,7 +12,7 @@ The server IS the resume. The code IS the craft.
 From frontier reconnaissance to cyber reconnaissance —
 same mission, different battlefield.
 
-20 functional tools + 23 identity resources.
+Functional tools + identity resources. Counts are dynamic.
 Craftsmanship. Tradecraft. Honor. Courage. Commitment.
 
 A father's knowledge. A son's mission.
@@ -38,6 +38,17 @@ register_resources(mcp)
 register_tools(mcp)
 register_prompts(mcp)
 
+
+def tool_count() -> int:
+    """Dynamic tool count from the MCP registry."""
+    return len(mcp._tool_manager.list_tools())
+
+
+def resource_count() -> int:
+    """Dynamic resource count from the MCP registry."""
+    return len(mcp._resource_manager.list_resources())
+
+
 STARTUP_BANNER = f"""
 
     Check the clock.
@@ -56,7 +67,7 @@ STARTUP_BANNER = f"""
      You learned how to break.
      Now you do both.
 
-     20 Tools | 23 Resources
+     {tool_count()} Tools | {resource_count()} Resources
      Craftsmanship in every line.
      Tradecraft in every tool.
 

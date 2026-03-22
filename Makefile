@@ -1,7 +1,9 @@
-.PHONY: check fix test lint format-check typecheck coverage smoke clean
+.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup
+
+MAX_FILE_LINES := 1500
 
 # Run everything — the full inspection
-check: lint format-check typecheck test
+check: lint format-check typecheck file-length test
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
 	@echo " ALL CHECKS PASSED — Semper Fidelis"
@@ -35,15 +37,53 @@ format-check:
 typecheck:
 	mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
 
+# File length check — no Python file should exceed MAX_FILE_LINES
+file-length:
+	@FAIL=0; \
+	for f in $$(find rick_mcp/ tests/ -name '*.py' -not -path '*/venv/*'); do \
+		LINES=$$(wc -l < "$$f"); \
+		if [ "$$LINES" -gt "$(MAX_FILE_LINES)" ]; then \
+			echo "ERROR: $$f has $$LINES lines (max $(MAX_FILE_LINES))"; \
+			FAIL=1; \
+		fi; \
+	done; \
+	if [ "$$FAIL" -eq 1 ]; then exit 1; fi
+	@echo "All Python files under $(MAX_FILE_LINES) lines."
+
 # Smoke test — fire every tool once, verify output
 smoke:
 	@echo "═══════════════════════════════════════════════"
-	@echo " SMOKE TEST — Firing all 20 tools"
+	@echo " SMOKE TEST — Firing all tools"
 	@echo "═══════════════════════════════════════════════"
 	@python smoke_test.py
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
 	@echo " ALL TOOLS OPERATIONAL — Semper Fidelis"
+	@echo "═══════════════════════════════════════════════"
+
+# Full dev environment setup
+setup:
+	@echo "═══════════════════════════════════════════════"
+	@echo " RICK MCP — Dev Environment Setup"
+	@echo "═══════════════════════════════════════════════"
+	pip install -r requirements-dev.txt
+	pre-commit install
+	@mkdir -p ~/.rick_mcp/soul
+	@echo ""
+	@echo " Dependencies installed."
+	@echo " Pre-commit hooks installed."
+	@echo " Private content directory: ~/.rick_mcp/soul/"
+	@echo ""
+	@echo " To give Rick his soul, add these files:"
+	@echo "   ~/.rick_mcp/soul/SOUL.md       — Core principles and values"
+	@echo "   ~/.rick_mcp/soul/my book.txt   — Memoirs of jiveturkey"
+	@echo "   ~/.rick_mcp/soul/PROFILE.md    — Current state, what's on the horizon"
+	@echo ""
+	@echo " These are private — they never enter git."
+	@echo " Without them, Rick still works. With them, Rick has a soul."
+	@echo ""
+	@echo "═══════════════════════════════════════════════"
+	@echo " Setup complete. Run 'make check' to verify."
 	@echo "═══════════════════════════════════════════════"
 
 # Clean build/test artifacts

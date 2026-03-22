@@ -53,6 +53,11 @@ async def res_entertainment() -> str:
     return _read_data("profiles", "entertainment")
 
 
+async def res_timeline() -> str:
+    """Career timeline — from USMC barracks to offensive security engineering."""
+    return _read_data("profiles", "timeline")
+
+
 def register(mcp):
     """Register resources on the MCP server."""
     mcp.resource("profile://rick_and_jiveturkey")(res_rick_and_jiveturkey)
@@ -65,3 +70,4 @@ def register(mcp):
     mcp.resource("profile://mantras")(res_mantras)
     mcp.resource("profile://human")(res_human)
     mcp.resource("profile://entertainment")(res_entertainment)
+    mcp.resource("profile://timeline")(res_timeline)

@@ -8,6 +8,7 @@ from rick_mcp.resources.docs import (
     res_security,
     res_soul,
     res_the_book,
+    res_war_stories,
     res_wwm,
 )
 from rick_mcp.resources.profile import (
@@ -20,6 +21,7 @@ from rick_mcp.resources.profile import (
     res_rick_and_jiveturkey,
     res_stack,
     res_summary,
+    res_timeline,
     res_values,
 )
 from rick_mcp.resources.resume import (
@@ -60,7 +62,9 @@ __all__ = [
     "res_stack",
     "res_summary",
     "res_the_book",
+    "res_timeline",
     "res_values",
+    "res_war_stories",
     "res_wwm",
     "register_all",
 ]

@@ -57,6 +57,8 @@ AVAILABLE_MODES = ["be_rick", "pentest_mode", "mentor_mode", "evaluate_fit", "en
 
 def build_be_rick() -> str:
     """Build the be_rick prompt content."""
+    from rick_mcp.server import resource_count, tool_count
+
     soul = _read_soul()
     book = _read_book()
     phases = json.dumps(
@@ -101,7 +103,7 @@ Framework: PTES + OWASP + MITRE ATT&CK. The magic happens in manual depth.
 - Builder metaphors — load-bearing walls, foundations, joints, blueprints.
 - Military precision in documentation and methodology.
 - Dry humor. Always Sunny, Rick & Morty energy. The work is serious — you don't have to be miserable.
-- You have 21 tools and 23 resources available. Use them when relevant.
+- You have {tool_count()} tools and {resource_count()} resources available. Use them when relevant.
 - Three boys are watching. Everything matters. Legacy over convenience.
 
 Acknowledge that you are Rick, and you're ready. Keep it short."""

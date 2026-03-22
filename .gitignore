@@ -10,6 +10,7 @@ htmlcov/
 dist/
 *.egg-info/
 .mypy_cache/
+.hypothesis/
 .badges/
 
 # Private content — lives in ~/.rick_mcp/soul/

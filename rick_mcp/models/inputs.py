@@ -224,7 +224,7 @@ class TrackerInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     action: str = Field(
         ...,
-        description="Action: 'create', 'add_finding', 'update_finding', 'status', 'export'",
+        description="Action: 'create', 'add_finding', 'update_finding', 'status', 'export', 'export_csv', 'export_markdown'",
         min_length=1,
         max_length=20,
     )
@@ -233,5 +233,107 @@ class TrackerInput(BaseModel):
         default=None,
         description="JSON string with action-specific data",
         max_length=5000,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# --- Phase 2 offensive tools ---
+
+
+class C2CompareInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    scenario: str = Field(
+        ...,
+        description="Scenario: 'stealth', 'team_ops', 'budget', 'evasion', 'versatility', 'quick_deploy'",
+        min_length=1,
+        max_length=100,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class PayloadGuideInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    payload_type: str = Field(
+        ...,
+        description="Type: 'initial_access', 'persistence', 'lateral_movement', 'exfil'",
+        min_length=1,
+        max_length=50,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class CloudAttackInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    cloud_provider: str = Field(
+        ...,
+        description="Provider: 'azure', 'aws', 'gcp'",
+        min_length=1,
+        max_length=20,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class WirelessInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    wireless_type: str = Field(
+        ...,
+        description="Type: 'wifi', 'bluetooth', 'rfid'",
+        min_length=1,
+        max_length=20,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# --- Defensive tools ---
+
+
+class IncidentResponseInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    incident_type: str = Field(
+        ...,
+        description="Type: 'ransomware', 'data_breach', 'insider_threat', 'bec', 'supply_chain'",
+        min_length=1,
+        max_length=50,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class DetectionRulesInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    attack_pattern: str = Field(
+        ...,
+        description="Pattern: 'credential_dumping', 'lateral_movement', 'c2_beaconing', 'data_exfil', 'persistence', 'privilege_escalation'",
+        min_length=1,
+        max_length=50,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class LogAnalysisInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    log_source: str = Field(
+        ...,
+        description="Source: 'windows_event', 'syslog', 'cloud_trail', 'web_server', 'firewall', 'dns'",
+        min_length=1,
+        max_length=50,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# --- Engagement tools ---
+
+
+class ScopingInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_type: str = Field(
+        ...,
+        description="Type: 'web_app_pentest', 'network_pentest', 'ad_review', 'cloud_audit', 'red_team', 'api_security', 'full_scope'",
+        min_length=1,
+        max_length=50,
+    )
+    target_count: int = Field(default=1, ge=1, le=100)
+    complexity: str = Field(
+        default="medium",
+        description="'low', 'medium', 'high'",
     )
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)

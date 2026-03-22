@@ -12,6 +12,7 @@ from rick_mcp.models import (
     ProposalInput,
     ReportInput,
     ROEInput,
+    ScopingInput,
     TrackerInput,
 )
 
@@ -548,8 +549,117 @@ async def rick_tracker(params: TrackerInput) -> str:
 
         return eng_file.read_text()
 
+    elif action == "export_csv":
+        if not engagement_id:
+            return "Error: engagement_id required for export_csv."
+
+        eng_file = data_dir / f"{engagement_id}.json"
+        if not eng_file.exists():
+            return f"Error: Engagement '{engagement_id}' not found."
+
+        eng = json.loads(eng_file.read_text())
+        findings = eng.get("findings", [])
+        lines = ["id,title,severity,status,added_at"]
+        for f in findings:
+            lines.append(
+                f"{f.get('id', '')},{f.get('title', '')},{f.get('severity', '')},{f.get('status', '')},{f.get('added_at', '')}"
+            )
+        return "\n".join(lines)
+
+    elif action == "export_markdown":
+        if not engagement_id:
+            return "Error: engagement_id required for export_markdown."
+
+        eng_file = data_dir / f"{engagement_id}.json"
+        if not eng_file.exists():
+            return f"Error: Engagement '{engagement_id}' not found."
+
+        eng = json.loads(eng_file.read_text())
+        findings = eng.get("findings", [])
+        lines = [
+            f"# Engagement Report: {eng.get('id', engagement_id)}",
+            f"**Client**: {eng.get('client', '[CLIENT]')}",
+            f"**Status**: {eng.get('status', 'unknown')}",
+            f"**Created**: {eng.get('created_at', 'N/A')}",
+            "",
+            "## Findings",
+            "",
+            "| ID | Title | Severity | Status |",
+            "|----|-------|----------|--------|",
+        ]
+        for f in findings:
+            lines.append(
+                f"| {f.get('id', '')} | {f.get('title', '')} | {f.get('severity', '')} | {f.get('status', '')} |"
+            )
+        if not findings:
+            lines.append("| — | No findings recorded | — | — |")
+        lines.append("")
+        lines.append(f"**Total findings**: {len(findings)}")
+        return "\n".join(lines)
+
     else:
-        return f"Error: Unknown action '{action}'. Available: create, add_finding, update_finding, status, export"
+        return f"Error: Unknown action '{action}'. Available: create, add_finding, update_finding, status, export, export_csv, export_markdown"
+
+
+async def rick_scoping(params: ScopingInput) -> str:
+    """Engagement scoping calculator. Hours, team size, rate card, timeline — the business side of breaking things."""
+    base_hours = {
+        "web_app_pentest": {"base": 40, "description": "Web Application Penetration Test"},
+        "network_pentest": {"base": 60, "description": "Network Infrastructure Penetration Test"},
+        "ad_review": {"base": 80, "description": "Active Directory Security Review"},
+        "cloud_audit": {"base": 60, "description": "Cloud Security Audit"},
+        "red_team": {"base": 160, "description": "Red Team Engagement"},
+        "api_security": {"base": 30, "description": "API Security Assessment"},
+        "full_scope": {"base": 240, "description": "Full Scope Penetration Test"},
+    }
+    complexity_factors = {"low": 0.75, "medium": 1.0, "high": 1.5}
+
+    et = params.engagement_type.lower().strip()
+    scope = base_hours.get(et)
+    if not scope:
+        return f"Error: Unknown engagement type '{et}'. Available: {', '.join(base_hours.keys())}"
+
+    complexity = (params.complexity or "medium").lower().strip()
+    factor = complexity_factors.get(complexity, 1.0)
+
+    base = scope["base"]
+    total_hours = int(base * params.target_count * factor)  # type: ignore[operator]
+    team_size = max(1, total_hours // 80)  # ~80 hours per person per engagement
+    day_rate = 2400  # industry standard for senior pentester
+    total_days = max(1, total_hours // 8)
+    total_estimate = total_days * day_rate
+
+    result = {
+        "engagement_type": scope["description"],
+        "targets": params.target_count,
+        "complexity": complexity,
+        "estimated_hours": total_hours,
+        "estimated_days": total_days,
+        "team_size": f"{team_size} operator{'s' if team_size > 1 else ''}",
+        "rate_card": {
+            "day_rate": f"${day_rate:,}/day (senior pentester)",
+            "total_estimate": f"${total_estimate:,}",
+            "note": "Rates are estimates — final pricing depends on scope specifics, travel, and tooling requirements.",
+        },
+        "deliverable_timeline": {
+            "kickoff": "Day 1 — Scope validation, credential handoff, comms setup",
+            "testing": f"Days 2-{max(2, total_days - 5)} — Active testing phase",
+            "draft_report": f"Day {max(3, total_days - 4)} — Draft report delivery",
+            "client_review": f"Days {max(4, total_days - 3)}-{max(5, total_days - 1)} — Client review period",
+            "final_report": f"Day {total_days} — Final report with remediation guidance",
+            "debrief": f"Day {total_days + 3} — Executive debrief and technical walkthrough",
+        },
+        "phases_breakdown": [
+            {"phase": p["name"], "allocation": f"{int(total_hours * w)}h"}
+            for p, w in zip(
+                MISSION_PHASES,
+                [0.15, 0.20, 0.25, 0.10, 0.10, 0.10, 0.10],
+                strict=False,
+            )
+        ],
+        "rick_note": "These are estimates, not bids. Every engagement is different — complexity, target maturity, and scope creep all affect the final number. Always pad 20% for the unexpected. The builder who underestimates the foundation pays for it on the roof.",
+    }
+    return _fmt(result, params.response_format, title=f"{CALLSIGN} Engagement Scoping")
 
 
 def register(mcp):
@@ -614,3 +724,13 @@ def register(mcp):
             "openWorldHint": False,
         },
     )(_safe_tool(rick_tracker))
+    mcp.tool(
+        name="rick_scoping",
+        annotations={
+            "title": "Engagement Scoping Calculator",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_scoping))

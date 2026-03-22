@@ -20,6 +20,12 @@ repos:
 
   - repo: local
     hooks:
+      - id: file-length-check
+        name: file-length-check
+        entry: "bash -c 'MAX=1500; FAIL=0; for f in \"$@\"; do LINES=$(wc -l < \"$f\"); if [ \"$LINES\" -gt \"$MAX\" ]; then echo \"ERROR: $f has $LINES lines (max $MAX)\"; FAIL=1; fi; done; exit $FAIL' --"
+        language: system
+        types: [python]
+
       - id: pytest
         name: pytest
         entry: bash -c 'source venv/bin/activate && python -m pytest tests/ -x -q'

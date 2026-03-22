@@ -4,13 +4,14 @@ import json
 import logging
 from functools import wraps
 from pathlib import Path
+from typing import Any
 
 from rick_mcp.constants import ResponseFormat
 
 logger = logging.getLogger("rick_mcp")
 
 
-def _fmt(data: dict, fmt: ResponseFormat, title: str = "") -> str:
+def _fmt(data: dict[str, Any], fmt: ResponseFormat, title: str = "") -> str:
     """Format tool output as markdown or JSON."""
     if fmt == ResponseFormat.JSON:
         return json.dumps(data, indent=2, default=str)

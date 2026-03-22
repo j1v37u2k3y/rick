@@ -18,13 +18,15 @@ from rick_mcp.models import HealthInput, ModeInput
 
 async def rick_status() -> str:
     """Rick MCP server status. Version, tool count, resource count, callsign, operational readiness."""
+    from rick_mcp.server import resource_count, tool_count
+
     return _fmt(
         {
             "server": "rick_mcp",
             "version": __version__,
             "callsign": CALLSIGN,
-            "tools": 22,
-            "resources": 22,
+            "tools": tool_count(),
+            "resources": resource_count(),
             "mission_phases": len(MISSION_PHASES),
             "certifications": CERTIFICATIONS,
             "specializations": len(SPECIALIZATIONS),
@@ -79,15 +81,9 @@ async def rick_health(params: HealthInput | None = None) -> str:
         rick_roe,
         rick_tracker,
     )
-    from rick_mcp.tools.offensive import (
-        rick_attack_chain,
-        rick_cheatsheet,
-        rick_pivot_plan,
-        rick_recon,
-        rick_threat_model,
-        rick_tool_recommend,
-        rick_vuln_assess,
-    )
+    from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
+    from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
+    from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet, rick_threat_model
 
     fix = params.fix if params else False
     fmt = params.response_format if params else ResponseFormat.MARKDOWN
@@ -260,13 +256,9 @@ async def rick_demo() -> str:
     from rick_mcp.tools.career import rick_mentorship
     from rick_mcp.tools.defensive import rick_hardening
     from rick_mcp.tools.engagement import rick_roe
-    from rick_mcp.tools.offensive import (
-        rick_attack_chain,
-        rick_cheatsheet,
-        rick_recon,
-        rick_tool_recommend,
-        rick_vuln_assess,
-    )
+    from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
+    from rick_mcp.tools.offensive_chains import rick_attack_chain
+    from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet
 
     sections: list[str] = []
     sections.append("# Rick MCP — The Full Tour")
@@ -374,6 +366,96 @@ async def rick_mode(params: ModeInput) -> str:
     return content
 
 
+async def rick_capabilities() -> str:
+    """What does Rick do? Full capability map — every tool, organized by mission phase."""
+    from rick_mcp.server import resource_count, tool_count
+
+    caps = {
+        "who_is_rick": (
+            "Rick is the father. jiveturkey is the son. "
+            f"This MCP server IS the resume — {tool_count()} tools, {resource_count()} resources, "
+            "built with Marine Corps precision. Every tool proves a claim. "
+            "Every resource tells the story."
+        ),
+        "offensive_recon_and_assessment": {
+            "description": "Phase 1-2: Know your target before you touch it",
+            "tools": {
+                "rick_recon": "Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)",
+                "rick_vuln_assess": "Vuln testing methodology for 10 categories (SQLi, XSS, SSRF, IDOR, auth, etc.)",
+                "rick_tool_recommend": "Scenario-aware tool recommendations — describe the job, get the toolbox",
+                "rick_threat_model": "STRIDE threat modeling for 8 system types",
+            },
+        },
+        "offensive_attack_methodology": {
+            "description": "Phase 3-5: Exploitation, escalation, lateral movement",
+            "tools": {
+                "rick_attack_chain": "MITRE ATT&CK kill chains — 6 scenarios from external to DA",
+                "rick_pivot_plan": "Post-compromise pivoting from 7 positions (Linux, Windows, container, cloud, DB, network)",
+                "rick_cheatsheet": "Field manuals for 10 core tools (nmap, burp, ffuf, hashcat, bloodhound, impacket, etc.)",
+                "rick_c2_compare": "C2 framework comparison — Cobalt Strike vs Sliver vs Mythic vs Havoc",
+                "rick_payload_guide": "Payload methodology — evasion, encoding, delivery vectors by MITRE ATT&CK",
+                "rick_cloud_attack_path": "Cloud-specific attack paths for Azure, AWS, GCP",
+                "rick_wireless": "Wireless attack playbooks — WiFi, Bluetooth, RFID",
+            },
+        },
+        "defensive_and_detection": {
+            "description": "The other side of the coin — build it right after breaking it",
+            "tools": {
+                "rick_hardening": "Hardening blueprints for 9 technologies (Windows, Linux, AD, cloud, K8s, network, DB)",
+                "rick_incident_response": "IR playbooks for 5 incident types (ransomware, breach, insider, BEC, supply chain)",
+                "rick_detection_rules": "Sigma/YARA rule templates for 6 attack patterns",
+                "rick_log_analysis": "Log review methodology for 6 log sources (Windows, syslog, cloud, web, firewall, DNS)",
+            },
+        },
+        "engagement_lifecycle": {
+            "description": "The business side — from scoping to debrief",
+            "tools": {
+                "rick_scoping": "Engagement scoping calculator — hours, team size, rate card, timeline",
+                "rick_roe": "Rules of Engagement document generator",
+                "rick_engagement_proposal": "SOW/proposal generator for 7 engagement types",
+                "rick_client_onboarding": "Client onboarding packet with checklists and ground rules",
+                "rick_report_template": "Pentest report section templates (PlexTrac-compatible)",
+                "rick_debrief": "Post-engagement debrief template",
+                "rick_tracker": "Stateful engagement tracker — create, findings, export (JSON/CSV/Markdown)",
+            },
+        },
+        "career_and_mentorship": {
+            "description": "Growing the craft — for Rick and for the next generation",
+            "tools": {
+                "rick_compatibility_check": "Job/engagement brief analyzer — tech score, cultural fit, red flags",
+                "rick_cover_letter": "Targeted cover letter generator matched to job requirements",
+                "rick_mentorship": "Learning paths for 9 topics — getting started through advanced",
+            },
+        },
+        "research": {
+            "description": "Live intelligence from external sources",
+            "tools": {
+                "rick_cve": "NVD CVE lookup — search by ID or keyword, cached 24 hours",
+            },
+        },
+        "meta": {
+            "description": "Rick talking about Rick",
+            "tools": {
+                "rick_status": "Server status — version, counts, operational readiness",
+                "rick_health": "Health check with optional self-healing (fix=True)",
+                "rick_demo": "Guided tour — fires one tool from each category",
+                "rick_mode": "Activate persona modes (be_rick, pentest_mode, mentor_mode, etc.)",
+                "rick_capabilities": "You're looking at it",
+            },
+        },
+        "resources": {
+            "description": "25 identity resources — who jiveturkey is, queryable by AI",
+            "categories": {
+                "profile://": "10 resources — summary, values, heritage, stack, methodology, mantras, human, entertainment, timeline, rick_and_jiveturkey",
+                "doc://": "9 resources — soul, the-book, working-with-me, profile, achievements, contributing, changelog, security, war-stories",
+                "resume://": "4 resources — overview, evidence, portfolio, contact",
+            },
+        },
+        "rick_note": "Don't just read the menu — order something. Pick a tool and fire it. The craft is in the doing, not the reading.",
+    }
+    return _fmt(caps, ResponseFormat.MARKDOWN, title=f"{CALLSIGN} Capabilities")
+
+
 def register(mcp):
     """Register tools on the MCP server."""
     mcp.tool(
@@ -416,3 +498,13 @@ def register(mcp):
             "openWorldHint": False,
         },
     )(_safe_tool(rick_mode))
+    mcp.tool(
+        name="rick_capabilities",
+        annotations={
+            "title": "Capability Map",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_capabilities))
