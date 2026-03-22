@@ -74,7 +74,7 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "2.0.0"
+        assert __version__ == "2.0.1"
         assert __version__ in STARTUP_BANNER
 
     def test_callsign(self):
@@ -1075,32 +1075,27 @@ class TestRickThreatModel:
         ],
     )
     async def test_valid_targets(self, target):
-
         result = await rick_threat_model(ThreatModelInput(target=target))
         assert CALLSIGN in result
         assert "STRIDE" in result
 
     @pytest.mark.asyncio
     async def test_invalid_target(self):
-
         result = await rick_threat_model(ThreatModelInput(target="nope"))
         assert "Error" in result
 
     @pytest.mark.asyncio
     async def test_with_context(self):
-
         result = await rick_threat_model(ThreatModelInput(target="web_app", context="Django app with PostgreSQL"))
         assert "Django" in result
 
     @pytest.mark.asyncio
     async def test_json_format(self):
-
         result = await rick_threat_model(ThreatModelInput(target="api", response_format=ResponseFormat.JSON))
         parsed = json.loads(result)
         assert "stride" in parsed
 
     def test_input_rejects_extra_fields(self):
-
         with pytest.raises(ValidationError):
             ThreatModelInput(target="web_app", extra="nope")
 
@@ -1115,7 +1110,7 @@ class TestRickStatus:
     async def test_status_output(self):
         result = await rick_status()
         assert CALLSIGN in result
-        assert "2.0.0" in result
+        assert "2.0.1" in result
         assert "OPERATIONAL" in result
 
     @pytest.mark.asyncio

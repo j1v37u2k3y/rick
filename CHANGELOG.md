@@ -2,6 +2,19 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [2.0.1] - 2026-03-22
+
+### Quality of Life
+
+- `rick_demo` updated to showcase v2 tools (C2 compare, IR, detection rules, log analysis, scoping)
+- `rick_demo` now fires 13 tools across all categories (up from 8)
+- All hardcoded tool/resource counts in Python replaced with dynamic `tool_count()` / `resource_count()`
+- `make setup` — one-command dev environment (deps, pre-commit hooks, private content directory)
+- README updated with soul file setup instructions and full v2 tool tables
+- Pre-commit YAML fixed for file-length hook compatibility
+
+---
+
 ## [2.0.0] - 2026-03-22
 
 ### The Full Build — 31 Tools, 25 Resources, 406 Tests
