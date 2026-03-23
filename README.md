@@ -51,7 +51,8 @@ make setup
 
 Rick works without these files, but with them he has a soul. These are private — they never enter git.
 
-See `soul-example/` for the full directory structure and example files. Copy them into `~/.rick_mcp/` and fill in your own content:
+See `soul-example/` for the full directory structure and example files. Copy them into `~/.rick_mcp/` and fill in your
+own content:
 
 ```bash
 # The setup command creates ~/.rick_mcp/soul/ for you.
@@ -66,7 +67,8 @@ cp -r soul-example/* ~/.rick_mcp/
 ~/.rick_mcp/identity.yaml       # Name, callsign, tagline, contact info
 ```
 
-Rick's prompts (`be_rick`, `mentor_mode`, etc.) pull live from these files at call time. Update the soul, update Rick's voice. The `doc://soul`, `doc://the-book`, and `doc://profile` resources serve this content to any MCP client.
+Rick's prompts (`be_rick`, `mentor_mode`, etc.) pull live from these files at call time. Update the soul, update Rick's
+voice. The `doc://soul`, `doc://the-book`, and `doc://profile` resources serve this content to any MCP client.
 
 If these files don't exist, Rick falls back to project-root copies (if present) or returns a default message.
 
@@ -132,7 +134,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 31 Functional Tools
+## Tools — 34 Functional Tools
 
 ### Offensive — Recon & Assessment
 
@@ -190,6 +192,14 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 |------------|-----------------------------------------------------------|
 | `rick_cve` | NVD CVE lookup — search by ID or keyword, cached 24 hours |
 
+### Dick Mode — JARVIS Tools
+
+| Tool              | What It Does                                                                                      |
+|-------------------|---------------------------------------------------------------------------------------------------|
+| `rick_full_auto`  | Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained. |
+| `rick_kill_chain` | Stateful 7-phase kill chain tracker — persists across conversations                               |
+| `rick_next_move`  | Situational awareness — analyzes position, findings, and kill chain state. What's next.           |
+
 ### Meta
 
 | Tool                | What It Does                                                                   |
@@ -198,7 +208,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | `rick_status`       | Server status — version, callsign, tool/resource counts, operational readiness |
 | `rick_health`       | Health check with optional self-healing (`fix=True`)                           |
 | `rick_demo`         | Guided tour — fires one tool from each category                                |
-| `rick_mode`         | Activate persona modes (be_rick, pentest_mode, mentor_mode, etc.)              |
+| `rick_mode`         | Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)   |
 
 ## Example Usage
 
@@ -243,7 +253,7 @@ Once connected, try asking:
 **Check job fit:**
 > "Run rick_compatibility_check against this job posting: [paste job description]"
 
-## Resources — 25 Identity Resources
+## Resources — 24 Identity Resources
 
 Access these via MCP resource URIs. Content is loaded from your private `~/.rick_mcp/` directory.
 
@@ -285,7 +295,7 @@ Access these via MCP resource URIs. Content is loaded from your private `~/.rick
 ### Run Tests
 
 ```bash
-make test        # 406 tests across 4 test files
+make test        # 439 tests across 5 test files
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -308,7 +318,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run 406 tests                                               |
+| `make test`        | Run 439 tests                                               |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |
@@ -327,6 +337,7 @@ Pre-commit hooks are installed automatically. Every commit runs:
 - Merge conflict detection
 - **File length check** (1500 line max per Python file)
 - Ruff lint + format
+- **mypy** static type checking
 - Full test suite
 
 ### CI/CD
@@ -335,7 +346,7 @@ GitHub Actions runs on every push/PR against Python 3.10, 3.12, and 3.14. Includ
 
 ## Achievements
 
-Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 34 tools, 406 tests, full CI/CD pipeline.
+Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the build story. See [CHANGELOG.md](CHANGELOG.md) for version details.
 
 ## Built With
 
