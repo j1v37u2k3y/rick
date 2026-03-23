@@ -1201,8 +1201,9 @@ class TestRickMode:
     @pytest.mark.asyncio
     async def test_be_rick_mode(self):
         result = await rick_mode(ModeInput(mode="be_rick"))
-        assert "Rick" in result
-        assert CALLSIGN in result
+        # Works with or without identity configured
+        assert "MCP" in result or "Rick" in result
+        assert CALLSIGN in result or "operator" in result.lower()
 
     @pytest.mark.asyncio
     async def test_pentest_mode(self):
