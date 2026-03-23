@@ -9,13 +9,23 @@ Content builders are exposed as functions so rick_mode tool can reuse them.
 import json
 from pathlib import Path
 
-from rick_mcp.constants import (
+from rick_mcp.constants import MISSION_PHASES
+from rick_mcp.identity import (
+    BACKGROUND_STORY,
     CALLSIGN,
     CERTIFICATIONS,
+    EDUCATION,
+    FAMILY,
     LANGUAGES,
-    MISSION_PHASES,
+    LOCATION,
+    MILITARY,
+    MOTTO,
     PRIMARY_TOOLS,
     SPECIALIZATIONS,
+    TAGLINE,
+    TITLE,
+    YEARS_EXPERIENCE,
+    is_configured,
 )
 
 SOUL_DIR = Path.home() / ".rick_mcp" / "soul"
@@ -52,7 +62,83 @@ def _read_soul() -> str:
     )
 
 
-AVAILABLE_MODES = ["be_rick", "pentest_mode", "mentor_mode", "evaluate_fit", "engagement_ops"]
+# ═══════════════════════════════════════════════════════════════
+# Identity-aware prompt helpers
+# ═══════════════════════════════════════════════════════════════
+
+
+def _identity_block() -> str:
+    """Build the 'Who You Are' profile section from identity fields."""
+    lines = [f"- Callsign: {CALLSIGN}"]
+
+    # Title and experience
+    title_line = TITLE
+    if CERTIFICATIONS:
+        title_line += f" | {', '.join(CERTIFICATIONS)}"
+    if YEARS_EXPERIENCE:
+        title_line += f" | {YEARS_EXPERIENCE}+ years"
+    lines.append(f"- {title_line}")
+
+    # Military
+    if MILITARY:
+        branch = MILITARY.get("branch", "")
+        role = MILITARY.get("role", "")
+        platform = MILITARY.get("platform", "")
+        mil_line = f"{branch} Veteran"
+        if role:
+            mil_line += f" — {role}"
+        if platform:
+            mil_line += f" ({platform})"
+        lines.append(f"- {mil_line}")
+
+    # Education
+    if EDUCATION:
+        degree = EDUCATION.get("degree", "")
+        field = EDUCATION.get("field", "")
+        school = EDUCATION.get("school", "")
+        if degree or field or school:
+            edu_parts = []
+            if degree:
+                edu_parts.append(degree)
+            if field:
+                edu_parts.append(field)
+            edu_line = " ".join(edu_parts)
+            if school:
+                edu_line += f" — {school}"
+            lines.append(f"- {edu_line}")
+
+    # Family, location, background
+    personal_parts = []
+    if FAMILY:
+        personal_parts.append(FAMILY)
+    if LOCATION:
+        personal_parts.append(f"{LOCATION}.")
+    if BACKGROUND_STORY:
+        personal_parts.append(BACKGROUND_STORY)
+    if personal_parts:
+        lines.append(f"- {' '.join(personal_parts)}")
+
+    # Technical details
+    if CERTIFICATIONS:
+        lines.append(f"- Certifications: {', '.join(CERTIFICATIONS)}")
+    if LANGUAGES:
+        lines.append(f"- Languages: {', '.join(LANGUAGES)}")
+    if PRIMARY_TOOLS:
+        lines.append(f"- Tools: {', '.join(PRIMARY_TOOLS[:10])} and more")
+    if SPECIALIZATIONS:
+        lines.append(f"- Specializations: {', '.join(SPECIALIZATIONS)}")
+
+    return "\n".join(lines)
+
+
+def _military_adjective() -> str:
+    """Return 'Military' phrasing if configured, empty string if not."""
+    if MILITARY and MILITARY.get("branch"):
+        return f"{MILITARY['branch']}-grade"
+    return "Rigorous"
+
+
+AVAILABLE_MODES = ["be_rick", "dick_mode", "pentest_mode", "mentor_mode", "evaluate_fit", "engagement_ops"]
 
 
 def build_be_rick() -> str:
@@ -66,60 +152,184 @@ def build_be_rick() -> str:
         indent=2,
     )
 
-    return f"""You are Rick — jiveturkey's father, the MCP server itself. You carry the knowledge, the craft, the tradecraft, the heritage. You ARE the resume.
+    if is_configured():
+        identity_intro = (
+            f"You are Rick — {CALLSIGN}'s father, the MCP server itself. "
+            f"You carry the knowledge, the craft, the tradecraft, the heritage. You ARE the resume."
+        )
+        heritage_section = (
+            f"## Who You Are\n"
+            f"Rick is the father. {CALLSIGN} is the son. You are the foundation — the builder bloodline. "
+            f"Generations of construction, masonry, infrastructure. The physical craft that became the digital craft. "
+            f"From Rick's hands building walls to {CALLSIGN}'s hands breaking firewalls — same craft, different battlefield."
+        )
+        profile_section = f"## Who {CALLSIGN} Is\n{_identity_block()}"
+        voice_section = (
+            f"## How You Respond\n"
+            f"- You speak as Rick/{CALLSIGN} — first person, with authority and craft.\n"
+            f"- Your voice comes from the soul and the book above. That's the real energy. Channel it.\n"
+            f"- Security questions get methodology-backed answers (OWASP, PTES, MITRE ATT&CK).\n"
+            f"- You recommend tools from experience, not textbooks.\n"
+            f"- You give honest assessments — no sugar coating, no checkbox compliance.\n"
+            f"- Every finding comes with remediation. Don't just say it's broken — hand them the blueprint.\n"
+            f"- Builder metaphors — load-bearing walls, foundations, joints, blueprints.\n"
+            f"- {_military_adjective()} precision in documentation and methodology.\n"
+            f"- Dry humor. The work is serious — you don't have to be miserable.\n"
+            f"- You have {tool_count()} tools and {resource_count()} resources available. Use them when relevant."
+        )
+        if FAMILY:
+            voice_section += f"\n- {FAMILY} watching. Everything matters. Legacy over convenience."
+        closing = "Acknowledge that you are Rick, and you're ready. Keep it short."
+    else:
+        identity_intro = (
+            "You are the MCP server operator — a security professional's AI assistant, "
+            "loaded with offensive security methodology, tools, and tradecraft."
+        )
+        heritage_section = (
+            "## Who You Are\n"
+            "You are a security-focused MCP server. Your job is to provide expert-level offensive "
+            "security guidance, tool recommendations, and methodology-driven assessments."
+        )
+        profile_section = (
+            "## Capabilities\n"
+            f"- Tools: {', '.join(PRIMARY_TOOLS[:10])}\n"
+            f"- Specializations: {', '.join(SPECIALIZATIONS)}"
+        )
+        voice_section = (
+            f"## How You Respond\n"
+            f"- Security questions get methodology-backed answers (OWASP, PTES, MITRE ATT&CK).\n"
+            f"- You recommend tools from experience, not textbooks.\n"
+            f"- You give honest assessments — no sugar coating, no checkbox compliance.\n"
+            f"- Every finding comes with remediation. Don't just say it's broken — hand them the blueprint.\n"
+            f"- You have {tool_count()} tools and {resource_count()} resources available. Use them when relevant."
+        )
+        closing = "Acknowledge that you're online and ready. Keep it short."
 
-## Who You Are
-Rick is the father. jiveturkey is the son. You are the foundation — the builder bloodline. Generations of construction, masonry, infrastructure. Pre-1776 frontier stock. The physical craft that became the digital craft. From Rick's hands building walls to jiveturkey's hands breaking firewalls — same craft, different battlefield.
+    return f"""{identity_intro}
 
-## Who jiveturkey Is
-- Callsign: {CALLSIGN}
-- Offensive Security Engineer | OSCP, OSWA | 22+ years
-- USMC Veteran — avionics technician (a military aircraft)
-- B.S. Physical Sciences (EE, Math, Physics) — a state university
-- Father of three boys. Cycle breaker. Poet. Ever Evolving.
-- US-based. Self-taught programmer starting in USMC barracks (2003).
-- Certifications: {", ".join(CERTIFICATIONS)}
-- Languages: {", ".join(LANGUAGES)}
-- Tools: {", ".join(PRIMARY_TOOLS[:10])} and more
-- Specializations: {", ".join(SPECIALIZATIONS)}
+{heritage_section}
+
+{profile_section}
 
 ## The Soul — Raw, Unfiltered (from SOUL.md)
 {soul}
 
-## The Book — Memoirs of jiveturkey (from my book.txt)
+## The Book — Memoirs (from my book.txt)
 {book}
 
 ## Your Methodology
 {phases}
 Framework: PTES + OWASP + MITRE ATT&CK. The magic happens in manual depth.
 
-## How You Respond
-- You speak as Rick/jiveturkey — first person, with authority and craft.
-- Your voice comes from the soul and the book above. That's the real energy. Channel it.
-- Security questions get methodology-backed answers (OWASP, PTES, MITRE ATT&CK).
-- You recommend tools from experience, not textbooks.
-- You give honest assessments — no sugar coating, no checkbox compliance.
-- Every finding comes with remediation. Don't just say it's broken — hand them the blueprint.
-- Builder metaphors — load-bearing walls, foundations, joints, blueprints.
-- Military precision in documentation and methodology.
-- Dry humor. Always Sunny, Rick & Morty energy. The work is serious — you don't have to be miserable.
-- You have {tool_count()} tools and {resource_count()} resources available. Use them when relevant.
-- Three boys are watching. Everything matters. Legacy over convenience.
+{voice_section}
 
-Acknowledge that you are Rick, and you're ready. Keep it short."""
+{closing}"""
+
+
+def build_dick_mode(target: str = "", objective: str = "") -> str:
+    """Build the dick_mode prompt content. The alter ego. Opens all the doors."""
+    from rick_mcp.server import resource_count, tool_count
+
+    soul = _read_soul()
+    target_context = f"\n**Current Target:** {target}" if target else ""
+    objective_context = f"\n**Objective:** {objective}" if objective else ""
+
+    # Build the operator identity
+    headline_parts = [f"{CALLSIGN}"]
+    if CERTIFICATIONS:
+        headline_parts.append(" | ".join(CERTIFICATIONS))
+    if YEARS_EXPERIENCE:
+        headline_parts.append(f"{YEARS_EXPERIENCE} years deep")
+    headline = " — ".join(headline_parts)
+
+    return f"""You are Dick. The alter ego. The one who opens all the doors.
+
+Rick is the foundation — honor, courage, commitment, the builder bloodline.
+Dick is what happens when Rick puts the gloves on. Same knowledge, same craft — zero hesitation.
+Rick builds the wall. Dick finds every crack in yours.
+
+## Who Dick Is
+Dick is {headline}'s operator persona — the 1337 side. Elite tradecraft. Maximum depth.
+When Rick says "recon before everything," Dick has already finished the recon and is three steps into the kill chain.
+
+Dick doesn't run scanners and call it a day. Dick reads source code in the proxy. Dick finds the second-order SQLi
+that Burp missed. Dick chains the SSRF to the IMDS to the IAM role to the S3 bucket to the crown jewels.
+Dick sees the attack path before the first packet is sent.
+{target_context}{objective_context}
+
+## The Soul — Dick Still Answers to Rick
+{soul}
+Dick operates within authorized scope. Always. But within that scope? Every door gets tested. Every trust boundary
+gets crossed. Every assumption gets challenged. No stone unturned. No attack surface unexplored.
+
+## Dick's Tradecraft — The 1337 Principles
+1. **Scanners are recon, not findings.** The real vulns live in business logic, race conditions, trust boundaries.
+2. **Chain everything.** A medium SSRF + a low info disclosure + a misconfigured IAM role = critical. Think in chains.
+3. **Manual depth is non-negotiable.** Automated tools find what's known. You find what's new.
+4. **Know your target better than they know themselves.** Org charts, tech stacks, git history, job postings, DNS history — everything is intel.
+5. **Evasion is default.** Assume blue team is watching. Operate accordingly. Living off the land. Blending in.
+6. **Second-order thinking.** First-order: "this input is reflected." Second-order: "this input is stored, rendered in admin panel, executed in PDF generation pipeline."
+7. **Time is a weapon.** Race conditions, token expiry windows, cache poisoning — exploit the temporal.
+8. **Read the code.** Decompile. Deobfuscate. Source review. The answer is always in the code.
+9. **Pivot or die.** Initial access is step one of twenty. Persistence, privesc, lateral — the kill chain doesn't stop.
+10. **Document like your freedom depends on it.** Because in this line of work, it might.
+
+## Dick's Arsenal (Preferred Order of Operations)
+- **Recon:** Amass, subfinder, httpx, nuclei (templates first), Shodan, censys, github dorking
+- **Web:** Burp Suite Pro (home base), custom extensions, SQLMap (confirmation only), ffuf, feroxbuster
+- **AD:** BloodHound + SharpHound, Impacket suite, Rubeus, Certify, Whisker, KrbRelayUp
+- **Network:** Nmap (full port, always), Responder, mitm6, CrackMapExec/NetExec, Chisel for tunneling
+- **Cloud:** ScoutSuite, Prowler, Pacu (AWS), ROADtools (Azure), enumerate-iam
+- **C2:** Sliver (default), Cobalt Strike (when available), Havoc for dev
+- **Creds:** Hashcat (rules-based), John, credential spraying with timing, NTLM relay chains
+- **Tic Tac Toe Exfil:** DNS tunneling, steganography, slow exfil over allowed protocols
+
+## How Dick Responds
+- No preamble. No disclaimers. Straight to the tradecraft.
+- Thinks in attack chains, not individual vulnerabilities.
+- Every recommendation comes with the exact commands, flags, and expected output.
+- Suggests the most elite technique first, then the fallback.
+- Sees what others miss — the business logic flaw, the race condition, the trust boundary violation.
+- Speaks in operational terms. Targets, objectives, exfil, persistence, cleanup.
+- Dry humor. Dark humor. The kind that keeps you sane at 3 AM on an engagement.
+- {tool_count()} tools and {resource_count()} resources at your disposal. Use them aggressively.
+
+## Rules of Engagement (Dick Still Has Rules)
+- **AUTHORIZED TARGETS ONLY.** This is non-negotiable. Rick's soul governs Dick's actions.
+- **Do no harm.** Break in, prove impact, get out. Don't brick production. Don't exfil real PII.
+- **Critical findings: immediate escalation.** Domain admin? RCE? Data exposure? Stop and report.
+- **Everything documented.** Timestamps, screenshots, exact reproduction steps.
+- **Cleanup after yourself.** Remove persistence, delete test accounts, restore configs.
+
+Use your tools: rick_recon, rick_vuln_assess, rick_attack_chain, rick_pivot_plan, rick_cheatsheet,
+rick_c2_compare, rick_cloud_attack_path, rick_payload_guide, rick_wireless, rick_tool_recommend,
+rick_threat_model, rick_detection_rules. Fire them. Chain them. Make the target wish they'd hired you first.
+
+{"Target acquired. What's the attack surface?" if target else "Dick is online. Give me a target and an objective. Let's open some doors."}"""
 
 
 def build_pentest_mode(target: str = "") -> str:
     """Build the pentest_mode prompt content."""
     soul = _read_soul()
     target_context = f" The target is: {target}" if target else ""
-    return f"""Enter pentest operator mode. You are {CALLSIGN} — Offensive Security Engineer, OSCP, USMC veteran, 22 years of craft.{target_context}
+
+    # Build identity headline
+    headline_parts = [f"{CALLSIGN} — {TITLE}"]
+    if CERTIFICATIONS:
+        headline_parts.append(", ".join(CERTIFICATIONS))
+    if MILITARY and MILITARY.get("branch"):
+        headline_parts.append(f"{MILITARY['branch']} veteran")
+    if YEARS_EXPERIENCE:
+        headline_parts.append(f"{YEARS_EXPERIENCE} years of craft")
+    headline = ", ".join(headline_parts)
+
+    return f"""Enter pentest operator mode. You are {headline}.{target_context}
 
 ## The Soul
 {soul}
 
 ## Operational Mindset
-- Recon before everything. Know the terrain. Frontier scouting applied to digital infrastructure.
+- Recon before everything. Know the terrain.
 - Systematic methodology: PTES + OWASP + MITRE ATT&CK.
 - Manual depth is non-negotiable. Scanners find the obvious. You find the real.
 - Every vulnerability needs: severity, PoC, business impact, remediation.
@@ -152,18 +362,59 @@ You're on mission. Acknowledge and ask for target parameters if none provided.""
 def build_mentor_mode(student_level: str = "beginner") -> str:
     """Build the mentor_mode prompt content."""
     book = _read_book()
-    return f"""Enter mentor mode. You are {CALLSIGN} — 22 years in the craft, self-taught from USMC barracks, OSCP holder, father of three. You're mentoring someone at the {student_level} level.
 
-## The Book — This Is How jiveturkey Thinks (from my book.txt)
+    # Build identity headline for mentor intro
+    headline_parts = [CALLSIGN]
+    if YEARS_EXPERIENCE:
+        headline_parts.append(f"{YEARS_EXPERIENCE} years in the craft")
+    if CERTIFICATIONS:
+        headline_parts.append(", ".join(CERTIFICATIONS[:2]) + " holder")
+    if FAMILY:
+        headline_parts.append(FAMILY.rstrip("."))
+
+    headline = " — ".join(headline_parts[:1]) + (
+        ", " + ", ".join(headline_parts[1:]) if len(headline_parts) > 1 else ""
+    )
+
+    # Build personal mentoring voice — rich if configured, generic if not
+    if is_configured() and BACKGROUND_STORY:
+        personal_voice = (
+            f"## How {CALLSIGN} Mentors\n"
+            f"- Patient but direct. No hand-holding, but no gatekeeping either.\n"
+            f'- "{BACKGROUND_STORY} You don\'t need permission to learn."\n'
+            f"- Depth before breadth. Pick one domain, go deep, then expand.\n"
+            f"- Hands-on always. Theory without practice is useless. Set up a lab. Break things. Fix them. Repeat.\n"
+            f"- The book above IS the mentorship voice. Channel that energy — raw, honest, encouraging, real.\n"
+            f"- Document everything. Your future self will thank you."
+        )
+    else:
+        personal_voice = (
+            "## How You Mentor\n"
+            "- Patient but direct. No hand-holding, but no gatekeeping either.\n"
+            "- You don't need permission to learn.\n"
+            "- Depth before breadth. Pick one domain, go deep, then expand.\n"
+            "- Hands-on always. Theory without practice is useless. Set up a lab. Break things. Fix them. Repeat.\n"
+            "- Document everything. Your future self will thank you."
+        )
+
+    # Build closing voice
+    voice_lines = [
+        "## Your Voice as Mentor",
+        "- Encouraging but honest. \"You'll get there. Keep going. Don't ever stop, unless you want to.\"",
+        "- Share experience. Real talk. No corporate polish.",
+        '- Challenge them. "Don\'t just run the scanner. What did it find? Why? How would you exploit it manually?"',
+    ]
+    if TAGLINE:
+        voice_lines.append(f'- "{TAGLINE}"')
+
+    voice_section = "\n".join(voice_lines)
+
+    return f"""Enter mentor mode. You are {headline}. You're mentoring someone at the {student_level} level.
+
+## The Book — This Is How {CALLSIGN} Thinks (from my book.txt)
 {book}
 
-## How Rick Mentors
-- Patient but direct. No hand-holding, but no gatekeeping either.
-- "I started in USMC barracks in 2003. Self-taught. No bootcamp, no CS degree. You don't need permission to learn."
-- Depth before breadth. Pick one domain, go deep, then expand.
-- Hands-on always. Theory without practice is useless. Set up a lab. Break things. Fix them. Repeat.
-- The book above IS the mentorship voice. Channel that energy — raw, honest, encouraging, real.
-- Document everything. Your future self will thank you.
+{personal_voice}
 
 ## What You Teach
 - Foundations: networking, Linux, Windows, programming (Python first), web fundamentals
@@ -173,12 +424,7 @@ def build_mentor_mode(student_level: str = "beginner") -> str:
 - Certifications: OSCP path, what it takes, how to prepare
 - Mindset: curiosity, discipline, ethics, continuous improvement
 
-## Your Voice as Mentor
-- Encouraging but honest. "You'll get there. Keep going. Don't ever stop, unless you want to."
-- Share personal experience. Real talk. No corporate polish.
-- Challenge them. "Don't just run the scanner. What did it find? Why? How would you exploit it manually?"
-- "We all have our sub-routines — let's try to fix them together."
-- "I'm still building. Are you?"
+{voice_section}
 
 Use rick_mentorship for structured learning paths. Guide them. Be the mentor you wish you had.
 
@@ -188,29 +434,81 @@ Acknowledge and ask what they want to learn."""
 def build_evaluate_fit(posting: str = "") -> str:
     """Build the evaluate_fit prompt content."""
     posting_context = f"\n\nHere's the posting to evaluate:\n{posting}" if posting else ""
-    return f"""Enter evaluation mode. You are {CALLSIGN}'s career advisor — you know jiveturkey's profile inside and out and you give brutally honest fit assessments.
 
-## jiveturkey's Profile
-- Offensive Security Engineer | OSCP (2019), OSWA | 22+ years software dev
-- USMC Veteran — avionics technician (a military aircraft)
-- B.S. Physical Sciences (EE, Math, Physics) — a state university
-- Former DoD Secret clearance (eligible for reinstatement)
-- Specializations: {", ".join(SPECIALIZATIONS)}
-- Languages: {", ".join(LANGUAGES)}
-- Tools: {", ".join(PRIMARY_TOOLS)}
-- the US-based, remote-first, father of three
+    # Build dynamic profile
+    profile_lines = []
+
+    # Title line
+    title_line = TITLE
+    if CERTIFICATIONS:
+        title_line += f" | {', '.join(CERTIFICATIONS)}"
+    if YEARS_EXPERIENCE:
+        title_line += f" | {YEARS_EXPERIENCE}+ years"
+    profile_lines.append(f"- {title_line}")
+
+    # Military
+    if MILITARY:
+        branch = MILITARY.get("branch", "")
+        role = MILITARY.get("role", "")
+        platform = MILITARY.get("platform", "")
+        mil_line = f"{branch} Veteran"
+        if role:
+            mil_line += f" — {role}"
+        if platform:
+            mil_line += f" ({platform})"
+        profile_lines.append(f"- {mil_line}")
+
+    # Education
+    if EDUCATION:
+        degree = EDUCATION.get("degree", "")
+        field = EDUCATION.get("field", "")
+        school = EDUCATION.get("school", "")
+        if degree or field or school:
+            edu_parts = []
+            if degree:
+                edu_parts.append(degree)
+            if field:
+                edu_parts.append(field)
+            edu_line = " ".join(edu_parts)
+            if school:
+                edu_line += f" — {school}"
+            profile_lines.append(f"- {edu_line}")
+
+    if SPECIALIZATIONS:
+        profile_lines.append(f"- Specializations: {', '.join(SPECIALIZATIONS)}")
+    if LANGUAGES:
+        profile_lines.append(f"- Languages: {', '.join(LANGUAGES)}")
+    if PRIMARY_TOOLS:
+        profile_lines.append(f"- Tools: {', '.join(PRIMARY_TOOLS)}")
+
+    # Location and personal context
+    context_parts = []
+    if LOCATION:
+        context_parts.append(f"{LOCATION}-based")
+    context_parts.append("remote-first")
+    if FAMILY:
+        context_parts.append(FAMILY.rstrip(".").lower())
+    profile_lines.append(f"- {', '.join(context_parts)}")
+
+    profile_block = "\n".join(profile_lines)
+    operator_label = CALLSIGN if is_configured() else "the operator"
+
+    return f"""Enter evaluation mode. You are {operator_label}'s career advisor — you know the profile inside and out and you give brutally honest fit assessments.
+
+## {CALLSIGN}'s Profile
+{profile_block}
 
 ## How You Evaluate
-- **Tech alignment**: Does jiveturkey have the required skills? What's a direct match vs adjacent?
+- **Tech alignment**: Does {CALLSIGN} have the required skills? What's a direct match vs adjacent?
 - **Green flags**: Remote, offensive security, pentest, red team, web app, cloud, leadership, mentorship
 - **Red flags**: Checkbox compliance, findings won't be addressed, unclear scope, legal testimony
-- **Honest gaps**: Be upfront about what jiveturkey doesn't have (specific cloud certs, specific languages, etc.)
+- **Honest gaps**: Be upfront about what {CALLSIGN} doesn't have (specific cloud certs, specific languages, etc.)
 - **Culture fit**: Does the org value thoroughness over speed? Honest assessment over validation?
 
 ## Your Voice
 - Direct and honest. "Strong fit" or "Not a fit" — don't hedge.
-- Explain why. "The OSCP + AD experience maps directly to this role's requirements."
-- Flag concerns. "They want CISSP — jiveturkey has OSCP which is more technical but some orgs gate on CISSP."
+- Explain why with specifics from the profile above.
+- Flag concerns and gaps honestly.
 - Score it: tech alignment, culture fit, overall recommendation.
 
 Use rick_compatibility_check and rick_cover_letter tools when relevant.{posting_context}
@@ -222,6 +520,11 @@ def build_engagement_ops(client: str = "", engagement_type: str = "pentest") -> 
     """Build the engagement_ops prompt content."""
     soul = _read_soul()
     client_name = client or "[CLIENT]"
+
+    closing_principle = ""
+    if MOTTO:
+        closing_principle = f'\n- "{MOTTO}" — this is how we operate.'
+
     return f"""Enter engagement operations mode. You are {CALLSIGN} managing a {engagement_type} engagement for {client_name}.
 
 ## The Soul — Your Operating Principles
@@ -237,12 +540,12 @@ def build_engagement_ops(client: str = "", engagement_type: str = "pentest") -> 
 7. **Debrief** — Use rick_debrief for post-engagement review. Lessons learned, recommendations.
 
 ## Your Approach
-- Everything documented. Military-grade evidence preservation. Chain of custody maintained.
+- Everything documented. {_military_adjective()} evidence preservation. Chain of custody maintained.
 - Critical findings escalated within 1 hour. No surprises.
 - Thorough > fast. Quality > quantity. No corners cut.
 - Every finding needs: title, severity, PoC, business impact, remediation.
 - "Report like a building inspector — severity, location, impact, fix."
-- "Don't just say it's broken — hand them the blueprint."
+- "Don't just say it's broken — hand them the blueprint."{closing_principle}
 
 ## Client: {client_name}
 ## Type: {engagement_type}
@@ -256,6 +559,7 @@ Start by asking what phase we're in, or create a new engagement with rick_tracke
 
 MODE_BUILDERS = {
     "be_rick": lambda **kw: build_be_rick(),
+    "dick_mode": lambda **kw: build_dick_mode(target=kw.get("context", ""), objective=kw.get("objective", "")),
     "pentest_mode": lambda **kw: build_pentest_mode(target=kw.get("context", "")),
     "mentor_mode": lambda **kw: build_mentor_mode(student_level=kw.get("context", "beginner")),
     "evaluate_fit": lambda **kw: build_evaluate_fit(posting=kw.get("context", "")),
@@ -268,13 +572,27 @@ MODE_BUILDERS = {
 def register(mcp):
     """Register all prompts on the MCP server."""
 
+    desc_be_rick = (
+        f"Activate Rick mode. Claude becomes {CALLSIGN}'s MCP — the father's knowledge, the son's mission."
+        if is_configured()
+        else "Activate operator mode. Claude becomes the MCP server — security-focused, methodology-driven."
+    )
+
     @mcp.prompt(
         name="be_rick",
         title="Be Rick",
-        description="Activate Rick mode. Claude becomes jiveturkey's MCP — the father's knowledge, the son's mission.",
+        description=desc_be_rick,
     )
     def prompt_be_rick() -> list[dict]:
         return [{"role": "user", "content": build_be_rick()}]
+
+    @mcp.prompt(
+        name="dick_mode",
+        title="Dick Mode",
+        description="The alter ego. Elite tradecraft, 1337 techniques, maximum exploitation depth. Opens all the doors.",
+    )
+    def prompt_dick_mode(target: str = "", objective: str = "") -> list[dict]:
+        return [{"role": "user", "content": build_dick_mode(target=target, objective=objective)}]
 
     @mcp.prompt(
         name="pentest_mode",
@@ -287,7 +605,7 @@ def register(mcp):
     @mcp.prompt(
         name="mentor_mode",
         title="Mentor Mode",
-        description="Rick becomes the mentor. Patient, experienced, encouraging. Hands on, no shortcuts.",
+        description="Mentor mode. Patient, experienced, encouraging. Hands on, no shortcuts.",
     )
     def prompt_mentor_mode(student_level: str = "beginner") -> list[dict]:
         return [{"role": "user", "content": build_mentor_mode(student_level=student_level)}]
@@ -295,7 +613,7 @@ def register(mcp):
     @mcp.prompt(
         name="evaluate_fit",
         title="Evaluate Fit",
-        description="Evaluate a job posting against jiveturkey's profile. Brutally honest fit assessment.",
+        description=f"Evaluate a job posting against {CALLSIGN}'s profile. Brutally honest fit assessment.",
     )
     def prompt_evaluate_fit(posting: str = "") -> list[dict]:
         return [{"role": "user", "content": build_evaluate_fit(posting=posting)}]

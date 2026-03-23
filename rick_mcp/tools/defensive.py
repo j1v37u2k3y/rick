@@ -535,10 +535,10 @@ level: critical
 tags:
     - attack.credential_access
     - attack.t1003.001""",
-            "yara_template": """rule credential_dump_strings {
+            "yara_template": f"""rule credential_dump_strings {{
     meta:
         description = "Detects credential dumping tool artifacts"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1003"
     strings:
         $s1 = "sekurlsa::logonpasswords" ascii wide nocase
@@ -548,7 +548,7 @@ tags:
         $s5 = "MiniDumpWriteDump" ascii wide
     condition:
         2 of them
-}""",
+}}""",
             "log_sources": ["Sysmon Event ID 10 (ProcessAccess)", "Windows Security 4656/4663", "EDR telemetry"],
             "mitre_mapping": ["T1003.001 — LSASS Memory", "T1003.002 — SAM", "T1003.003 — NTDS", "T1003.006 — DCSync"],
             "rick_note": "LSASS access is the canary in the coal mine. If you see process access to lsass.exe with suspicious granted access masks, investigate immediately. Credential Guard prevents most of this — deploy it.",
@@ -575,10 +575,10 @@ level: high
 tags:
     - attack.lateral_movement
     - attack.t1021.002""",
-            "yara_template": """rule lateral_movement_tool {
+            "yara_template": f"""rule lateral_movement_tool {{
     meta:
         description = "Detects common lateral movement tool artifacts"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1021"
     strings:
         $psexec = "psexec" ascii wide nocase
@@ -588,7 +588,7 @@ tags:
         $dcomexec = "dcomexec" ascii wide nocase
     condition:
         any of them
-}""",
+}}""",
             "log_sources": [
                 "Windows System Event 7045",
                 "Windows Security 4624 Type 3",
@@ -625,10 +625,10 @@ level: medium
 tags:
     - attack.command_and_control
     - attack.t1071.001""",
-            "yara_template": """rule c2_beacon_config {
+            "yara_template": f"""rule c2_beacon_config {{
     meta:
         description = "Detects C2 beacon configuration artifacts"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1071"
     strings:
         $cfg1 = "sleeptime" ascii wide nocase
@@ -638,7 +638,7 @@ tags:
         $ua = "Mozilla/5.0" ascii wide
     condition:
         3 of ($cfg*) or ($cfg4 and $ua)
-}""",
+}}""",
             "log_sources": ["DNS query logs", "Proxy/Web gateway logs", "Netflow data", "Zeek/Bro connection logs"],
             "mitre_mapping": [
                 "T1071.001 — Web Protocols",
@@ -671,20 +671,20 @@ level: high
 tags:
     - attack.exfiltration
     - attack.t1048""",
-            "yara_template": """rule staging_compression {
+            "yara_template": f"""rule staging_compression {{
     meta:
         description = "Detects data staging with compression for exfiltration"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1560"
     strings:
         $rar = "Rar!" ascii
-        $7z = { 37 7A BC AF 27 1C }
+        $7z = {{ 37 7A BC AF 27 1C }}
         $zip_password = "zip -P" ascii nocase
         $tar_gz = "tar czf" ascii
         $makecab = "makecab" ascii nocase
     condition:
         any of them
-}""",
+}}""",
             "log_sources": [
                 "Firewall logs (outbound bytes)",
                 "DLP alerts",
@@ -726,10 +726,10 @@ level: high
 tags:
     - attack.persistence
     - attack.t1547.001""",
-            "yara_template": """rule persistence_mechanism {
+            "yara_template": f"""rule persistence_mechanism {{
     meta:
         description = "Detects persistence mechanism setup artifacts"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1547"
     strings:
         $reg1 = "reg add" ascii wide nocase
@@ -739,7 +739,7 @@ tags:
         $startup = "\\\\Start Menu\\\\Programs\\\\Startup" ascii wide
     condition:
         2 of them
-}""",
+}}""",
             "log_sources": [
                 "Sysmon Event ID 12/13/14 (Registry)",
                 "Sysmon Event ID 11 (FileCreate in startup)",
@@ -778,10 +778,10 @@ level: high
 tags:
     - attack.privilege_escalation
     - attack.t1134""",
-            "yara_template": """rule privesc_tool {
+            "yara_template": f"""rule privesc_tool {{
     meta:
         description = "Detects privilege escalation tool artifacts"
-        author = "j1v37u2k3y"
+        author = "{CALLSIGN}"
         mitre = "T1134"
     strings:
         $potato1 = "JuicyPotato" ascii wide nocase
@@ -792,7 +792,7 @@ tags:
         $impersonate = "ImpersonateNamedPipeClient" ascii wide
     condition:
         any of them
-}""",
+}}""",
             "log_sources": [
                 "Windows Security 4672 (Special Privileges)",
                 "Windows Security 4673 (Privileged Service)",

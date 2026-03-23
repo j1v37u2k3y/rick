@@ -6,6 +6,7 @@ from pathlib import Path
 
 from rick_mcp.constants import CALLSIGN, MISSION_PHASES
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize, logger
+from rick_mcp.identity import MOTTO
 from rick_mcp.models import (
     DebriefInput,
     OnboardInput,
@@ -294,7 +295,7 @@ async def rick_client_onboarding(params: OnboardInput) -> str:
             "2. Schedule kick-off",
             "3. Provide access",
             "4. Confirm window",
-            "5. Execute. Semper Fidelis.",
+            f"5. Execute. {MOTTO + '.' if MOTTO else 'Get after it.'}",
         ],
         "rick_note": "Good onboarding sets the tone. Preparation prevents poor performance. Measure twice, cut once.",
     }
@@ -367,7 +368,7 @@ async def rick_debrief(params: DebriefInput) -> str:
                 "Specific technology deep-dives based on findings",
             ],
         },
-        "closing": f"Engagement complete. Findings documented. Remediation roadmap delivered. Standing by for questions and retest scheduling. Semper Fidelis. — {CALLSIGN}",
+        "closing": f"Engagement complete. Findings documented. Remediation roadmap delivered. Standing by for questions and retest scheduling. {MOTTO + '. ' if MOTTO else ''}— {CALLSIGN}",
         "rick_note": "The debrief is where you prove you're a partner, not just a tester. Tell the story. Acknowledge what they do well. Make the remediation actionable. And always recommend a retest — the work isn't done until the fixes are verified.",
     }
     return _fmt(debrief, params.response_format, title=f"{CALLSIGN} Debrief")

@@ -13,6 +13,7 @@ from rick_mcp.constants import (
     ResponseFormat,
 )
 from rick_mcp.formatting import _fmt, _read_md, _safe_tool, _sanitize
+from rick_mcp.identity import MOTTO, TAGLINE, bio_summary, is_configured
 from rick_mcp.models import HealthInput, ModeInput
 
 
@@ -33,8 +34,8 @@ async def rick_status() -> str:
             "languages": len(LANGUAGES),
             "primary_tools": len(PRIMARY_TOOLS),
             "status": "OPERATIONAL — Standing by for mission parameters.",
-            "rick_says": "I'm still building. Are you?",
-            "semper_fidelis": True,
+            "tagline": TAGLINE,
+            **({"motto": MOTTO} if MOTTO else {}),
         },
         ResponseFormat.MARKDOWN,
         title=f"{CALLSIGN} Status",
@@ -270,11 +271,17 @@ async def rick_demo() -> str:
     sections: list[str] = []
     sections.append("# Rick MCP — The Full Tour")
     sections.append("")
-    sections.append(
-        "Rick is the father. jiveturkey is the son. The MCP is Rick. "
-        f"{tool_count()} tools, {resource_count()} resources, built with Marine Corps precision. "
-        "Here's one from each category."
-    )
+    if is_configured():
+        sections.append(
+            f"{bio_summary()} The MCP is Rick. "
+            f"{tool_count()} tools, {resource_count()} resources, built with precision. "
+            "Here's one from each category."
+        )
+    else:
+        sections.append(
+            f"Rick MCP — {tool_count()} tools, {resource_count()} resources. "
+            "Security through craftsmanship. Here's one from each category."
+        )
     sections.append("")
 
     demos = [
@@ -391,7 +398,10 @@ async def rick_demo() -> str:
     sections.append("")
     sections.append("Run `rick_capabilities` for the full map. Run `rick_health` to verify everything's operational.")
     sections.append("")
-    sections.append("*I'm still building. Are you? — Semper Fidelis.*")
+    _closing = f"*{TAGLINE}*"
+    if MOTTO:
+        _closing = f"*{TAGLINE} — {MOTTO}.*"
+    sections.append(_closing)
 
     return "\n".join(sections)
 
@@ -415,9 +425,9 @@ async def rick_capabilities() -> str:
 
     caps = {
         "who_is_rick": (
-            "Rick is the father. jiveturkey is the son. "
-            f"This MCP server IS the resume — {tool_count()} tools, {resource_count()} resources, "
-            "built with Marine Corps precision. Every tool proves a claim. "
+            (bio_summary() + " " if is_configured() else "")
+            + f"This MCP server IS the resume — {tool_count()} tools, {resource_count()} resources, "
+            "built with precision. Every tool proves a claim. "
             "Every resource tells the story."
         ),
         "offensive_recon_and_assessment": {
@@ -476,18 +486,26 @@ async def rick_capabilities() -> str:
                 "rick_cve": "NVD CVE lookup — search by ID or keyword, cached 24 hours",
             },
         },
+        "dick_mode_tools": {
+            "description": "Dick's JARVIS — proactive, chained, situationally aware",
+            "tools": {
+                "rick_full_auto": "Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained automatically.",
+                "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings. Persists across conversations.",
+                "rick_next_move": "Situational awareness — analyzes position, findings, and kill chain state. Tells you what to do next.",
+            },
+        },
         "meta": {
             "description": "Rick talking about Rick",
             "tools": {
                 "rick_status": "Server status — version, counts, operational readiness",
                 "rick_health": "Health check with optional self-healing (fix=True)",
                 "rick_demo": "Guided tour — fires one tool from each category",
-                "rick_mode": "Activate persona modes (be_rick, pentest_mode, mentor_mode, etc.)",
+                "rick_mode": "Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)",
                 "rick_capabilities": "You're looking at it",
             },
         },
         "resources": {
-            "description": "25 identity resources — who jiveturkey is, queryable by AI",
+            "description": f"{resource_count()} identity resources — operator profile, queryable by AI",
             "categories": {
                 "profile://": "10 resources — summary, values, heritage, stack, methodology, mantras, human, entertainment, timeline, rick_and_jiveturkey",
                 "doc://": "9 resources — soul, the-book, working-with-me, profile, achievements, contributing, changelog, security, war-stories",

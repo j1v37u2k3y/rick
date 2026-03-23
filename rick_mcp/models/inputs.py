@@ -200,7 +200,7 @@ class ModeInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     mode: str = Field(
         ...,
-        description="Mode: 'be_rick', 'pentest_mode', 'mentor_mode', 'evaluate_fit', 'engagement_ops'",
+        description="Mode: 'be_rick', 'dick_mode', 'pentest_mode', 'mentor_mode', 'evaluate_fit', 'engagement_ops'",
         min_length=1,
         max_length=50,
     )

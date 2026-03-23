@@ -71,7 +71,7 @@ from rick_mcp.resources import (
     res_war_stories,
     res_wwm,
 )
-from rick_mcp.server import STARTUP_BANNER, mcp, resource_count, tool_count
+from rick_mcp.server import _build_banner, mcp, resource_count, tool_count
 from rick_mcp.tools import (
     rick_attack_chain,
     rick_c2_compare,
@@ -152,7 +152,7 @@ __all__ = [
     "WirelessInput",
     # Server
     "mcp",
-    "STARTUP_BANNER",
+    "_build_banner",
     "tool_count",
     "resource_count",
     # Resources

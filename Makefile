@@ -6,7 +6,7 @@ MAX_FILE_LINES := 1500
 check: lint format-check typecheck file-length test
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
-	@echo " ALL CHECKS PASSED — Semper Fidelis"
+	@echo " ALL CHECKS PASSED"
 	@echo "═══════════════════════════════════════════════"
 
 # Auto-fix what can be fixed
@@ -58,7 +58,7 @@ smoke:
 	@python smoke_test.py
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
-	@echo " ALL TOOLS OPERATIONAL — Semper Fidelis"
+	@echo " ALL TOOLS OPERATIONAL"
 	@echo "═══════════════════════════════════════════════"
 
 # Full dev environment setup
@@ -74,13 +74,18 @@ setup:
 	@echo " Pre-commit hooks installed."
 	@echo " Private content directory: ~/.rick_mcp/soul/"
 	@echo ""
-	@echo " To give Rick his soul, add these files:"
-	@echo "   ~/.rick_mcp/soul/SOUL.md       — Core principles and values"
-	@echo "   ~/.rick_mcp/soul/my book.txt   — Memoirs of jiveturkey"
-	@echo "   ~/.rick_mcp/soul/PROFILE.md    — Current state, what's on the horizon"
+	@echo " To configure your identity:"
+	@echo "   cp soul-example/identity.yaml.example ~/.rick_mcp/identity.yaml"
+	@echo "   Edit ~/.rick_mcp/identity.yaml with your details"
 	@echo ""
-	@echo " These are private — they never enter git."
-	@echo " Without them, Rick still works. With them, Rick has a soul."
+	@echo " For the full experience, also add:"
+	@echo "   ~/.rick_mcp/soul/SOUL.md       — Your core principles"
+	@echo "   ~/.rick_mcp/soul/my book.txt   — Your memoirs"
+	@echo "   ~/.rick_mcp/soul/PROFILE.md    — Current state"
+	@echo ""
+	@echo " See soul-example/ for all templates."
+	@echo " Without identity files, Rick works with generic defaults."
+	@echo " With them, Rick becomes yours."
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
 	@echo " Setup complete. Run 'make check' to verify."

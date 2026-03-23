@@ -75,8 +75,11 @@ def _read_md(filename: str) -> str:
 
 
 def _read_data(category: str, name: str) -> str:
-    """Read a markdown file from rick_mcp/data/{category}/{name}.md."""
-    path = Path(__file__).parent / "data" / category / f"{name}.md"
-    if path.exists():
-        return path.read_text(encoding="utf-8")
-    return f"Data file {category}/{name}.md not found."
+    """Read a markdown file. Checks ~/.rick_mcp/ first, then bundled data."""
+    private_path = Path.home() / ".rick_mcp" / category / f"{name}.md"
+    if private_path.exists():
+        return private_path.read_text(encoding="utf-8")
+    bundled_path = Path(__file__).parent / "data" / category / f"{name}.md"
+    if bundled_path.exists():
+        return bundled_path.read_text(encoding="utf-8")
+    return f"Content for {category}/{name} not configured. Add ~/.rick_mcp/{category}/{name}.md or see soul-example/."

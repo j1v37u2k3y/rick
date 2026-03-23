@@ -389,7 +389,7 @@ async def rick_attack_chain(params: AttackChainInput) -> str:
                     "tools": ["Custom analysis", "SBOM tools"],
                 },
             ],
-            "rick_note": "Supply chain is the frontier. Most orgs trust their dependencies blindly. CI/CD pipelines are the new domain admin — compromise the build, own everything downstream.",
+            "rick_note": "Supply chain is the next battlefield. Most orgs trust their dependencies blindly. CI/CD pipelines are the new domain admin — compromise the build, own everything downstream.",
         },
     }
     s = params.scenario.lower().strip()

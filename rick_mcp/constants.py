@@ -1,94 +1,56 @@
-"""Core identity constants and enums for rick_mcp."""
+"""Constants and enums for rick_mcp. Identity loaded from ~/.rick_mcp/identity.yaml."""
 
 from enum import Enum
 
-# ═══════════════ CORE IDENTITY CONSTANTS ═══════════════
+from rick_mcp.identity import (
+    CALLSIGN,
+    CERTIFICATIONS,
+    LANGUAGES,
+    PRIMARY_TOOLS,
+    SPECIALIZATIONS,
+)
 
-CALLSIGN = "j1v37u2k3y"
-
-CERTIFICATIONS = [
-    "OSCP (2019)",
-    "OSWA",
-    "ZCE",
-    "MCTS",
-    "MongoDB",
-]
-
-LANGUAGES = [
-    "PHP",
-    "JavaScript",
-    "jQuery",
-    "MySQL",
-    "MSSQL",
-    "Perl",
-    "Python",
-    "PowerShell",
-    "C#",
-    "JSON",
-    "Golang",
-]
-
-PRIMARY_TOOLS = [
-    "Burp Suite (preferred proxy)",
-    "Metasploit",
-    "Nmap",
-    "Gobuster",
-    "ffuf",
-    "Nuclei",
-    "SQLMap",
-    "Hashcat",
-    "John the Ripper",
-    "BloodHound",
-    "Responder",
-    "Impacket",
-    "CrackMapExec",
-    "Chisel",
-    "Ligolo-ng",
-    "LinPEAS/WinPEAS",
-    "Custom Python scripts",
-]
-
-SPECIALIZATIONS = [
-    "Web Application Security",
-    "Network Infrastructure Pentesting",
-    "Active Directory Attacks",
-    "Exploit Development",
-    "Cloud Security (Azure, AWS, GCP)",
-    "Container Security (Docker, K8s)",
-    "API Security Testing",
-    "Red Team Operations",
+# Re-export identity fields so the rest of the codebase can import from here
+__all__ = [
+    "CALLSIGN",
+    "CERTIFICATIONS",
+    "LANGUAGES",
+    "PRIMARY_TOOLS",
+    "SPECIALIZATIONS",
+    "MISSION_PHASES",
+    "ResponseFormat",
 ]
 
 MISSION_PHASES = [
     {
         "phase": 1,
         "name": "Reconnaissance",
-        "description": "Systematic target profiling and intelligence gathering. Frontier scouting applied to digital terrain.",
+        "description": "Systematic target profiling and intelligence gathering.",
     },
     {
         "phase": 2,
         "name": "Vulnerability Assessment",
-        "description": "Technical scanning + manual analysis with military precision and frontier persistence.",
+        "description": "Technical scanning + manual analysis with precision and persistence.",
     },
     {
         "phase": 3,
         "name": "Exploitation",
-        "description": "Controlled demonstrations proving real-world impact. No backing down from technical challenges.",
+        "description": "Controlled demonstrations proving real-world impact.",
     },
     {
         "phase": 4,
         "name": "Privilege Escalation",
-        "description": "Advanced persistent threat simulation with Marine Corps attention to detail.",
+        "description": "Advanced persistent threat simulation with attention to detail.",
     },
     {
         "phase": 5,
         "name": "Lateral Movement",
-        "description": "Network traversal and compromise chain analysis. Mapping digital territory.",
+        "description": "Network traversal and compromise chain analysis.",
     },
     {
         "phase": 6,
         "name": "Documentation",
-        "description": "Military-grade evidence preservation and reporting. Chain of custody maintained.",
+        "description": "Evidence preservation and reporting. Chain of custody maintained.",
     },
     {
         "phase": 7,
