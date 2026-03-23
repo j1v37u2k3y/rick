@@ -2,6 +2,25 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.1.0] - 2026-03-22
+
+### Dick Mode + JARVIS Tools — The Alter Ego
+
+- **New persona**: `dick_mode` — elite tradecraft alter ego with 1337 principles, full arsenal, zero hesitation
+- **New tool**: `rick_full_auto` — give a target, get the complete playbook (recon → vuln → attack chain → tools → pivot) chained automatically
+- **New tool**: `rick_kill_chain` — stateful 7-phase kill chain tracker, persisted to `~/.rick_mcp/dick/`, survives across conversations
+- **New tool**: `rick_next_move` — JARVIS-level situational awareness, analyzes position + findings + kill chain state, recommends next actions
+- 6 modes (added `dick_mode` to `AVAILABLE_MODES` and `MODE_BUILDERS`)
+- 34 tools total (up from 31)
+- `rick_capabilities` updated with new `dick_mode_tools` category
+- mypy added to pre-commit hooks — type errors can no longer slip through
+- `types-PyYAML` added to dev dependencies
+- `test_dick.py` — 33 new tests covering all Dick tools, helpers, and input validation
+- `test_be_rick_mode` fixed to work without `identity.yaml` (CI-safe)
+- 439 tests total (up from 406)
+
+---
+
 ## [3.0.0] - 2026-03-22
 
 ### Identity Extraction — Rick Becomes a Platform
