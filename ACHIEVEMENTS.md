@@ -53,12 +53,26 @@ Personal identity data was extracted from hardcoded Python strings into structur
 configurable and maintainable — update the content, not the code. This separation of concerns made Rick MCP a cleaner
 architecture and a better teaching tool.
 
+## v3.1.0 — Dick Mode + JARVIS Tools
+
+Rick built the wall. Dick opens every door.
+
+Dick is the alter ego — the 1337 side. Same soul, same values, zero hesitation. When Rick says "recon before everything,"
+Dick has already finished the recon and is three steps into the kill chain.
+
+Three new JARVIS-style tools landed: `rick_full_auto` chains five tools automatically for any target.
+`rick_kill_chain` tracks your position through the 7-phase kill chain with persistent state that survives across
+conversations. `rick_next_move` analyzes where you are, what you've found, and tells you exactly what to do next —
+phase-aware, position-aware, findings-aware.
+
+mypy joined the pre-commit hooks. Type errors no longer slip through the cracks.
+
 ## The Numbers
 
-- 31 tools
-- 25 resources
-- 5 MCP prompts
-- 406 tests
+- 34 tools
+- 24 resources
+- 6 MCP prompts
+- 439 tests
 - Full CI/CD pipeline with Docker verification
 - Integration tests through MCP protocol layer
 - Property-based fuzz testing on all input models
