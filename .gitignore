@@ -12,7 +12,3 @@ dist/
 .mypy_cache/
 .hypothesis/
 .badges/
-
-# Private content — lives in ~/.rick_mcp/soul/
-SOUL.md
-my book.txt

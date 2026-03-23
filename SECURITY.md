@@ -8,7 +8,8 @@ If you discover a security vulnerability in this project, please report it respo
 
 ### How to Report
 
-Use [GitHub Security Advisories](https://github.com/j1v37u2k3y/rick/security/advisories/new) to report vulnerabilities privately, or see [CONTRIBUTING.md](CONTRIBUTING.md) for general contact guidance.
+Use [GitHub Security Advisories](https://github.com/j1v37u2k3y/rick/security/advisories/new) to report vulnerabilities
+privately, or see [CONTRIBUTING.md](CONTRIBUTING.md) for general contact guidance.
 
 Subject line: `[SECURITY] rick_mcp - Brief description`
 
