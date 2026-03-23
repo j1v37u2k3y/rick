@@ -486,12 +486,13 @@ async def rick_capabilities() -> str:
                 "rick_cve": "NVD CVE lookup — search by ID or keyword, cached 24 hours",
             },
         },
-        "dick_mode_tools": {
-            "description": "Dick's JARVIS — proactive, chained, situationally aware",
+        "jarvis_tools": {
+            "description": "JARVIS — the intelligence layer. Proactive, chained, situationally aware.",
             "tools": {
                 "rick_full_auto": "Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained automatically.",
                 "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings. Persists across conversations.",
                 "rick_next_move": "Situational awareness — analyzes position, findings, and kill chain state. Tells you what to do next.",
+                "rick_sitrep": "Situation Report — one command, full tactical picture. Kill chain, findings, mission log, recommendations.",
             },
         },
         "meta": {
@@ -500,7 +501,7 @@ async def rick_capabilities() -> str:
                 "rick_status": "Server status — version, counts, operational readiness",
                 "rick_health": "Health check with optional self-healing (fix=True)",
                 "rick_demo": "Guided tour — fires one tool from each category",
-                "rick_mode": "Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)",
+                "rick_mode": "Activate persona modes (be_rick, dick_mode, jarvis, pentest_mode, mentor_mode, etc.)",
                 "rick_capabilities": "You're looking at it",
             },
         },

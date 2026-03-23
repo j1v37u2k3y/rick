@@ -74,7 +74,7 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "3.1.0"
+        assert __version__ == "3.2.0"
         banner = _build_banner()
         assert __version__ in banner
 
@@ -1279,7 +1279,7 @@ class TestPromptBuilders:
     def test_available_modes(self):
         from rick_mcp.prompts import AVAILABLE_MODES, MODE_BUILDERS
 
-        assert len(AVAILABLE_MODES) == 6
+        assert len(AVAILABLE_MODES) == 7
         for mode in AVAILABLE_MODES:
             assert mode in MODE_BUILDERS
 

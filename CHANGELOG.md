@@ -2,6 +2,23 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.2.0] - 2026-03-23
+
+### JARVIS — The Intelligence Layer
+
+- **New mode**: `jarvis` — master prompt that turns Claude into a proactive orchestrator with automatic tool chaining, kill chain tracking, and situational awareness
+- **New tool**: `rick_sitrep` — Situation Report. One command, full tactical picture: kill chain progress, findings, mission log, tool history, tactical assessment
+- **Enhanced state model**: engagement JSON now tracks `mission_log`, `tool_history`, `notes`, and `objective`
+- Three new state helpers: `_add_mission_log()`, `_add_tool_history()`, `_add_note()`
+- `rick_full_auto` now auto-populates mission log and tool history on engagement creation
+- `rick_kill_chain` add_finding and advance now auto-log to mission log
+- JARVIS prompt embeds operator identity (soul, summary, stack, methodology) for full context from activation
+- 7 modes total (added `jarvis`)
+- 35 tools total (added `rick_sitrep`)
+- 449 tests total
+
+---
+
 ## [3.1.0] - 2026-03-22
 
 ### Dick Mode + JARVIS Tools — The Alter Ego

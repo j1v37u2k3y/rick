@@ -1,14 +1,14 @@
-# Rick MCP Server v3.1
+# Rick MCP Server v3.2
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-439%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-449%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-34 tools. 24 resources. Fork it, fill it, make it yours.
+35 tools. 24 resources. Fork it, fill it, make it yours.
 
 ## Why an MCP Server
 
@@ -16,7 +16,7 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
 who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
-structured resources an AI can reason over. And there are 34 functional tools that *do things* — generate ROE docs,
+structured resources an AI can reason over. And there are 35 functional tools that *do things* — generate ROE docs,
 model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
 IR playbooks, compare C2 frameworks, and scope entire engagements.
 
@@ -136,7 +136,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 34 Functional Tools
+## Tools — 35 Functional Tools
 
 ### Offensive — Recon & Assessment
 
@@ -201,6 +201,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | `rick_full_auto`  | Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained. |
 | `rick_kill_chain` | Stateful 7-phase kill chain tracker — persists across conversations                               |
 | `rick_next_move`  | Situational awareness — analyzes position, findings, and kill chain state. What's next.           |
+| `rick_sitrep`     | Situation Report — one command, full tactical picture. Kill chain, findings, mission log.         |
 
 ### Meta
 
@@ -297,7 +298,7 @@ Access these via MCP resource URIs. Content is loaded from your private `~/.rick
 ### Run Tests
 
 ```bash
-make test        # 439 tests across 5 test files
+make test        # 449 tests across 5 test files
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -320,7 +321,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run 439 tests                                               |
+| `make test`        | Run 449 tests                                               |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |

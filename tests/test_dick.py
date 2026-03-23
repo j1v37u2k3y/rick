@@ -319,3 +319,128 @@ class TestDickHelpers:
             KillChainInput(action="status", engagement_id="x", phase=0)
         with pytest.raises(ValidationError):
             KillChainInput(action="status", engagement_id="x", phase=8)
+
+
+class TestRickSitrep:
+    @pytest.mark.asyncio
+    async def test_sitrep_no_engagement(self, tmp_path):
+        from rick_mcp.tools.dick import SitrepInput, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            result = await rick_sitrep(SitrepInput(engagement_id="ghost"))
+        assert "No engagement" in result or "error" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_sitrep_new_engagement(self, tmp_path):
+        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-eng"))
+            result = await rick_sitrep(SitrepInput(engagement_id="sit-eng"))
+        assert "SITREP" in result
+        assert "0/7" in result or "sit-eng" in result
+
+    @pytest.mark.asyncio
+    async def test_sitrep_with_findings(self, tmp_path):
+        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-find"))
+            await rick_kill_chain(KillChainInput(action="advance", engagement_id="sit-find", phase=1))
+            await rick_kill_chain(
+                KillChainInput(action="add_finding", engagement_id="sit-find", finding="Port 443 open")
+            )
+            result = await rick_sitrep(SitrepInput(engagement_id="sit-find"))
+        assert "Port 443" in result
+        assert "1" in result  # at least 1 finding
+
+    @pytest.mark.asyncio
+    async def test_sitrep_completed(self, tmp_path):
+        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-done"))
+            for phase in range(1, 8):
+                await rick_kill_chain(KillChainInput(action="advance", engagement_id="sit-done", phase=phase))
+                await rick_kill_chain(KillChainInput(action="advance", engagement_id="sit-done"))
+            result = await rick_sitrep(SitrepInput(engagement_id="sit-done"))
+        assert "7/7" in result or "COMPLETE" in result
+
+    @pytest.mark.asyncio
+    async def test_sitrep_with_mission_log(self, tmp_path):
+        from rick_mcp.tools.dick import SitrepInput, _save_state, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _save_state(
+                "log-eng",
+                {
+                    "id": "log-eng",
+                    "target": "test.com",
+                    "target_type": "web_app",
+                    "kill_chain": [
+                        dict(p)
+                        for p in __import__("rick_mcp.tools.dick", fromlist=["KILL_CHAIN_PHASES"]).KILL_CHAIN_PHASES
+                    ],
+                    "mission_log": [{"timestamp": "2026-03-23T12:00:00Z", "entry": "Test entry"}],
+                },
+            )
+            result = await rick_sitrep(SitrepInput(engagement_id="log-eng"))
+        assert "Test entry" in result
+
+    @pytest.mark.asyncio
+    async def test_sitrep_backward_compat(self, tmp_path):
+        """Old state files without mission_log/tool_history should work."""
+        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, SitrepInput, _save_state, rick_sitrep
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _save_state(
+                "old-eng",
+                {
+                    "id": "old-eng",
+                    "target": "legacy.com",
+                    "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+                },
+            )
+            result = await rick_sitrep(SitrepInput(engagement_id="old-eng"))
+        assert "legacy.com" in result
+
+
+class TestStateHelpers:
+    def test_add_mission_log(self, tmp_path):
+        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_mission_log, _load_state, _save_state
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _save_state("ml-eng", {"id": "ml-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
+            _add_mission_log("ml-eng", "Test log entry")
+            state = _load_state("ml-eng")
+        assert len(state["mission_log"]) == 1
+        assert state["mission_log"][0]["entry"] == "Test log entry"
+
+    def test_add_tool_history(self, tmp_path):
+        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_tool_history, _load_state, _save_state
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _save_state("th-eng", {"id": "th-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
+            _add_tool_history("th-eng", "rick_recon", "Recon for web_app")
+            state = _load_state("th-eng")
+        assert len(state["tool_history"]) == 1
+        assert state["tool_history"][0]["tool"] == "rick_recon"
+
+    def test_add_note(self, tmp_path):
+        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_note, _load_state, _save_state
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _save_state("note-eng", {"id": "note-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
+            _add_note("note-eng", "Client uses CrowdStrike")
+            state = _load_state("note-eng")
+        assert "Client uses CrowdStrike" in state["notes"]
+
+    def test_helpers_no_state(self, tmp_path):
+        """Helpers should silently return when engagement doesn't exist."""
+        from rick_mcp.tools.dick import _add_mission_log, _add_note, _add_tool_history
+
+        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            _add_mission_log("ghost", "entry")
+            _add_tool_history("ghost", "tool")
+            _add_note("ghost", "note")
+        # No error raised — silent return

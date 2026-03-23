@@ -3,7 +3,7 @@
 from rick_mcp.tools.career import rick_compatibility_check, rick_cover_letter, rick_mentorship
 from rick_mcp.tools.cve import rick_cve
 from rick_mcp.tools.defensive import rick_detection_rules, rick_hardening, rick_incident_response, rick_log_analysis
-from rick_mcp.tools.dick import rick_full_auto, rick_kill_chain, rick_next_move
+from rick_mcp.tools.dick import rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep
 from rick_mcp.tools.engagement import (
     rick_client_onboarding,
     rick_debrief,
@@ -38,6 +38,7 @@ __all__ = [
     "rick_full_auto",
     "rick_kill_chain",
     "rick_next_move",
+    "rick_sitrep",
     "rick_c2_compare",
     "rick_cheatsheet",
     "rick_client_onboarding",
