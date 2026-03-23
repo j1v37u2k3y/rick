@@ -1,0 +1,54 @@
+# Rick MCP Identity Configuration
+# Copy this to ~/.rick_mcp/identity.yaml and fill in your details.
+# All fields are optional — Rick works with generic defaults if omitted.
+
+callsign: "your_callsign"
+name: "Your Name"
+title: "Your Title"
+years_experience: 0
+
+military:
+  branch: ""          # e.g., "USMC", "US Army", "US Navy"
+  role: ""            # e.g., "Aviation Electronics Technician"
+  platform: ""        # e.g., "AV-8B Harrier"
+
+education:
+  degree: ""          # e.g., "B.S."
+  field: ""           # e.g., "Computer Science"
+  school: ""          # e.g., "University of Maryland"
+
+certifications:
+  - "OSCP"
+  # - "OSWA"
+  # - "CISSP"
+
+languages:
+  - "Python"
+  - "JavaScript"
+  # Add your languages
+
+primary_tools:
+  - "Burp Suite"
+  - "Nmap"
+  - "Metasploit"
+  # Add your preferred tools
+
+specializations:
+  - "Web Application Security"
+  - "Network Pentesting"
+  # Add your specializations
+
+location: ""          # e.g., "Colorado"
+website: ""           # e.g., "https://yoursite.com"
+family: ""            # e.g., "Father of three" (optional, personal)
+motto: ""             # e.g., "Semper Fidelis" (appears in signatures and closings)
+tagline: "Security through craftsmanship."  # Your personal tagline
+aliases: []           # Alternative handles/usernames
+
+background_story: ""  # Brief origin story for mentor mode prompts
+# e.g., "Self-taught from a barracks room in 2003. No bootcamp, no hand-holding."
+
+highlights:           # Key achievements for cover letter generation
+  # cert_name: "Description of how you use this certification"
+  # e.g.:
+  # oscp: "OSCP certified with hands-on penetration testing across web, network, and AD environments"
