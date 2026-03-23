@@ -8,6 +8,7 @@ JARVIS energy. 1337 tradecraft. Same soul — zero hesitation.
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,15 +45,16 @@ def _state_file(engagement_id: str) -> Path:
     return _STATE_DIR / f"{safe_id}.json"
 
 
-def _load_state(engagement_id: str) -> dict:
+def _load_state(engagement_id: str) -> dict[str, Any]:
     """Load engagement state from disk."""
     path = _state_file(engagement_id)
     if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
+        result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+        return result
     return {}
 
 
-def _save_state(engagement_id: str, state: dict) -> None:
+def _save_state(engagement_id: str, state: dict[str, Any]) -> None:
     """Save engagement state to disk."""
     _STATE_DIR.mkdir(parents=True, exist_ok=True)
     path = _state_file(engagement_id)
@@ -243,15 +245,15 @@ async def rick_full_auto(params: FullAutoInput) -> str:
     # Initialize kill chain state if engagement_id provided
     if params.engagement_id:
         eng_id = _sanitize(params.engagement_id) or params.engagement_id
-        state = {
+        kill_chain = [dict(p) for p in KILL_CHAIN_PHASES]
+        kill_chain[0]["status"] = "active"
+        state: dict[str, Any] = {
             "id": eng_id,
             "target": target,
             "target_type": target_type,
             "created": datetime.now(timezone.utc).isoformat(),
-            "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+            "kill_chain": kill_chain,
         }
-        # Auto-advance recon to active
-        state["kill_chain"][0]["status"] = "active"
         _save_state(eng_id, state)
         sections.append("---")
         sections.append(f"## Engagement Tracking: `{eng_id}`")
@@ -424,9 +426,10 @@ async def rick_kill_chain(params: KillChainInput) -> str:
         phase_num = params.phase
         if not phase_num:
             # Add to current active phase
-            active = next((p for p in state["kill_chain"] if p["status"] == "active"), None)
-            if active:
-                phase_num = active["phase"]
+            kc = state["kill_chain"]
+            active_p = next((p for p in kc if p["status"] == "active"), None)
+            if active_p:
+                phase_num = active_p["phase"]
             else:
                 return "Error: No active phase. Specify phase= or advance to a phase first."
 
@@ -515,7 +518,7 @@ async def rick_next_move(params: NextMoveInput) -> str:
     position = _sanitize(params.current_position) if params.current_position else None
     extra_findings = _sanitize(params.findings_so_far) if params.findings_so_far else None
 
-    result: dict[str, object] = {
+    result: dict[str, Any] = {
         "engagement": eng_id,
         "target": state.get("target", "Unknown"),
     }

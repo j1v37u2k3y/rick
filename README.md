@@ -8,7 +8,7 @@
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-31 tools. 25 resources. Fork it, fill it, make it yours.
+34 tools. 24 resources. Fork it, fill it, make it yours.
 
 ## Why an MCP Server
 
@@ -16,7 +16,7 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
 who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
-structured resources an AI can reason over. And there are 31 functional tools that *do things* — generate ROE docs,
+structured resources an AI can reason over. And there are 34 functional tools that *do things* — generate ROE docs,
 model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
 IR playbooks, compare C2 frameworks, and scope entire engagements.
 
@@ -335,7 +335,7 @@ GitHub Actions runs on every push/PR against Python 3.10, 3.12, and 3.14. Includ
 
 ## Achievements
 
-Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 31 tools, 406 tests, full CI/CD pipeline.
+Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 34 tools, 406 tests, full CI/CD pipeline.
 
 ## Built With
 
