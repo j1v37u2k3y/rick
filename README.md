@@ -51,14 +51,12 @@ make setup
 
 Rick works without these files, but with them he has a soul. These are private — they never enter git.
 
-See `soul-example/` for the full directory structure and example files.
+See `soul-example/` for a fully worked example using a fictional operator (sh4d0wf0x).
 
 ```bash
-# Copy the example templates
-cp -r soul-example/* ~/.rick_mcp/
-
-# Rename .example files to their real names
-find ~/.rick_mcp -name "*.example" -exec sh -c 'mv "$1" "${1%.example}"' _ {} \;
+# Copy the example files
+cp soul-example/identity.yaml ~/.rick_mcp/
+cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/
 
 # Edit your identity — this is the core config
 $EDITOR ~/.rick_mcp/identity.yaml
@@ -66,27 +64,27 @@ $EDITOR ~/.rick_mcp/identity.yaml
 
 **What lives where:**
 
-| Path | Purpose |
-|------|---------|
-| `~/.rick_mcp/identity.yaml` | Name, callsign, certs, tools, tagline — powers all output |
-| `~/.rick_mcp/soul/SOUL.md` | Core principles and values — feeds `be_rick` and `dick_mode` |
-| `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode` |
-| `~/.rick_mcp/soul/PROFILE.md` | Current state, what's on the horizon |
-| `~/.rick_mcp/profiles/` | 10 identity resources (stack, methodology, timeline, etc.) |
-| `~/.rick_mcp/resume/` | 4 resume resources (overview, evidence, portfolio, contact) |
-| `~/.rick_mcp/docs/` | War stories and additional content |
+| Path                           | Purpose                                                      |
+|--------------------------------|--------------------------------------------------------------|
+| `~/.rick_mcp/identity.yaml`    | Name, callsign, certs, tools, tagline — powers all output    |
+| `~/.rick_mcp/soul/SOUL.md`     | Core principles and values — feeds `be_rick` and `dick_mode` |
+| `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode`           |
+| `~/.rick_mcp/soul/PROFILE.md`  | Current state, what's on the horizon                         |
+| `~/.rick_mcp/profiles/`        | 10 identity resources (stack, methodology, timeline, etc.)   |
+| `~/.rick_mcp/resume/`          | 4 resume resources (overview, evidence, portfolio, contact)  |
+| `~/.rick_mcp/docs/`            | War stories and additional content                           |
 
-Rick's prompts pull live from these files at call time. Update the soul, update Rick's voice. Without these files, Rick falls back to generic defaults.
+Rick's prompts pull live from these files at call time. Update the soul, update Rick's voice. Without these files, Rick
+falls back to generic defaults.
 
 ### Make It Yours
 
 1. **Clone** — `git clone https://github.com/j1v37u2k3y/rick.git && cd rick`
 2. **Setup** — `make setup`
-3. **Copy templates** — `cp -r soul-example/* ~/.rick_mcp/`
-4. **Rename** — `find ~/.rick_mcp -name "*.example" -exec sh -c 'mv "$1" "${1%.example}"' _ {} \;`
-5. **Edit identity** — `$EDITOR ~/.rick_mcp/identity.yaml`
-6. **Add your soul** — Edit `~/.rick_mcp/soul/` with your values, your story, your profile
-7. **Done** — Rick now speaks for you
+3. **Copy examples** — `cp soul-example/identity.yaml ~/.rick_mcp/ && cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/`
+4. **Edit identity** — `$EDITOR ~/.rick_mcp/identity.yaml`
+5. **Add your soul** — Edit `~/.rick_mcp/soul/` with your values, your story, your profile
+6. **Done** — Rick now speaks for you
 
 Your identity files live outside the repo in `~/.rick_mcp/`. The tools are generic. The soul is yours.
 
