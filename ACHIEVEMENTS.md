@@ -30,42 +30,13 @@ A webpage sits there and waits to be read. Rick responds.
 
 Rick is a living system that an AI can query, reason about, and use as a tool. An LLM asks Rick for identity data and
 gets structured results back. It queries values, methodology, and capabilities — all as resources an AI can reason
-over. And there are 31 functional tools that *do things* — generate ROE docs, model threats, look up CVEs, track
+over. And there are 34 functional tools that *do things* — generate ROE docs, model threats, look up CVEs, track
 engagements, recommend tools, write cover letters matched to job postings.
 
 Most people send a PDF resume. Rick MCP is a running server that proves every claim it makes. `make check` and it
 all lights up green.
 
-## v2.0.0 — The Full Build (March 2026)
-
-22 tools became 30. The defensive side got real — incident response playbooks, Sigma/YARA detection rules, log analysis
-guides. Offensive expanded into wireless, cloud attack paths, C2 framework comparison, payload methodology. The
-engagement lifecycle closed with a scoping calculator. War stories came from the field. A career timeline told the full
-journey.
-
-Code quality hardened: typed formatting helpers, CVE response caching, tracker exports in CSV and Markdown.
-Testing infrastructure expanded with MCP protocol-level integration tests, Hypothesis property-based fuzzing, and Docker
-build verification in CI. 406 tests. All green.
-
-## v3.0.0 — Identity Extraction
-
-Personal identity data was extracted from hardcoded Python strings into structured content files. The platform became
-configurable and maintainable — update the content, not the code. This separation of concerns made Rick MCP a cleaner
-architecture and a better teaching tool.
-
-## v3.1.0 — Dick Mode + JARVIS Tools
-
-Rick built the wall. Dick opens every door.
-
-Dick is the alter ego — the 1337 side. Same soul, same values, zero hesitation. When Rick says "recon before everything,"
-Dick has already finished the recon and is three steps into the kill chain.
-
-Three new JARVIS-style tools landed: `rick_full_auto` chains five tools automatically for any target.
-`rick_kill_chain` tracks your position through the 7-phase kill chain with persistent state that survives across
-conversations. `rick_next_move` analyzes where you are, what you've found, and tells you exactly what to do next —
-phase-aware, position-aware, findings-aware.
-
-mypy joined the pre-commit hooks. Type errors no longer slip through the cracks.
+See [CHANGELOG.md](CHANGELOG.md) for version-by-version details.
 
 ## The Numbers
 
