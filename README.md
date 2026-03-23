@@ -51,37 +51,41 @@ make setup
 
 Rick works without these files, but with them he has a soul. These are private — they never enter git.
 
-See `soul-example/` for the full directory structure and example files. Copy them into `~/.rick_mcp/` and fill in your
-own content:
+See `soul-example/` for the full directory structure and example files.
 
 ```bash
-# The setup command creates ~/.rick_mcp/soul/ for you.
-# Copy the examples and make them yours:
-
+# Copy the example templates
 cp -r soul-example/* ~/.rick_mcp/
 
-# Then edit:
-~/.rick_mcp/soul/SOUL.md        # Core principles and values
-~/.rick_mcp/soul/my book.txt    # Your writing — memoirs, essays, whatever you carry
-~/.rick_mcp/soul/PROFILE.md     # Current state, what's on the horizon, key learnings
-~/.rick_mcp/identity.yaml       # Name, callsign, tagline, contact info
+# Rename .example files to their real names
+find ~/.rick_mcp -name "*.example" -exec sh -c 'mv "$1" "${1%.example}"' _ {} \;
+
+# Edit your identity — this is the core config
+$EDITOR ~/.rick_mcp/identity.yaml
 ```
 
-Rick's prompts (`be_rick`, `mentor_mode`, etc.) pull live from these files at call time. Update the soul, update Rick's
-voice. The `doc://soul`, `doc://the-book`, and `doc://profile` resources serve this content to any MCP client.
+**What lives where:**
 
-If these files don't exist, Rick falls back to project-root copies (if present) or returns a default message.
+| Path | Purpose |
+|------|---------|
+| `~/.rick_mcp/identity.yaml` | Name, callsign, certs, tools, tagline — powers all output |
+| `~/.rick_mcp/soul/SOUL.md` | Core principles and values — feeds `be_rick` and `dick_mode` |
+| `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode` |
+| `~/.rick_mcp/soul/PROFILE.md` | Current state, what's on the horizon |
+| `~/.rick_mcp/profiles/` | 10 identity resources (stack, methodology, timeline, etc.) |
+| `~/.rick_mcp/resume/` | 4 resume resources (overview, evidence, portfolio, contact) |
+| `~/.rick_mcp/docs/` | War stories and additional content |
+
+Rick's prompts pull live from these files at call time. Update the soul, update Rick's voice. Without these files, Rick falls back to generic defaults.
 
 ### Make It Yours
 
-The fork workflow:
-
 1. **Clone** — `git clone https://github.com/j1v37u2k3y/rick.git && cd rick`
 2. **Setup** — `make setup`
-3. **Copy examples** — `cp -r soul-example/* ~/.rick_mcp/`
-4. **Edit identity** — Open `~/.rick_mcp/identity.yaml` and fill in your name, callsign, tagline, and contact
-5. **Add your soul** — Edit the files in `~/.rick_mcp/soul/` with your values, your story, your profile
-6. **Add your profiles** — Edit `~/.rick_mcp/profiles/` with your stack, methodology, timeline, etc.
+3. **Copy templates** — `cp -r soul-example/* ~/.rick_mcp/`
+4. **Rename** — `find ~/.rick_mcp -name "*.example" -exec sh -c 'mv "$1" "${1%.example}"' _ {} \;`
+5. **Edit identity** — `$EDITOR ~/.rick_mcp/identity.yaml`
+6. **Add your soul** — Edit `~/.rick_mcp/soul/` with your values, your story, your profile
 7. **Done** — Rick now speaks for you
 
 Your identity files live outside the repo in `~/.rick_mcp/`. The tools are generic. The soul is yours.
