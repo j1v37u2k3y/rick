@@ -7,6 +7,10 @@ from rick_mcp.formatting import _read_data, _read_md
 
 async def res_wwm() -> str:
     """Complete Working With Me guide — how to engage, what to expect, what I need."""
+    # Private first, project root second
+    private_path = Path.home() / ".rick_mcp" / "docs" / "working_with_me.md"
+    if private_path.exists():
+        return private_path.read_text(encoding="utf-8")
     return _read_md("WORKING_WITH_ME.md")
 
 

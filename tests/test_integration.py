@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from rick_mcp.constants import CALLSIGN
 from rick_mcp.server import mcp
 
 
@@ -24,7 +25,7 @@ class TestMCPProtocol:
             if isinstance(content, list)
             else (content.text if hasattr(content, "text") else str(content))
         )
-        assert "operator" in text
+        assert CALLSIGN in text
 
     @pytest.mark.asyncio
     async def test_call_rick_status(self):
