@@ -1,0 +1,74 @@
+# Rick MCP Identity Configuration
+# Copy this to ~/.rick_mcp/identity.yaml and fill in your details.
+# All fields are optional — Rick works with generic defaults if omitted.
+#
+# This example uses a fictional operator "sh4d0wf0x" to show what
+# a filled-out identity looks like. Replace everything with your own.
+
+callsign: "sh4d0wf0x"
+name: "Alex Chen"
+title: "Senior Security Consultant"
+years_experience: 12
+
+military:
+  branch: "US Air Force"
+  role: "Cyber Operations Specialist"
+  platform: "624th Operations Center"
+
+education:
+  degree: "B.S."
+  field: "Computer Science"
+  school: "Georgia Institute of Technology"
+
+certifications:
+  - "OSCP"
+  - "GPEN"
+  - "GCIH"
+  - "AWS Security Specialty"
+
+languages:
+  - "Python"
+  - "Go"
+  - "PowerShell"
+  - "JavaScript"
+  - "Bash"
+  - "C"
+
+primary_tools:
+  - "Burp Suite"
+  - "Nmap"
+  - "BloodHound"
+  - "Impacket"
+  - "Cobalt Strike"
+  - "Sliver"
+  - "ffuf"
+  - "Hashcat"
+  - "CrackMapExec"
+  - "Nuclei"
+  - "Terraform"
+  - "ScoutSuite"
+
+specializations:
+  - "Web Application Security"
+  - "Active Directory Attacks"
+  - "Cloud Security (AWS, Azure)"
+  - "Red Team Operations"
+  - "Container Security"
+  - "API Security Testing"
+
+location: "Atlanta, GA"
+website: "https://sh4d0wf0x.dev"
+family: "Dog dad. Two rescue greyhounds."
+motto: "Measure twice, hack once."
+tagline: "Breaking things so you can build them better."
+aliases:
+  - "shadowfox"
+  - "achen-sec"
+
+background_story: "Started in Air Force cyber ops. First real hack was a misconfigured Splunk instance on a red team exercise. Never looked back."
+
+highlights:
+  oscp: "OSCP certified — completed all AD sets and 10 standalone boxes in the exam"
+  gpen: "GPEN holder with focus on network infrastructure and pivoting techniques"
+  cloud: "AWS Security Specialty — designed cloud security architecture for three Fortune 500 clients"
+  red_team: "Led 15+ red team engagements including full-scope operations with physical access"

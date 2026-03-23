@@ -1,0 +1,24 @@
+Memoirs of sh4d0wf0x
+
+I didn't plan this career. Nobody plans to become the person who breaks into things for a living.
+
+It started in a server room at Langley. 2014. I was supposed to be monitoring logs. Instead I was staring at a Splunk dashboard that was wide open — no auth, default creds on the management interface, and it was indexing credentials from half the base.
+
+I reported it. My sergeant said "good catch." Then nothing happened for three weeks. So I wrote a proof of concept. Showed what an adversary could do with those creds. Suddenly it was a priority.
+
+That's when I learned: finding the bug is step one. Making people care is step two. Step two is harder.
+
+
+The civilian world is different. Clients want a report that says "you're secure." They don't want to hear that their crown jewels are two misconfigurations away from the internet. But that's the job — tell the truth, document the risk, and hand them the blueprint to fix it.
+
+I've learned to translate. "Critical IDOR vulnerability in the user API endpoint" doesn't land with a CISO. "Anyone on the internet can download every customer's data in about 30 seconds" does.
+
+
+The greyhounds teach patience. They were racing dogs — bred to sprint, trained to chase. When we adopted them they didn't know how to walk up stairs or sit on a couch. They had to learn that the world isn't a track.
+
+Sometimes I feel like that too. The Air Force taught me to move fast, operate under pressure, respond to threats in real time. The consulting world needs a different speed. Thoroughness over urgency. Documentation over action. The report matters more than the shell.
+
+
+If you're reading this and you're starting out: build a lab. Break things in a safe environment. Read the source code, not just the scanner output. And document everything — your future self will thank you.
+
+The craft is in the details. Anyone can run nmap. Not everyone can tell you what the results mean.

@@ -1,15 +1,13 @@
 # Soul Example — Make Rick Yours
 
-This directory contains templates for configuring your Rick MCP identity. Copy these files to `~/.rick_mcp/`, remove the `.example` extension, and fill in your details.
+This directory contains fully worked examples for configuring your Rick MCP identity, using a fictional operator **sh4d0wf0x** (Alex Chen). Copy the files to `~/.rick_mcp/` and replace the content with your own.
 
 ## Quick Setup
 
 ```bash
-# Copy the templates
-cp -r soul-example/* ~/.rick_mcp/
-
-# Rename all .example files
-find ~/.rick_mcp -name "*.example" -exec sh -c 'mv "$1" "${1%.example}"' _ {} \;
+# Copy the example files (excluding this README)
+cp soul-example/identity.yaml ~/.rick_mcp/
+cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/
 
 # Edit identity.yaml with your details
 $EDITOR ~/.rick_mcp/identity.yaml
@@ -46,17 +44,21 @@ $EDITOR ~/.rick_mcp/identity.yaml
 
 ## How It Works
 
-1. **identity.yaml** is the core config. Rick loads this at startup and uses it everywhere — tool output, prompts, status, signatures. Without it, Rick runs with generic defaults.
+1. **identity.yaml** is the core config. Rick loads this at startup and uses it everywhere — tool output, prompts,
+   status, signatures. Without it, Rick runs with generic defaults.
 
-2. **soul/** files feed the MCP prompts. When you activate `be_rick` mode, the soul and book content get injected live. Update the soul, update Rick's voice.
+2. **soul/** files feed the MCP prompts. When you activate `be_rick` mode, the soul and book content get injected live.
+   Update the soul, update Rick's voice.
 
-3. **profiles/** and **resume/** serve as MCP resources. Any MCP client can query `profile://summary` or `resume://overview` and get your identity data back.
+3. **profiles/** and **resume/** serve as MCP resources. Any MCP client can query `profile://summary` or
+   `resume://overview` and get your identity data back.
 
 4. **docs/** contains additional content like engagement war stories.
 
 ## What Happens Without Identity
 
-Rick works fine without any of these files. Tools fire, tests pass, everything is operational. You just get generic output instead of personalized content. The security methodology is in the code — the identity is in the config.
+Rick works fine without any of these files. Tools fire, tests pass, everything is operational. You just get generic
+output instead of personalized content. The security methodology is in the code — the identity is in the config.
 
 ## Tips
 
