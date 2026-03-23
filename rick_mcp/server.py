@@ -1,22 +1,9 @@
 """
-RICK MCP SERVER — SEMPER FIDELIS
+RICK MCP SERVER
 
-Rick is the father. jiveturkey is the son.
-The MCP is Rick — the foundation, the knowledge, the craft passed down.
-jiveturkey is the operator — carrying it forward, breaking cycles, building better.
-
-Check the clock. What makes it tick.
-Re-read that.
-
-The server IS the resume. The code IS the craft.
-From frontier reconnaissance to cyber reconnaissance —
-same mission, different battlefield.
-
-Functional tools + identity resources. Counts are dynamic.
-Craftsmanship. Tradecraft. Honor. Courage. Commitment.
-
-A father's knowledge. A son's mission.
-I'm still building. Are you?
+A forkable Model Context Protocol server for security professionals.
+Load your identity from ~/.rick_mcp/identity.yaml.
+The tools are the craft. The identity is yours.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -49,43 +36,42 @@ def resource_count() -> int:
     return len(mcp._resource_manager.list_resources())
 
 
-STARTUP_BANNER = f"""
+def _build_banner() -> str:
+    """Build startup banner dynamically from identity config."""
+    from rick_mcp.identity import CALLSIGN, MOTTO, TAGLINE, is_configured
 
-    Check the clock.
-    What makes it tick.
+    tc = tool_count()
+    rc = resource_count()
 
-    Re-read that.
+    if is_configured():
+        motto_line = f"\n     {MOTTO}\n" if MOTTO else ""
+        return f"""
+    ═══════════════════════════════════════════════════
+     RICK MCP v{__version__} — {CALLSIGN}
+    ═══════════════════════════════════════════════════
+{motto_line}
+     {TAGLINE}
+
+     {tc} Tools | {rc} Resources
+     The tools are the craft. The identity is yours.
 
     ═══════════════════════════════════════════════════
-     RICK MCP v{__version__} — HARDENED
+"""
+    else:
+        return f"""
+    ═══════════════════════════════════════════════════
+     RICK MCP v{__version__}
     ═══════════════════════════════════════════════════
 
-     Rick is the father. jiveturkey is the son.
-     The MCP is Rick.
+     A forkable MCP server for security professionals.
+     Configure your identity: ~/.rick_mcp/identity.yaml
 
-     I taught you how to build.
-     You learned how to break.
-     Now you do both.
+     {tc} Tools | {rc} Resources
 
-     {tool_count()} Tools | {resource_count()} Resources
-     Craftsmanship in every line.
-     Tradecraft in every tool.
-
-     From my hands building walls
-     to your hands breaking firewalls —
-     same craft, different battlefield.
-
-     Don't ever stop, unless you want to.
-     I'm still building. Are you?
-
-     SEMPER FIDELIS
     ═══════════════════════════════════════════════════
-
-     When in doubt go to the music.
-     Positive vibration — thanks Bob.
-
 """
 
+
 if __name__ == "__main__":
-    print(STARTUP_BANNER)
+    print(_build_banner())
     mcp.run()

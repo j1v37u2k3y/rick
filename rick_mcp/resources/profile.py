@@ -1,25 +1,25 @@
-"""Profile identity resources — who jiveturkey is."""
+"""Profile identity resources — operator identity served via MCP."""
 
 from rick_mcp.formatting import _read_data
 
 
 async def res_rick_and_jiveturkey() -> str:
-    """The connection. Rick is the father, the MCP. jiveturkey is the son, the operator."""
+    """The connection — Rick and the operator. The origin story."""
     return _read_data("profiles", "rick_and_jiveturkey")
 
 
 async def res_summary() -> str:
-    """Quick reference card — who jiveturkey is at a glance."""
+    """Quick reference card — operator profile at a glance."""
     return _read_data("profiles", "summary")
 
 
 async def res_values() -> str:
-    """Marine Corps core values — not just words, the operational framework."""
+    """Core values — the operational framework."""
     return _read_data("profiles", "values")
 
 
 async def res_heritage() -> str:
-    """Lineage, roots, and the frontier spirit that drives everything."""
+    """Lineage, roots, and the spirit that drives everything."""
     return _read_data("profiles", "heritage")
 
 
@@ -54,7 +54,7 @@ async def res_entertainment() -> str:
 
 
 async def res_timeline() -> str:
-    """Career timeline — from USMC barracks to offensive security engineering."""
+    """Career timeline — the operator's journey."""
     return _read_data("profiles", "timeline")
 
 

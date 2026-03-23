@@ -24,7 +24,7 @@ class TestMCPProtocol:
             if isinstance(content, list)
             else (content.text if hasattr(content, "text") else str(content))
         )
-        assert "j1v37u2k3y" in text
+        assert "operator" in text
 
     @pytest.mark.asyncio
     async def test_call_rick_status(self):

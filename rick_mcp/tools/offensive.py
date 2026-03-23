@@ -115,7 +115,7 @@ async def rick_recon(params: ReconInput) -> str:
                 "LAPS config analysis",
             ],
             "tools": ["BloodHound", "Impacket", "CrackMapExec", "Rubeus", "Certify", "PowerView"],
-            "rick_note": "BloodHound first, always. ADCS misconfigs are the new hotness. Map the domain like scouting frontier territory.",
+            "rick_note": "BloodHound first, always. ADCS misconfigs are the new hotness. Map the domain before you engage.",
         },
         "api": {
             "phase": "API Security",

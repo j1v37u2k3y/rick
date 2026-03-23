@@ -2,6 +2,25 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.0.0] - 2026-03-22
+
+### Identity Extraction — Rick Becomes a Platform
+
+- **BREAKING**: All personal identity extracted from codebase
+- New `rick_mcp/identity.py` — loads operator identity from `~/.rick_mcp/identity.yaml`
+- `constants.py` imports identity dynamically (CALLSIGN, CERTIFICATIONS, etc.)
+- All prompts, tools, and resources use identity config with generic fallbacks
+- `_read_data()` checks `~/.rick_mcp/` first for private content, bundled data as fallback
+- All 16 data markdown files replaced with generic placeholders
+- `soul-example/` directory with 21 template files for identity setup
+- Server banner dynamically built from identity config
+- New dependency: `pyyaml>=6.0`
+- Zero personal data in Python source — confirmed via grep audit
+- 406 tests pass with generic defaults (no identity.yaml required)
+- Rick works out of the box. Identity makes it yours.
+
+---
+
 ## [2.0.1] - 2026-03-22
 
 ### Quality of Life

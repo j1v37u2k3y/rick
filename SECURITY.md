@@ -8,7 +8,7 @@ If you discover a security vulnerability in this project, please report it respo
 
 ### How to Report
 
-Contact: **[jiveturkey.rocks/about](https://jiveturkey.rocks/about)**
+Use [GitHub Security Advisories](https://github.com/j1v37u2k3y/rick/security/advisories/new) to report vulnerabilities privately, or see [CONTRIBUTING.md](CONTRIBUTING.md) for general contact guidance.
 
 Subject line: `[SECURITY] rick_mcp - Brief description`
 
@@ -38,9 +38,7 @@ not perform actual security testing, store credentials, or interact with externa
 
 ## Philosophy
 
-Security is defined as making the best decision you can without doing any harm whatsoever. We don't want to harm any
+Security is defined as making the best decision you can without doing any harm whatsoever. No harm to any
 lifeform. Point blank. Full stop.
 
-Honor. Courage. Commitment. Honesty above all.
-
-*Semper Fidelis*
+Integrity above all.

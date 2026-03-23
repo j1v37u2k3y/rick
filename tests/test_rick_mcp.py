@@ -19,7 +19,6 @@ from rick_mcp import (
     MISSION_PHASES,
     PRIMARY_TOOLS,
     SPECIALIZATIONS,
-    STARTUP_BANNER,
     AttackChainInput,
     CheatsheetInput,
     CompatInput,
@@ -39,6 +38,7 @@ from rick_mcp import (
     ThreatModelInput,
     ToolRecInput,
     VulnInput,
+    _build_banner,
     _fmt,
     _safe_tool,
     _sanitize,
@@ -74,26 +74,26 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "2.0.1"
-        assert __version__ in STARTUP_BANNER
+        assert __version__ == "3.0.0"
+        banner = _build_banner()
+        assert __version__ in banner
 
     def test_callsign(self):
-        assert CALLSIGN == "j1v37u2k3y"
+        assert CALLSIGN == "operator"
 
     def test_certifications_not_empty(self):
-        assert len(CERTIFICATIONS) >= 5
-        assert "OSCP (2019)" in CERTIFICATIONS
+        assert isinstance(CERTIFICATIONS, list)
 
     def test_languages_not_empty(self):
-        assert len(LANGUAGES) >= 10
+        assert len(LANGUAGES) >= 1
         assert "Python" in LANGUAGES
 
     def test_primary_tools_not_empty(self):
-        assert len(PRIMARY_TOOLS) >= 15
-        assert "Burp Suite (preferred proxy)" in PRIMARY_TOOLS
+        assert len(PRIMARY_TOOLS) >= 1
+        assert "Burp Suite" in PRIMARY_TOOLS
 
     def test_specializations_not_empty(self):
-        assert len(SPECIALIZATIONS) >= 7
+        assert len(SPECIALIZATIONS) >= 1
 
     def test_mission_phases(self):
         assert len(MISSION_PHASES) == 7
@@ -102,8 +102,8 @@ class TestConstants:
         assert MISSION_PHASES[-1]["name"] == "Remediation Strategy"
 
     def test_startup_banner(self):
-        assert "RICK MCP v2.0" in STARTUP_BANNER
-        assert "SEMPER FIDELIS" in STARTUP_BANNER
+        banner = _build_banner()
+        assert "RICK MCP v" in banner
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -158,88 +158,70 @@ class TestResources:
         from rick_mcp import res_rick_and_jiveturkey
 
         result = await res_rick_and_jiveturkey()
-        assert "Rick and jiveturkey" in result
-        assert "Rick" in result
-        assert "jiveturkey" in result
+        assert "Identity not configured" in result or "About" in result
 
     @pytest.mark.asyncio
     async def test_res_summary(self):
         from rick_mcp import res_summary
 
         result = await res_summary()
-        assert "j1v37u2k3y" in result
-        assert "OSCP" in result
+        assert "Identity not configured" in result or "Quick Reference" in result
 
     @pytest.mark.asyncio
     async def test_res_values(self):
         from rick_mcp import res_values
 
         result = await res_values()
-        assert "Honor" in result
-        assert "Courage" in result
-        assert "Commitment" in result
-        assert "Honesty" in result
+        assert "Identity not configured" in result or "Values" in result
 
     @pytest.mark.asyncio
     async def test_res_heritage(self):
         from rick_mcp import res_heritage
 
         result = await res_heritage()
-        assert "Lineage" in result
-        assert "Builder Bloodline" in result
-        assert "Rick to jiveturkey" in result
+        assert "Identity not configured" in result or "Heritage" in result
 
     @pytest.mark.asyncio
     async def test_res_craftsmanship(self):
         from rick_mcp import res_craftsmanship
 
         result = await res_craftsmanship()
-        assert "Philosophy" in result
-        assert "Tradecraft Principles" in result
-        assert "Builder to Breaker" in result
+        assert "Identity not configured" in result or "Craftsmanship" in result
 
     @pytest.mark.asyncio
     async def test_res_stack(self):
         from rick_mcp import res_stack
 
         result = await res_stack()
-        assert "Languages" in result
-        assert "Offensive Tools" in result
-        assert "Python" in result
+        assert "Identity not configured" in result or "Technical Stack" in result
 
     @pytest.mark.asyncio
     async def test_res_methodology(self):
         from rick_mcp import res_methodology
 
         result = await res_methodology()
-        assert "Phase 7" in result
-        assert "OWASP" in result
+        assert "Identity not configured" in result or "Methodology" in result
 
     @pytest.mark.asyncio
     async def test_res_mantras(self):
         from rick_mcp import res_mantras
 
         result = await res_mantras()
-        assert "Operational" in result
-        assert "SEMPER FIDELIS" in result
+        assert "Identity not configured" in result or "Mantras" in result
 
     @pytest.mark.asyncio
     async def test_res_human(self):
         from rick_mcp import res_human
 
         result = await res_human()
-        assert "Father" in result
-        assert "Cycle Breaker" in result
-        assert "Ever Evolving" in result
-        assert "The Poet" in result
+        assert "Identity not configured" in result or "Human Element" in result
 
     @pytest.mark.asyncio
     async def test_res_entertainment(self):
         from rick_mcp import res_entertainment
 
         result = await res_entertainment()
-        assert "Always Sunny" in result
-        assert "Rick & Morty" in result
+        assert "Identity not configured" in result or "Entertainment" in result
 
     @pytest.mark.asyncio
     async def test_res_wwm(self):
@@ -247,41 +229,34 @@ class TestResources:
 
         result = await res_wwm()
         assert "Working With Me" in result
-        assert "Semper Fidelis" in result
-        assert "OSCP" in result
 
     @pytest.mark.asyncio
     async def test_res_resume_overview(self):
         from rick_mcp import res_resume_overview
 
         result = await res_resume_overview()
-        assert "j1v37u2k3y" in result
-        assert "How to Evaluate" in result
+        assert "Identity not configured" in result or "Resume Overview" in result
 
     @pytest.mark.asyncio
     async def test_res_resume_evidence(self):
         from rick_mcp import res_resume_evidence
 
         result = await res_resume_evidence()
-        assert "Exhibits" in result or "rick_recon" in result
-        assert "rick_recon" in result
+        assert "Identity not configured" in result or "Evidence" in result
 
     @pytest.mark.asyncio
     async def test_res_resume_portfolio(self):
         from rick_mcp import res_resume_portfolio
 
         result = await res_resume_portfolio()
-        assert "Public" in result
-        assert "Gated" in result
+        assert "Identity not configured" in result or "Portfolio" in result
 
     @pytest.mark.asyncio
     async def test_res_resume_contact(self):
         from rick_mcp import res_resume_contact
 
         result = await res_resume_contact()
-        assert "Ready For" in result
-        assert "Next Steps" in result
-        assert "jiveturkey.rocks/about" in result
+        assert "Identity not configured" in result or "Contact" in result
 
     @pytest.mark.asyncio
     async def test_res_the_book(self):
@@ -297,7 +272,7 @@ class TestResources:
 
         result = await res_soul()
         # SOUL.md is private — may return fallback on CI
-        assert "HONOR" in result.upper() or "not found" in result.lower()
+        assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_res_profile(self):
@@ -312,7 +287,7 @@ class TestResources:
         from rick_mcp import res_achievements
 
         result = await res_achievements()
-        assert "Birth of Rick" in result
+        assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_res_contributing(self):
@@ -732,7 +707,7 @@ class TestRickCoverLetter:
             )
         )
         assert "TestCo" in result
-        assert "Semper Fidelis" in result
+        assert CALLSIGN in result
 
     @pytest.mark.asyncio
     async def test_requirement_matching(self):
@@ -1110,7 +1085,7 @@ class TestRickStatus:
     async def test_status_output(self):
         result = await rick_status()
         assert CALLSIGN in result
-        assert "2.0.1" in result
+        assert "3.0.0" in result
         assert "OPERATIONAL" in result
 
     @pytest.mark.asyncio
@@ -1141,24 +1116,20 @@ class TestNewResources:
 
         result = await res_security()
         assert "Security" in result
-        assert "jiveturkey.rocks/about" in result
 
     @pytest.mark.asyncio
     async def test_res_war_stories(self):
         from rick_mcp import res_war_stories
 
         result = await res_war_stories()
-        assert "War Stories" in result
-        assert "Lesson" in result
+        assert "Identity not configured" in result or "War Stories" in result
 
     @pytest.mark.asyncio
     async def test_res_timeline(self):
         from rick_mcp import res_timeline
 
         result = await res_timeline()
-        assert "USMC" in result
-        assert "OSCP" in result
-        assert "2003" in result
+        assert "Identity not configured" in result or "Timeline" in result
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1305,7 +1276,7 @@ class TestPromptBuilders:
     def test_available_modes(self):
         from rick_mcp.prompts import AVAILABLE_MODES, MODE_BUILDERS
 
-        assert len(AVAILABLE_MODES) == 5
+        assert len(AVAILABLE_MODES) == 6
         for mode in AVAILABLE_MODES:
             assert mode in MODE_BUILDERS
 
@@ -1343,9 +1314,9 @@ class TestRickDemo:
         assert "rick_health" in result
 
     @pytest.mark.asyncio
-    async def test_demo_ends_with_semper_fi(self):
+    async def test_demo_ends_with_closing(self):
         result = await rick_demo()
-        assert "Semper Fidelis" in result
+        assert "craftsmanship" in result.lower() or CALLSIGN in result
 
 
 class TestRickHealth:

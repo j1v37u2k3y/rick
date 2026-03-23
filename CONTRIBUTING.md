@@ -77,5 +77,3 @@ Update README with new tool documentation
 ## Security
 
 Found a vulnerability? See [SECURITY.md](SECURITY.md) — don't open a public issue.
-
-*Semper Fidelis*

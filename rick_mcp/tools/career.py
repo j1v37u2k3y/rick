@@ -4,7 +4,34 @@ from rick_mcp.constants import (
     CALLSIGN,
 )
 from rick_mcp.formatting import _fmt, _safe_tool
+from rick_mcp.identity import (
+    BACKGROUND_STORY,
+    CERTIFICATIONS,
+    FAMILY,
+    MILITARY,
+    MOTTO,
+    TAGLINE,
+    TITLE,
+    YEARS_EXPERIENCE,
+    is_configured,
+    signature_line,
+)
 from rick_mcp.models import CompatInput, CoverInput, MentorInput
+
+
+def _military_branch() -> str:
+    """Return military branch name if configured, else empty string."""
+    return MILITARY.get("branch", "") if MILITARY else ""
+
+
+def _years_str() -> str:
+    """Return years experience string like '22+' or fallback."""
+    return f"{YEARS_EXPERIENCE}+" if YEARS_EXPERIENCE else "extensive"
+
+
+def _cert_list_str(limit: int = 3) -> str:
+    """Return pipe-separated cert string."""
+    return " | ".join(CERTIFICATIONS[:limit]) if CERTIFICATIONS else ""
 
 
 async def rick_compatibility_check(params: CompatInput) -> str:
@@ -83,7 +110,8 @@ async def rick_compatibility_check(params: CompatInput) -> str:
     overall = int(tech_score * 0.6 + culture_score * 0.4)
 
     if overall >= 80:
-        verdict = "STRONG FIT — Semper Fidelis, let's talk."
+        greeting = f"{MOTTO}, let's talk." if MOTTO else "Strong alignment — let's talk."
+        verdict = f"STRONG FIT — {greeting}"
     elif overall >= 60:
         verdict = "GOOD POTENTIAL — Worth a conversation."
     elif overall >= 40:
@@ -113,55 +141,108 @@ async def rick_compatibility_check(params: CompatInput) -> str:
 async def rick_cover_letter(params: CoverInput) -> str:
     """Generate targeted cover letter. Auto-matches requirements to experience. 3 tones."""
     tone = (params.tone or "professional").lower()
+    branch = _military_branch()
+    years = _years_str()
     hl = []
     if params.key_requirements:
         rq = params.key_requirements.lower()
-        requirement_map = {
-            "oscp": "OSCP certified (2019) with hands-on pentesting across web, network, AD, and cloud.",
-            "pentest": "Extensive pentesting across web, network, AD, cloud — manual depth, not just scanner output.",
-            "web app": "Deep web application security — Burp Suite, OWASP, business logic, manual analysis.",
-            "cloud": "Cloud security across Azure and AWS — IAM, storage, infrastructure, CIS benchmarks.",
-            "active directory": "AD specialist — BloodHound, Kerberoasting, ADCS abuse, trust analysis.",
-            "python": "Extensive Python for security automation, custom tooling, and exploit development.",
-            "leadership": "Growing into security leadership — Marine Corps command experience, team coordination, mentorship.",
-            "automation": "Automation-first mindset — custom frameworks, CI/CD security, PlexTrac integration.",
-            "red team": "Red team operations with MITRE ATT&CK alignment and adversary simulation.",
-            "clearance": "Former DoD Secret clearance (last held 2013 as DoD contractor).",
-            "veteran": "USMC veteran — discipline, systematic methodology, ethics, mission completion.",
-            "exploit": "Custom exploit development — multiple languages, creative attack vectors.",
-            "api": "API security testing — OWASP API Top 10, BOLA/IDOR, JWT, OAuth, GraphQL.",
-        }
+        # Build requirement_map dynamically from identity
+        requirement_map: dict[str, str] = {}
+
+        # Certification-based highlights
+        for cert in CERTIFICATIONS:
+            cert_lower = cert.lower()
+            if "oscp" in cert_lower:
+                requirement_map["oscp"] = f"{cert} with hands-on pentesting across web, network, AD, and cloud."
+            if "oswa" in cert_lower:
+                requirement_map["oswa"] = f"{cert} — deep web application security testing."
+
+        # Core skills (not personal)
+        requirement_map.setdefault(
+            "pentest",
+            "Extensive pentesting across web, network, AD, cloud — manual depth, not just scanner output.",
+        )
+        requirement_map["web app"] = (
+            "Deep web application security — Burp Suite, OWASP, business logic, manual analysis."
+        )
+        requirement_map["cloud"] = "Cloud security across Azure and AWS — IAM, storage, infrastructure, CIS benchmarks."
+        requirement_map["active directory"] = "AD specialist — BloodHound, Kerberoasting, ADCS abuse, trust analysis."
+        requirement_map["python"] = "Extensive Python for security automation, custom tooling, and exploit development."
+        requirement_map["automation"] = "Automation-first mindset — custom frameworks, CI/CD security integration."
+        requirement_map["red team"] = "Red team operations with MITRE ATT&CK alignment and adversary simulation."
+        requirement_map["exploit"] = "Custom exploit development — multiple languages, creative attack vectors."
+        requirement_map["api"] = "API security testing — OWASP API Top 10, BOLA/IDOR, JWT, OAuth, GraphQL."
+
+        # Military-conditional highlights
+        if branch:
+            requirement_map["leadership"] = (
+                f"Growing into security leadership — {branch} command experience, team coordination, mentorship."
+            )
+            requirement_map["clearance"] = "Former DoD Secret clearance (eligible for reinstatement)."
+            requirement_map["veteran"] = (
+                f"{branch} veteran — discipline, systematic methodology, ethics, mission completion."
+            )
+        else:
+            requirement_map["leadership"] = (
+                "Growing into security leadership — team coordination, mentorship, technical direction."
+            )
+            requirement_map["veteran"] = (
+                "Disciplined, systematic methodology with strong ethics and mission completion."
+            )
+
         for kw, h in requirement_map.items():
             if kw in rq:
                 hl.append(h)
+
     if not hl:
-        hl = [
-            "OSCP-certified offensive security engineer, 22+ years experience.",
-            "Marine Corps systematic methodology — Honor, Courage, Commitment applied to security.",
-            "Builder mindset — I don't just find vulnerabilities, I help build better defenses.",
-        ]
+        default_hl = []
+        cert_str = _cert_list_str(2)
+        if cert_str:
+            default_hl.append(f"{cert_str}-certified {TITLE.lower()}, {years} years experience.")
+        else:
+            default_hl.append(f"{TITLE}, {years} years experience.")
+        if branch:
+            default_hl.append(f"{branch} systematic methodology applied to security.")
+        default_hl.append("Builder mindset — I don't just find vulnerabilities, I help build better defenses.")
+        hl = default_hl
 
     c, r = params.company_name, params.role_title
+
+    # Build origin phrase from identity
+    if BACKGROUND_STORY:
+        origin_phrase = BACKGROUND_STORY
+    elif branch:
+        origin_phrase = f"{branch} veteran turned security professional. Mission-driven."
+    else:
+        origin_phrase = "Self-taught, mission-driven, continuously evolving."
+
     if tone == "conversational":
-        op = f"Reaching out about the {r} role at {c}. Been breaking and building software for 22+ years — started in Marine Corps barracks, 2003. Self-taught, mission-driven, ever evolving."
-        bd = f"What I bring: {' '.join(hl[:3])}\n\nThorough, honest, every vuln comes with actionable remediation. Builder bloodline — I understand architecture, not just attack surfaces."
-        cl = f"Would love to chat about contributing to {c}. Marine work ethic, builder mindset, frontier determination. Semper Fidelis."
+        op = f"Reaching out about the {r} role at {c}. Been breaking and building software for {years} years — {origin_phrase}"
+        bd = f"What I bring: {' '.join(hl[:3])}\n\nThorough, honest, every vuln comes with actionable remediation. Builder mindset — I understand architecture, not just attack surfaces."
+        greeting = MOTTO if MOTTO else "Looking forward to connecting"
+        cl = f"Would love to chat about contributing to {c}. {greeting}."
     elif tone == "executive":
-        op = f"Writing regarding the {r} position at {c}. 22+ years progressive experience in software development and offensive security, with military service foundation and deep technical expertise."
+        op = f"Writing regarding the {r} position at {c}. {years} years progressive experience in software development and offensive security, with deep technical expertise."
         bd = (
             "Key qualifications:\n"
             + "\n".join([f"- {h}" for h in hl[:4]])
-            + "\n\nSelf-taught Marine developer to OSCP-certified security engineer — continuous adaptation and growth across two decades."
+            + f"\n\nContinuous adaptation and growth across {years} years in the field."
         )
         cl = f"Welcome the opportunity to discuss strategic alignment with {c}'s security objectives and long-term vision."
     else:
-        op = f"Writing to express interest in the {r} at {c}. OSCP-certified offensive security engineer with 22+ years experience, USMC veteran background, and builder's approach to security."
+        cert_intro = f"{_cert_list_str(2)}-certified " if CERTIFICATIONS else ""
+        branch_intro = f", {branch} veteran background" if branch else ""
+        op = f"Writing to express interest in the {r} at {c}. {cert_intro}{TITLE.lower()} with {years} years experience{branch_intro}, and builder's approach to security."
         bd = (
             "Relevant qualifications:\n"
             + "\n".join([f"- {h}" for h in hl[:4]])
-            + "\n\nEvery finding documented with reproduction steps and actionable remediation. Builder bloodline — I understand how systems are constructed, so I know where they break."
+            + "\n\nEvery finding documented with reproduction steps and actionable remediation. Builder mindset — I understand how systems are constructed, so I know where they break."
         )
         cl = f"Welcome the opportunity to discuss how my experience aligns with {c}'s security needs. Thorough > fast. Honest > comfortable."
+
+    sig = signature_line()
+    if MOTTO:
+        sig = f"{MOTTO},\n{sig}"
 
     return _fmt(
         {
@@ -169,7 +250,7 @@ async def rick_cover_letter(params: CoverInput) -> str:
             "opening": op,
             "body": bd,
             "closing": cl,
-            "signature": f"Semper Fidelis,\nTom — {CALLSIGN}\nOSCP | OSWA | USMC Veteran\nhttps://jiveturkey.rocks/",
+            "signature": sig,
             "matched_highlights": hl[:4],
             "rick_note": "Customize before sending. Research the company. Generic = wasted round. Recon before engagement.",
         },
@@ -180,10 +261,25 @@ async def rick_cover_letter(params: CoverInput) -> str:
 
 async def rick_mentorship(params: MentorInput) -> str:
     """Teaching newcomers the craft. Learning paths, mindset guidance, 'how I got here' wisdom. The MCP teaches."""
+    branch = _military_branch()
+    years = _years_str()
+
+    # Build dynamic personal fragments
+    origin_story = (
+        BACKGROUND_STORY
+        if BACKGROUND_STORY
+        else "Self-taught. No bootcamp, no hand-holding. You don't need permission to learn. You need discipline and curiosity."
+    )
+    family_note = (
+        f"{FAMILY}. Strategic time management." if FAMILY else "Strategic time management. Every minute counts."
+    )
+    doc_standard = f"{branch} standard." if branch else "Professional standard."
+    still_building = TAGLINE if TAGLINE else "Keep building."
+
     paths = {
         "getting_started": {
             "topic": "Getting Started in Offensive Security",
-            "the_real_talk": "I started in USMC barracks in 2003. Self-taught. No bootcamp, no degree in CS, no hand-holding. You don't need permission to learn. You need discipline and curiosity. Check the clock. What makes it tick.",
+            "the_real_talk": f"{origin_story} Check the clock. What makes it tick.",
             "foundation_first": {
                 "networking": "Learn TCP/IP, DNS, HTTP, SMB, Kerberos. You can't hack what you don't understand. CompTIA Network+ level minimum.",
                 "linux": "Get comfortable in a terminal. Bash scripting. File permissions. Process management. Services. This is your workbench.",
@@ -201,7 +297,7 @@ async def rick_mentorship(params: MentorInput) -> str:
                 "7. Start a blog/notes system — document everything you learn",
                 "8. Practice, practice, practice. There is no shortcut.",
             ],
-            "rick_note": "Don't try to learn everything at once. Pick one domain (web, network, AD), go deep, then expand. Depth before breadth. And document EVERYTHING — your future self will thank you. I'm still building. Are you?",
+            "rick_note": f"Don't try to learn everything at once. Pick one domain (web, network, AD), go deep, then expand. Depth before breadth. And document EVERYTHING — your future self will thank you. {still_building}",
         },
         "web_app_path": {
             "topic": "Web Application Security Learning Path",
@@ -304,7 +400,7 @@ async def rick_mentorship(params: MentorInput) -> str:
                     "Build and operate C2 infrastructure in lab",
                 ],
             },
-            "rick_note": "Build an AD lab. Seriously. Three VMs — a DC, a member server, a workstation. Attack it yourself. Break it, fix it, break it again. That's how I learned AD security — by building and breaking the same environment hundreds of times.",
+            "rick_note": "Build an AD lab. Seriously. Three VMs — a DC, a member server, a workstation. Attack it yourself. Break it, fix it, break it again. That's how you learn AD security — by building and breaking the same environment hundreds of times.",
         },
         "ad_path": {
             "topic": "Active Directory Attack Path",
@@ -356,7 +452,7 @@ async def rick_mentorship(params: MentorInput) -> str:
                     "Research and develop novel AD attack techniques",
                 ],
             },
-            "rick_note": "AD is where the real money is in pentesting. BloodHound is your map. Impacket is your Swiss Army knife. ADCS is the new hotness — ESC1 is in almost every environment I test. Build a lab with intentional misconfigurations and attack it until you can do it in your sleep.",
+            "rick_note": "AD is where the real money is in pentesting. BloodHound is your map. Impacket is your Swiss Army knife. ADCS is the new hotness — ESC1 is in almost every environment. Build a lab with intentional misconfigurations and attack it until you can do it in your sleep.",
         },
         "cloud_path": {
             "topic": "Cloud Security Learning Path",
@@ -439,7 +535,7 @@ async def rick_mentorship(params: MentorInput) -> str:
                     "time": "Months of dedicated study",
                 },
             },
-            "rick_note": "I got OSCP in 2019 and it changed my career trajectory. The exam is brutal — 24 hours of hacking with a report due after. But that's the point. It proves you can DO the work under pressure. Start with the OffSec PG Practice machines, then do the PWK labs, then take the exam. No shortcuts.",
+            "rick_note": _build_cert_note(),
         },
         "lab_setup": {
             "topic": "Home Lab Setup Guide",
@@ -478,36 +574,48 @@ async def rick_mentorship(params: MentorInput) -> str:
                 "azure": "Azure free tier + AzureGoat",
                 "kubernetes": "Minikube or kind for local K8s + Kubernetes Goat",
             },
-            "rick_note": "Your lab is your dojo. Build it, break it, rebuild it. I've rebuilt my AD lab hundreds of times. Every rebuild teaches you something about how defenders build, and every attack teaches you where they fail. The lab is where the craft lives.",
+            "rick_note": "Your lab is your dojo. Build it, break it, rebuild it. Every rebuild teaches you something about how defenders build, and every attack teaches you where they fail. The lab is where the craft lives.",
         },
         "mindset": {
             "topic": "The Mindset — How to Think Like an Operator",
-            "from_tom": {
-                "origin": "I started coding in USMC barracks in 2003. No bootcamp. No mentor. No CS degree. Just curiosity, discipline, and the Marine Corps mentality that failure is not an option.",
-                "lesson": "You don't need permission to learn. You don't need the perfect setup. You need to START and not stop. Ever Evolving.",
-            },
+            **(
+                {
+                    "from_operator": {
+                        "origin": origin_story,
+                        "lesson": f"You don't need permission to learn. You don't need the perfect setup. You need to START and not stop. {still_building}",
+                    }
+                }
+                if is_configured()
+                else {}
+            ),
             "principles": {
                 "check_the_clock": "Understand the mechanism before you touch it. What makes it tick? Re-read that. Study the target before you attack.",
                 "builder_and_breaker": "The best hackers understand how things are built. Learn to build before you learn to break. The builder's eye sees structural weaknesses.",
                 "thoroughness_over_speed": "Scanners are fast. Humans are thorough. Your value is in the manual analysis, the creative thinking, the business logic flaws that no tool finds.",
-                "document_everything": "If it's not documented, it didn't happen. Marine Corps standard. Take notes obsessively. Screenshot everything. Your report IS your deliverable.",
+                "document_everything": f"If it's not documented, it didn't happen. {doc_standard} Take notes obsessively. Screenshot everything. Your report IS your deliverable.",
                 "fail_forward": "You will fail. Exploits won't work. Shells will die. Access will get burned. Learn from every failure. Fix it. Move on. The whole point of coding. And existence.",
-                "stay_curious": "22 years in and I'm still learning. The day you think you know enough is the day you become irrelevant. If you are not willing to learn today, what is the point of learning tomorrow.",
-                "rewrite_the_script": "Don't accept 'that's how it's always been done.' Question. Experiment. Break the pattern. Wanna learn how to keep going and be free? Rewrite the script.",
+                "stay_curious": f"{years} years in and still learning. The day you think you know enough is the day you become irrelevant.",
+                "rewrite_the_script": "Don't accept 'that's how it's always been done.' Question. Experiment. Break the pattern. Rewrite the script.",
             },
             "operational_discipline": {
-                "task_management": "Use task boards. Plan your engagement. Know your objectives before you start. Marine Corps mission planning applied to pentesting.",
-                "time_management": "Father of three boys. Strategic time management. Work smart, not just hard. Every minute counts.",
+                "task_management": f"Use task boards. Plan your engagement. Know your objectives before you start.{(' ' + branch + ' mission planning applied to pentesting.') if branch else ''}",
+                "time_management": family_note,
                 "accountability": "Hold yourself accountable. No judgment, but no excuses. We all have our sub-routines — let's try to fix them together.",
             },
             "the_warrior_path": {
                 "warrior_in_the_garden": "Way better than a gardener in a war. Build in peace. Prepare for conflict. Protect always.",
                 "cycle_breaker": "Break destructive patterns. In code and in life. Don't pass down the broken subroutines.",
-                "ever_evolving": "The craft evolves. The craftsman evolves with it. WORKING ON ME mentality. Don't ever stop, unless you want to.",
-                "music_reset": "When in doubt go to the music. Positive vibration. Reset. Come back stronger. The Message — Grand Master Flash.",
+                "ever_evolving": f"The craft evolves. The craftsman evolves with it. {still_building}",
+                "music_reset": "When in doubt go to the music. Positive vibration. Reset. Come back stronger.",
             },
-            "ricks_voice": "I taught my son to build before I taught him anything else. The foundation determines everything above it. You want to learn to hack? First learn how things are built. Then you'll know where they break. That's the craft. That's what I passed down.",
-            "rick_note": "The technical skills are the easy part. The mindset is what separates someone who hacks from someone who IS a hacker. Think like a builder — like Rick. Attack like a warrior — like a Marine. Document like your name is on it — because it is. I'm still building. Are you?",
+            **(
+                {
+                    "ricks_voice": "The foundation determines everything above it. You want to learn to hack? First learn how things are built. Then you'll know where they break. That's the craft."
+                }
+                if is_configured()
+                else {}
+            ),
+            "rick_note": f"The technical skills are the easy part. The mindset is what separates someone who hacks from someone who IS a hacker. Think like a builder — like Rick. Document like your name is on it — because it is. {still_building}",
         },
         "career": {
             "topic": "Career Path & Growth",
@@ -549,15 +657,33 @@ async def rick_mentorship(params: MentorInput) -> str:
                 "Network genuinely — help people, share knowledge, mentor others",
                 "Never stop learning — the field changes faster than any other in tech",
             ],
-            "rick_note": "The career path isn't linear. I went from Marine avionics to self-taught developer to security engineer. The thread is continuous learning and building. Build your reputation through quality work, honest reporting, and genuine community contribution. The cert gets you in the door. The work keeps you in the room. The character keeps you in the conversation.",
+            "rick_note": "The career path isn't linear. The thread is continuous learning and building. Build your reputation through quality work, honest reporting, and genuine community contribution. The cert gets you in the door. The work keeps you in the room. The character keeps you in the conversation.",
         },
     }
     t = params.topic.lower().strip()
     path = paths.get(t)
     if not path:
         return f"Error: Unknown topic '{t}'. Available: {', '.join(paths.keys())}"
-    path["mentored_by"] = f"{CALLSIGN} — OSCP | OSWA | USMC Veteran | 22+ Years | Ever Evolving"
+
+    # Build mentored_by line dynamically
+    if is_configured():
+        mentor_parts = [CALLSIGN]
+        if CERTIFICATIONS:
+            mentor_parts.append(" | ".join(CERTIFICATIONS[:2]))
+        if YEARS_EXPERIENCE:
+            mentor_parts.append(f"{YEARS_EXPERIENCE}+ Years")
+        path["mentored_by"] = " — ".join(mentor_parts)
+    else:
+        path["mentored_by"] = CALLSIGN
+
     return _fmt(path, params.response_format, title=f"{CALLSIGN} Mentorship")
+
+
+def _build_cert_note() -> str:
+    """Build the certification rick_note dynamically."""
+    if is_configured() and CERTIFICATIONS:
+        return "The exam is brutal — 24 hours of hacking with a report due after. But that's the point. It proves you can DO the work under pressure. Start with the OffSec PG Practice machines, then do the PWK labs, then take the exam. No shortcuts."
+    return "The OSCP exam is brutal — 24 hours of hacking with a report due after. But that's the point. It proves you can DO the work under pressure. Start with the OffSec PG Practice machines, then do the PWK labs, then take the exam. No shortcuts."
 
 
 def register(mcp):

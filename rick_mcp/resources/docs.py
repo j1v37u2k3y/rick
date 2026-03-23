@@ -11,7 +11,7 @@ async def res_wwm() -> str:
 
 
 async def res_the_book() -> str:
-    """Memoirs of jiveturkey. The book. Check the clock. What makes it tick. Re-read that."""
+    """The book — operator's memoirs. Raw, unfiltered voice."""
     # Private first, project root second
     soul_dir = Path.home() / ".rick_mcp" / "soul"
     for search_path in [soul_dir / "my book.txt", Path(__file__).parent.parent / "my book.txt"]:

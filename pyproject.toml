@@ -1,12 +1,13 @@
 [project]
 name = "rick-mcp"
 dynamic = ["version"]
-description = "Rick MCP Server — The server IS the resume. I'm still building. Are you? Semper Fidelis."
+description = "Rick MCP Server — A forkable security MCP platform. Load your identity, own your craft."
 requires-python = ">=3.10"
 license = "MIT"
 dependencies = [
     "mcp[cli]>=1.0.0",
     "pydantic>=2.0.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]

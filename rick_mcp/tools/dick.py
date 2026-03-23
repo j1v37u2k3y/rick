@@ -1,0 +1,677 @@
+"""Dick's tools — the alter ego. Proactive, chained, situationally aware.
+
+Dick doesn't wait for you to ask the right question. Dick chains tools together,
+tracks where you are in the kill chain, and tells you what's next before you ask.
+JARVIS energy. 1337 tradecraft. Same soul — zero hesitation.
+"""
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from rick_mcp.constants import CALLSIGN, ResponseFormat
+from rick_mcp.formatting import _fmt, _safe_tool, _sanitize
+from rick_mcp.models import (
+    AttackChainInput,
+    PivotInput,
+    ReconInput,
+    ToolRecInput,
+    VulnInput,
+)
+
+# ═══════════════════════════════════════════════════════════════
+# Engagement state — Dick remembers where you are
+# ═══════════════════════════════════════════════════════════════
+
+_STATE_DIR = Path.home() / ".rick_mcp" / "dick"
+
+KILL_CHAIN_PHASES = [
+    {"phase": 1, "name": "Reconnaissance", "status": "pending", "findings": []},
+    {"phase": 2, "name": "Weaponization", "status": "pending", "findings": []},
+    {"phase": 3, "name": "Delivery", "status": "pending", "findings": []},
+    {"phase": 4, "name": "Exploitation", "status": "pending", "findings": []},
+    {"phase": 5, "name": "Installation", "status": "pending", "findings": []},
+    {"phase": 6, "name": "Command & Control", "status": "pending", "findings": []},
+    {"phase": 7, "name": "Actions on Objectives", "status": "pending", "findings": []},
+]
+
+
+def _state_file(engagement_id: str) -> Path:
+    """Get the state file path for an engagement."""
+    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
+    return _STATE_DIR / f"{safe_id}.json"
+
+
+def _load_state(engagement_id: str) -> dict:
+    """Load engagement state from disk."""
+    path = _state_file(engagement_id)
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return {}
+
+
+def _save_state(engagement_id: str, state: dict) -> None:
+    """Save engagement state to disk."""
+    _STATE_DIR.mkdir(parents=True, exist_ok=True)
+    path = _state_file(engagement_id)
+    path.write_text(json.dumps(state, indent=2, default=str), encoding="utf-8")
+
+
+# ═══════════════════════════════════════════════════════════════
+# Input models
+# ═══════════════════════════════════════════════════════════════
+
+
+class FullAutoInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    target: str = Field(
+        ...,
+        description="Target description — domain, IP, app name, org, or environment",
+        min_length=1,
+        max_length=500,
+    )
+    target_type: str = Field(
+        default="web_app",
+        description="Target type: 'web_app', 'network', 'cloud_azure', 'cloud_aws', 'active_directory', 'api', 'container', 'mobile'",
+        max_length=50,
+    )
+    engagement_id: str | None = Field(
+        default=None,
+        description="Optional engagement ID to track state. Creates new if not found.",
+        max_length=100,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class KillChainInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    action: str = Field(
+        ...,
+        description="Action: 'status', 'advance', 'add_finding', 'reset', 'list'",
+        min_length=1,
+        max_length=20,
+    )
+    engagement_id: str = Field(
+        ...,
+        description="Engagement ID to track",
+        min_length=1,
+        max_length=100,
+    )
+    phase: int | None = Field(
+        default=None,
+        description="Phase number (1-7) for advance/add_finding",
+        ge=1,
+        le=7,
+    )
+    finding: str | None = Field(
+        default=None,
+        description="Finding description to add to a phase",
+        max_length=1000,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class NextMoveInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(
+        ...,
+        description="Engagement ID to analyze",
+        min_length=1,
+        max_length=100,
+    )
+    current_position: str | None = Field(
+        default=None,
+        description="Where you are right now: 'linux_webserver', 'windows_workstation', 'windows_server', 'container', 'cloud_instance', 'database_server', 'network_device', or free text",
+        max_length=500,
+    )
+    findings_so_far: str | None = Field(
+        default=None,
+        description="What you've found so far — comma separated or free text",
+        max_length=2000,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Tool: rick_full_auto — Chain everything. Automatically.
+# ═══════════════════════════════════════════════════════════════
+
+
+async def rick_full_auto(params: FullAutoInput) -> str:
+    """Dick's full auto mode. Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot plan. All chained. No waiting."""
+    from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
+    from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
+
+    target = _sanitize(params.target) or params.target
+    target_type = (_sanitize(params.target_type) or "web_app").lower().strip()
+
+    sections: list[str] = []
+    sections.append(f"# FULL AUTO — {target}")
+    sections.append("*Dick opened all the doors. Here's what's behind them.*")
+    sections.append(f"**Target:** {target}")
+    sections.append(f"**Type:** {target_type}")
+    sections.append(f"**Timestamp:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    sections.append("")
+
+    # Phase 1: Recon
+    sections.append("---")
+    sections.append("## Phase 1: RECONNAISSANCE")
+    sections.append("*Know your target better than they know themselves.*")
+    sections.append("")
+    recon_result = await rick_recon(ReconInput(target_type=target_type, scope_notes=f"Target: {target}"))
+    sections.append(recon_result)
+    sections.append("")
+
+    # Phase 2: Vulnerability Assessment
+    sections.append("---")
+    sections.append("## Phase 2: VULNERABILITY ASSESSMENT")
+    sections.append("*Scanners find what's known. Dick finds what's new.*")
+    sections.append("")
+    # Map target types to most relevant vuln categories
+    vuln_map = {
+        "web_app": "injection",
+        "api": "auth",
+        "network": "misconfig",
+        "active_directory": "privesc",
+        "cloud_azure": "misconfig",
+        "cloud_aws": "misconfig",
+        "container": "misconfig",
+        "mobile": "auth",
+    }
+    vuln_cat = vuln_map.get(target_type, "injection")
+    vuln_result = await rick_vuln_assess(
+        VulnInput(vuln_category=vuln_cat, context=f"Target: {target}, Type: {target_type}")
+    )
+    sections.append(vuln_result)
+    sections.append("")
+
+    # Phase 3: Attack Chain
+    sections.append("---")
+    sections.append("## Phase 3: ATTACK CHAIN")
+    sections.append("*Think in chains, not isolated vulnerabilities.*")
+    sections.append("")
+    chain_map = {
+        "web_app": "web_to_internal",
+        "api": "web_to_internal",
+        "network": "external_to_da",
+        "active_directory": "external_to_da",
+        "cloud_azure": "cloud_to_onprem",
+        "cloud_aws": "cloud_to_onprem",
+        "container": "web_to_internal",
+        "mobile": "web_to_internal",
+    }
+    chain_scenario = chain_map.get(target_type, "external_to_da")
+    chain_result = await rick_attack_chain(
+        AttackChainInput(scenario=chain_scenario, target_environment=f"{target} ({target_type})")
+    )
+    sections.append(chain_result)
+    sections.append("")
+
+    # Phase 4: Tool Recommendations
+    sections.append("---")
+    sections.append("## Phase 4: ARSENAL — What to Bring")
+    sections.append("*The right tool for the right door.*")
+    sections.append("")
+    tool_result = await rick_tool_recommend(ToolRecInput(scenario=f"{target_type} assessment against {target}"))
+    sections.append(tool_result)
+    sections.append("")
+
+    # Phase 5: Pivot Plan
+    sections.append("---")
+    sections.append("## Phase 5: POST-COMPROMISE — Where to Go Next")
+    sections.append("*Initial access is step one of twenty.*")
+    sections.append("")
+    pivot_map = {
+        "web_app": "linux_webserver",
+        "api": "linux_webserver",
+        "network": "network_device",
+        "active_directory": "windows_server",
+        "cloud_azure": "cloud_instance",
+        "cloud_aws": "cloud_instance",
+        "container": "container",
+        "mobile": "linux_webserver",
+    }
+    pivot_pos = pivot_map.get(target_type, "linux_webserver")
+    pivot_result = await rick_pivot_plan(
+        PivotInput(position=pivot_pos, target_network=f"Internal network behind {target}")
+    )
+    sections.append(pivot_result)
+    sections.append("")
+
+    # Initialize kill chain state if engagement_id provided
+    if params.engagement_id:
+        eng_id = _sanitize(params.engagement_id) or params.engagement_id
+        state = {
+            "id": eng_id,
+            "target": target,
+            "target_type": target_type,
+            "created": datetime.now(timezone.utc).isoformat(),
+            "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+        }
+        # Auto-advance recon to active
+        state["kill_chain"][0]["status"] = "active"
+        _save_state(eng_id, state)
+        sections.append("---")
+        sections.append(f"## Engagement Tracking: `{eng_id}`")
+        sections.append("Kill chain state initialized. Phase 1 (Reconnaissance) is ACTIVE.")
+        sections.append(f"Use `rick_kill_chain(action='status', engagement_id='{eng_id}')` to check progress.")
+        sections.append(f"Use `rick_next_move(engagement_id='{eng_id}')` for Dick's recommendation.")
+        sections.append("")
+
+    sections.append("---")
+    sections.append(f"*Full auto complete. {CALLSIGN} has the playbook. Now go open some doors.*")
+
+    return "\n".join(sections)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Tool: rick_kill_chain — Stateful kill chain tracker
+# ═══════════════════════════════════════════════════════════════
+
+
+async def rick_kill_chain(params: KillChainInput) -> str:
+    """Track your position in the kill chain. Dick knows where you are, what you've found, and what's next. Stateful across conversations."""
+    eng_id = _sanitize(params.engagement_id) or params.engagement_id
+    action = (_sanitize(params.action) or "status").lower().strip()
+    fmt = params.response_format
+
+    if action == "list":
+        # List all active engagements
+        _STATE_DIR.mkdir(parents=True, exist_ok=True)
+        engagements = []
+        for f in sorted(_STATE_DIR.glob("*.json")):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                active_phase = "Unknown"
+                for p in data.get("kill_chain", []):
+                    if p.get("status") == "active":
+                        active_phase = f"Phase {p['phase']}: {p['name']}"
+                        break
+                engagements.append(
+                    {
+                        "id": data.get("id", f.stem),
+                        "target": data.get("target", "Unknown"),
+                        "active_phase": active_phase,
+                        "created": data.get("created", "Unknown"),
+                    }
+                )
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+        if not engagements:
+            return "No active engagements. Use `rick_full_auto` to start one, or `rick_kill_chain(action='status', engagement_id='...')` to create manually."
+
+        return _fmt(
+            {"engagements": engagements, "count": len(engagements)},
+            fmt,
+            title=f"{CALLSIGN} Active Engagements",
+        )
+
+    state = _load_state(eng_id)
+
+    if action == "status":
+        if not state:
+            # Create new engagement state
+            state = {
+                "id": eng_id,
+                "target": "Not yet specified",
+                "created": datetime.now(timezone.utc).isoformat(),
+                "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+            }
+            _save_state(eng_id, state)
+            return _fmt(
+                {
+                    "engagement": eng_id,
+                    "status": "NEW — Kill chain initialized",
+                    "kill_chain": state["kill_chain"],
+                    "next": "Use action='advance' with phase=1 to begin recon.",
+                },
+                fmt,
+                title=f"{CALLSIGN} Kill Chain — {eng_id}",
+            )
+
+        # Calculate progress
+        completed = sum(1 for p in state["kill_chain"] if p["status"] == "completed")
+        active = [p for p in state["kill_chain"] if p["status"] == "active"]
+        total_findings = sum(len(p.get("findings", [])) for p in state["kill_chain"])
+
+        result = {
+            "engagement": eng_id,
+            "target": state.get("target", "Unknown"),
+            "progress": f"{completed}/7 phases completed",
+            "total_findings": total_findings,
+            "kill_chain": state["kill_chain"],
+        }
+        if active:
+            result["current_phase"] = f"Phase {active[0]['phase']}: {active[0]['name']}"
+        elif completed == 7:
+            result["status"] = "COMPLETE — All phases executed. Time for the report."
+        else:
+            next_pending = next((p for p in state["kill_chain"] if p["status"] == "pending"), None)
+            if next_pending:
+                result["next_phase"] = f"Phase {next_pending['phase']}: {next_pending['name']}"
+
+        return _fmt(result, fmt, title=f"{CALLSIGN} Kill Chain — {eng_id}")
+
+    if action == "advance":
+        if not state:
+            return f"Error: No engagement '{eng_id}' found. Use action='status' to create one first."
+
+        phase_num = params.phase
+        if not phase_num:
+            # Auto-advance: complete current active, activate next pending
+            for p in state["kill_chain"]:
+                if p["status"] == "active":
+                    p["status"] = "completed"
+                    p["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    phase_num = p["phase"]
+                    break
+
+            if phase_num:
+                # Activate next
+                next_phase = next((p for p in state["kill_chain"] if p["status"] == "pending"), None)
+                if next_phase:
+                    next_phase["status"] = "active"
+                    _save_state(eng_id, state)
+                    return _fmt(
+                        {
+                            "action": "ADVANCED",
+                            "completed": f"Phase {phase_num}",
+                            "now_active": f"Phase {next_phase['phase']}: {next_phase['name']}",
+                            "dick_says": _phase_advice(next_phase["phase"]),
+                        },
+                        fmt,
+                        title=f"{CALLSIGN} Kill Chain — Advanced",
+                    )
+                else:
+                    _save_state(eng_id, state)
+                    return _fmt(
+                        {
+                            "action": "COMPLETE",
+                            "status": "All 7 phases completed.",
+                            "dick_says": "Time to write the report. Document like your freedom depends on it.",
+                        },
+                        fmt,
+                        title=f"{CALLSIGN} Kill Chain — Complete",
+                    )
+            else:
+                return "No active phase to advance. Use phase= to specify, or set a phase to active first."
+        else:
+            # Advance specific phase
+            idx = phase_num - 1
+            state["kill_chain"][idx]["status"] = "active"
+            _save_state(eng_id, state)
+            return _fmt(
+                {
+                    "action": "ACTIVATED",
+                    "phase": f"Phase {phase_num}: {state['kill_chain'][idx]['name']}",
+                    "dick_says": _phase_advice(phase_num),
+                },
+                fmt,
+                title=f"{CALLSIGN} Kill Chain — Phase {phase_num} Active",
+            )
+
+    if action == "add_finding":
+        if not state:
+            return f"Error: No engagement '{eng_id}' found. Use action='status' to create one first."
+
+        finding = _sanitize(params.finding) or params.finding
+        if not finding:
+            return "Error: finding= is required for add_finding."
+
+        phase_num = params.phase
+        if not phase_num:
+            # Add to current active phase
+            active = next((p for p in state["kill_chain"] if p["status"] == "active"), None)
+            if active:
+                phase_num = active["phase"]
+            else:
+                return "Error: No active phase. Specify phase= or advance to a phase first."
+
+        idx = phase_num - 1
+        if "findings" not in state["kill_chain"][idx]:
+            state["kill_chain"][idx]["findings"] = []
+        state["kill_chain"][idx]["findings"].append(
+            {
+                "description": finding,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        _save_state(eng_id, state)
+
+        return _fmt(
+            {
+                "action": "FINDING LOGGED",
+                "phase": f"Phase {phase_num}: {state['kill_chain'][idx]['name']}",
+                "finding": finding,
+                "total_phase_findings": len(state["kill_chain"][idx]["findings"]),
+                "dick_says": "Documented. Now chain it. What does this finding unlock?",
+            },
+            fmt,
+            title=f"{CALLSIGN} Finding Added",
+        )
+
+    if action == "reset":
+        if not state:
+            return f"No engagement '{eng_id}' to reset."
+        state["kill_chain"] = [dict(p) for p in KILL_CHAIN_PHASES]
+        state["reset_at"] = datetime.now(timezone.utc).isoformat()
+        _save_state(eng_id, state)
+        return _fmt(
+            {"action": "RESET", "engagement": eng_id, "status": "Kill chain reset. All phases pending."},
+            fmt,
+            title=f"{CALLSIGN} Kill Chain — Reset",
+        )
+
+    return f"Error: Unknown action '{action}'. Available: 'status', 'advance', 'add_finding', 'reset', 'list'"
+
+
+def _phase_advice(phase: int) -> str:
+    """Dick's advice for each kill chain phase."""
+    advice = {
+        1: "Recon is everything. Know your target better than they know themselves. OSINT, DNS, subdomains, tech stack, org chart. Don't touch anything yet.",
+        2: "Build the weapon. Match exploits to what recon found. Custom payloads > off-the-shelf. Think about evasion NOW, not later.",
+        3: "Delivery time. Phishing, exploit, or direct? Pick the path of least resistance. Test your payload before sending.",
+        4: "Exploit. This is where prep pays off. First try should work if recon was thorough. If it doesn't — don't spray, think.",
+        5: "Persistence. You're in. Now stay in. Web shells, scheduled tasks, registry keys, certs, golden tickets. Multiple persistence mechanisms.",
+        6: "C2 established. Blend your traffic. DNS, HTTPS, domain fronting. Beacon intervals matter. Don't be noisy.",
+        7: "Actions on objectives. Get what you came for. Document everything. Screenshots, hashes, proof of access. This is what goes in the report.",
+    }
+    return advice.get(phase, "Execute with precision.")
+
+
+# ═══════════════════════════════════════════════════════════════
+# Tool: rick_next_move — Situational awareness. What's next.
+# ═══════════════════════════════════════════════════════════════
+
+
+async def rick_next_move(params: NextMoveInput) -> str:
+    """Dick tells you what to do next. Analyzes your position, findings, and kill chain state. JARVIS-level situational awareness."""
+    eng_id = _sanitize(params.engagement_id) or params.engagement_id
+    state = _load_state(eng_id)
+    fmt = params.response_format
+
+    if not state:
+        return _fmt(
+            {
+                "error": f"No engagement '{eng_id}' found.",
+                "suggestion": f"Start one: rick_full_auto(target='...', engagement_id='{eng_id}')",
+            },
+            fmt,
+            title=f"{CALLSIGN} Next Move",
+        )
+
+    # Analyze current state
+    completed_phases = [p for p in state["kill_chain"] if p["status"] == "completed"]
+    active_phases = [p for p in state["kill_chain"] if p["status"] == "active"]
+    all_findings = []
+    for p in state["kill_chain"]:
+        for f in p.get("findings", []):
+            all_findings.append({"phase": p["name"], "finding": f["description"]})
+
+    # Override position if provided
+    position = _sanitize(params.current_position) if params.current_position else None
+    extra_findings = _sanitize(params.findings_so_far) if params.findings_so_far else None
+
+    result: dict[str, object] = {
+        "engagement": eng_id,
+        "target": state.get("target", "Unknown"),
+    }
+
+    # Current situation
+    if active_phases:
+        current = active_phases[0]
+        result["current_phase"] = f"Phase {current['phase']}: {current['name']}"
+        result["phase_findings"] = len(current.get("findings", []))
+    elif completed_phases and len(completed_phases) < 7:
+        next_p = next((p for p in state["kill_chain"] if p["status"] == "pending"), None)
+        result["current_phase"] = "Between phases"
+        if next_p:
+            result["next_phase"] = f"Phase {next_p['phase']}: {next_p['name']}"
+
+    if position:
+        result["reported_position"] = position
+
+    result["completed_phases"] = len(completed_phases)
+    result["total_findings"] = len(all_findings)
+
+    # Generate Dick's recommendations based on state
+    recommendations: list[str] = []
+    tools_to_use: list[str] = []
+
+    if not active_phases and not completed_phases:
+        # Haven't started
+        recommendations.append("You haven't started. Run recon first — know your target before you touch it.")
+        recommendations.append("Use rick_full_auto to get the complete playbook, or advance to Phase 1 manually.")
+        tools_to_use.extend(["rick_full_auto", "rick_recon", "rick_kill_chain(action='advance', phase=1)"])
+    elif active_phases:
+        phase_num = active_phases[0]["phase"]
+        phase_findings = active_phases[0].get("findings", [])
+
+        if phase_num == 1:
+            # Recon phase
+            if len(phase_findings) < 3:
+                recommendations.append("Not enough recon data. Keep digging.")
+                recommendations.append(
+                    "Subdomain enumeration, port scans, tech stack fingerprinting, OSINT — all of it."
+                )
+                recommendations.append("Don't move to exploitation until you've mapped the full attack surface.")
+                tools_to_use.extend(["rick_recon", "rick_threat_model"])
+            else:
+                recommendations.append(
+                    f"Good recon — {len(phase_findings)} findings logged. Consider advancing to Phase 2."
+                )
+                recommendations.append("Review findings for attack vectors before moving on.")
+                tools_to_use.extend(["rick_vuln_assess", "rick_kill_chain(action='advance')"])
+
+        elif phase_num == 2:
+            recommendations.append("Weaponization: match what recon found to exploits.")
+            recommendations.append("Custom payloads for the specific tech stack. Test in your lab first.")
+            tools_to_use.extend(["rick_payload_guide", "rick_tool_recommend", "rick_cheatsheet"])
+
+        elif phase_num == 3:
+            recommendations.append("Delivery: pick your entry point. Path of least resistance.")
+            if position:
+                recommendations.append(f"From {position}, evaluate: phishing, direct exploit, or credential attack?")
+            tools_to_use.extend(["rick_attack_chain", "rick_tool_recommend"])
+
+        elif phase_num == 4:
+            recommendations.append("Exploitation: execute the plan. First shot should count.")
+            recommendations.append("If initial exploit fails, DON'T spray. Reassess, adjust, retry with precision.")
+            if position:
+                recommendations.append(f"Position: {position} — check for privesc vectors immediately after landing.")
+            tools_to_use.extend(["rick_vuln_assess", "rick_cheatsheet", "rick_pivot_plan"])
+
+        elif phase_num == 5:
+            recommendations.append("Persistence: you're in, now stay in. Multiple mechanisms.")
+            recommendations.append("Web shells, scheduled tasks, certs, golden tickets — don't rely on one.")
+            tools_to_use.extend(["rick_pivot_plan", "rick_attack_chain"])
+
+        elif phase_num == 6:
+            recommendations.append("C2: blend your traffic. Slow beacons. Domain fronting. Encrypted channels.")
+            recommendations.append("Operational security is everything now. Don't get burned.")
+            tools_to_use.extend(["rick_c2_compare", "rick_detection_rules"])
+
+        elif phase_num == 7:
+            recommendations.append("Actions on objectives. Get what you came for.")
+            recommendations.append("Document EVERYTHING. Screenshots, hashes, proof. This is the report.")
+            recommendations.append("Start cleanup planning. Remove persistence, test accounts, artifacts.")
+            tools_to_use.extend(["rick_report_template", "rick_debrief", "rick_tracker"])
+
+    elif len(completed_phases) == 7:
+        recommendations.append("All phases complete. Time to write the report.")
+        recommendations.append("Prioritize findings by business impact, not just CVSS.")
+        recommendations.append(
+            "Include remediation for every finding. Don't just say it's broken — hand them the blueprint."
+        )
+        tools_to_use.extend(["rick_report_template", "rick_debrief", "rick_tracker(action='export_markdown')"])
+
+    # Position-specific recommendations
+    if position:
+        pivot_positions = {
+            "linux_webserver",
+            "windows_workstation",
+            "windows_server",
+            "container",
+            "cloud_instance",
+            "database_server",
+            "network_device",
+        }
+        if position.lower().replace(" ", "_") in pivot_positions:
+            recommendations.append(f"Dick sees you're on a {position}. Run rick_pivot_plan for immediate actions.")
+            tools_to_use.append(f"rick_pivot_plan(position='{position.lower().replace(' ', '_')}')")
+
+    # Extra findings analysis
+    if extra_findings:
+        result["additional_context"] = extra_findings
+        recommendations.append("Dick sees new intel. Log it with rick_kill_chain(action='add_finding').")
+
+    result["dick_says"] = recommendations
+    result["recommended_tools"] = tools_to_use
+
+    # Add the phase advice
+    if active_phases:
+        result["phase_guidance"] = _phase_advice(active_phases[0]["phase"])
+
+    return _fmt(result, fmt, title=f"{CALLSIGN} Next Move — {eng_id}")
+
+
+# ═══════════════════════════════════════════════════════════════
+# Registration
+# ═══════════════════════════════════════════════════════════════
+
+
+def register(mcp):
+    """Register Dick's tools on the MCP server."""
+    mcp.tool(
+        name="rick_full_auto",
+        annotations={
+            "title": "Full Auto — Complete Target Playbook",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_full_auto))
+    mcp.tool(
+        name="rick_kill_chain",
+        annotations={
+            "title": "Kill Chain Tracker",
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_kill_chain))
+    mcp.tool(
+        name="rick_next_move",
+        annotations={
+            "title": "Next Move — Situational Awareness",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_next_move))
