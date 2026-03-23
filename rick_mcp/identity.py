@@ -40,7 +40,7 @@ def _load_identity() -> dict:
         return dict(DEFAULTS)
 
     try:
-        import yaml
+        import yaml  # type: ignore[import-untyped]
 
         raw = yaml.safe_load(IDENTITY_PATH.read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
