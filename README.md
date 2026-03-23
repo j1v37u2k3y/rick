@@ -1,4 +1,4 @@
-# Rick MCP Server v2.0
+# Rick MCP Server v3.0
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
@@ -6,21 +6,19 @@
 [![Tests](https://img.shields.io/badge/tests-406%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
-Rick is the father. jiveturkey is the son. The MCP is Rick.
+A forkable security MCP platform. Load your identity, own your craft.
 
-A Model Context Protocol server that IS the resume. 31 tools. 25 resources. The code IS the craft.
+31 tools. 25 resources. Fork it, fill it, make it yours.
 
-From frontier reconnaissance to cyber reconnaissance — same mission, different battlefield.
-
-## Why an MCP Server and Not a Webpage
+## Why an MCP Server
 
 A webpage sits there and waits to be read. Rick **responds**.
 
-Rick is a living system that an AI can query, reason about, and use as a tool. An LLM can ask Rick who jiveturkey is and
-get structured identity data back. It can pull the book — raw, unfiltered, with all the carriage returns intact. It can
-query values, mantras, methodology — all as structured resources an AI can reason over. And there are 31 functional
-tools that *do things* — generate ROE docs, model threats, look up CVEs, track engagements, recommend tools, write cover
-letters matched to job postings, generate IR playbooks, compare C2 frameworks, and scope entire engagements.
+Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
+who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
+structured resources an AI can reason over. And there are 31 functional tools that *do things* — generate ROE docs,
+model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
+IR playbooks, compare C2 frameworks, and scope entire engagements.
 
 A webpage can't do any of that. A PDF resume definitely can't.
 
@@ -28,15 +26,9 @@ A webpage can't do any of that. A PDF resume definitely can't.
 
 - A **machine-readable identity** that any MCP-compatible AI can consume and act on
 - **Functional proof of skill** — the code IS the portfolio, not a description of one
-- **An interactive operator** — say "check if jiveturkey's a fit for this job posting" and Rick runs the analysis
+- **An interactive operator** — say "check if I'm a fit for this job posting" and Rick runs the analysis
 - **A teaching tool** — newcomers can ask Rick for mentorship paths, cheatsheets, attack chains
 - **A purple team platform** — offensive AND defensive tools, attack chains AND detection rules
-
-The closest analogy isn't a webpage. It's closer to an API that represents a person — except it also has opinions,
-heritage, and a theme song.
-
-[jiveturkey.rocks](https://jiveturkey.rocks/) is where people go to learn about jiveturkey. Rick is where AI goes to
-*work with* jiveturkey.
 
 ## Quick Start
 
@@ -50,8 +42,6 @@ heritage, and a theme song.
 ```bash
 git clone https://github.com/j1v37u2k3y/rick.git
 cd rick
-python3 -m venv venv
-source venv/bin/activate
 make setup
 ```
 
@@ -61,18 +51,38 @@ make setup
 
 Rick works without these files, but with them he has a soul. These are private — they never enter git.
 
+See `soul-example/` for the full directory structure and example files. Copy them into `~/.rick_mcp/` and fill in your own content:
+
 ```bash
 # The setup command creates ~/.rick_mcp/soul/ for you.
-# Add your private content:
+# Copy the examples and make them yours:
 
+cp -r soul-example/* ~/.rick_mcp/
+
+# Then edit:
 ~/.rick_mcp/soul/SOUL.md        # Core principles and values
-~/.rick_mcp/soul/my book.txt    # Memoirs — the book, raw and unfiltered
+~/.rick_mcp/soul/my book.txt    # Your writing — memoirs, essays, whatever you carry
 ~/.rick_mcp/soul/PROFILE.md     # Current state, what's on the horizon, key learnings
+~/.rick_mcp/identity.yaml       # Name, callsign, tagline, contact info
 ```
 
 Rick's prompts (`be_rick`, `mentor_mode`, etc.) pull live from these files at call time. Update the soul, update Rick's voice. The `doc://soul`, `doc://the-book`, and `doc://profile` resources serve this content to any MCP client.
 
 If these files don't exist, Rick falls back to project-root copies (if present) or returns a default message.
+
+### Make It Yours
+
+The fork workflow:
+
+1. **Clone** — `git clone https://github.com/j1v37u2k3y/rick.git && cd rick`
+2. **Setup** — `make setup`
+3. **Copy examples** — `cp -r soul-example/* ~/.rick_mcp/`
+4. **Edit identity** — Open `~/.rick_mcp/identity.yaml` and fill in your name, callsign, tagline, and contact
+5. **Add your soul** — Edit the files in `~/.rick_mcp/soul/` with your values, your story, your profile
+6. **Add your profiles** — Edit `~/.rick_mcp/profiles/` with your stack, methodology, timeline, etc.
+7. **Done** — Rick now speaks for you
+
+Your identity files live outside the repo in `~/.rick_mcp/`. The tools are generic. The soul is yours.
 
 ### Use with Claude Code
 
@@ -168,11 +178,11 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 
 ### Career & Mentorship
 
-| Tool                       | What It Does                                                           |
-|----------------------------|------------------------------------------------------------------------|
-| `rick_compatibility_check` | Analyze a job posting or engagement brief against jiveturkey's profile |
-| `rick_cover_letter`        | Targeted cover letter generator with 3 tones                           |
-| `rick_mentorship`          | Learning paths for 9 topics — getting started through advanced         |
+| Tool                       | What It Does                                                   |
+|----------------------------|----------------------------------------------------------------|
+| `rick_compatibility_check` | Analyze a job posting or engagement brief against your profile |
+| `rick_cover_letter`        | Targeted cover letter generator with 3 tones                   |
+| `rick_mentorship`          | Learning paths for 9 topics — getting started through advanced |
 
 ### Research
 
@@ -235,26 +245,26 @@ Once connected, try asking:
 
 ## Resources — 25 Identity Resources
 
-Access these via MCP resource URIs:
+Access these via MCP resource URIs. Content is loaded from your private `~/.rick_mcp/` directory.
 
 ### Profile (11)
 
-- `profile://rick_and_jiveturkey` — The connection. Rick is the father, jiveturkey is the operator.
+- `profile://rick_and_jiveturkey` — The operator's origin story and connection to Rick
 - `profile://summary` — Quick reference card
-- `profile://values` — Honor. Courage. Commitment. Honesty.
-- `profile://heritage` — Lineage, roots, frontier spirit
+- `profile://values` — Core values and principles
+- `profile://heritage` — Lineage, roots, where you come from
 - `profile://craftsmanship` — Builder meets breaker philosophy
 - `profile://stack` — Complete technical arsenal
-- `profile://methodology` — 7-phase engagement methodology
+- `profile://methodology` — Engagement methodology
 - `profile://mantras` — Operational mantras and philosophy
-- `profile://human` — Father, cycle breaker, poet, ever evolving
+- `profile://human` — The person behind the operator
 - `profile://entertainment` — Humor as operational tool
-- `profile://timeline` — Career timeline from USMC barracks to offensive security
+- `profile://timeline` — Career timeline
 
 ### Documents (9)
 
 - `doc://working-with-me` — Complete engagement guide
-- `doc://the-book` — Memoirs of jiveturkey
+- `doc://the-book` — Your writing — memoirs, essays, whatever you carry
 - `doc://soul` — Core principles and values
 - `doc://profile` — Current state, horizon, key learnings
 - `doc://achievements` — The full build log
@@ -327,24 +337,17 @@ GitHub Actions runs on every push/PR against Python 3.10, 3.12, and 3.14. Includ
 
 Read [ACHIEVEMENTS.md](ACHIEVEMENTS.md) for the full build log — 31 tools, 406 tests, full CI/CD pipeline.
 
-## The Operator
-
-Read [WORKING_WITH_ME.md](WORKING_WITH_ME.md) for how to engage, what to expect, and what I need.
-
-Access `doc://profile` for current state and key learnings (private — available when deployed locally).
-
-Access `doc://soul` and `doc://the-book` through Rick's MCP resources for the principles and the memoirs.
-
 ## Built With
 
 - [FastMCP](https://github.com/jlowin/fastmcp) — MCP server framework
 - [Pydantic v2](https://docs.pydantic.dev/) — Input validation
+- [PyYAML](https://pyyaml.org/) — Identity configuration loading
 - [pytest](https://docs.pytest.org/) — Testing
 - [Hypothesis](https://hypothesis.readthedocs.io/) — Property-based fuzz testing
 - [ruff](https://docs.astral.sh/ruff/) — Linting and formatting
 - [mypy](https://mypy-lang.org/) — Static type checking
 - [pre-commit](https://pre-commit.com/) — Git hooks
 
-## Semper Fidelis
+---
 
-I'm still building. Are you?
+The tools are the craft. The identity is yours.

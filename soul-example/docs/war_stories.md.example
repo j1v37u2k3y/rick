@@ -1,0 +1,9 @@
+# War Stories
+
+Anonymized engagement narratives. Change the names. Keep the lessons.
+
+## Example: The Forgotten Admin Panel
+**Scenario**: Web app pentest for a mid-size company.
+**Finding**: Unauthenticated legacy admin panel found via directory brute-forcing.
+**Impact**: Critical — full database access.
+**Lesson**: Decommission everything. You can't protect what you don't know exists.
