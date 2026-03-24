@@ -1,8 +1,8 @@
-"""Dick's tools — the alter ego. Proactive, chained, situationally aware.
+"""JARVIS — the intelligence layer. Proactive, chained, situationally aware.
 
-Dick doesn't wait for you to ask the right question. Dick chains tools together,
-tracks where you are in the kill chain, and tells you what's next before you ask.
-JARVIS energy. 1337 tradecraft. Same soul — zero hesitation.
+The nervous system connecting Rick (foundation), Dick (operator), and all tools.
+Automatic tool chaining, stateful kill chain tracking, situational awareness,
+and mission logging. Dick is the persona. JARVIS is the system.
 """
 
 import json
