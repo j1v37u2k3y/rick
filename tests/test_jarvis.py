@@ -1,4 +1,4 @@
-"""Tests for Dick's JARVIS tools — full_auto, kill_chain, next_move."""
+"""Tests for JARVIS tools — full_auto, kill_chain, next_move, sitrep."""
 
 from unittest.mock import patch
 
@@ -9,7 +9,7 @@ from pydantic import ValidationError
 class TestRickFullAuto:
     @pytest.mark.asyncio
     async def test_full_auto_web_app(self):
-        from rick_mcp.tools.dick import FullAutoInput, rick_full_auto
+        from rick_mcp.tools.jarvis import FullAutoInput, rick_full_auto
 
         result = await rick_full_auto(FullAutoInput(target="test.example.com", target_type="web_app"))
         assert "test.example.com" in result
@@ -21,9 +21,9 @@ class TestRickFullAuto:
 
     @pytest.mark.asyncio
     async def test_full_auto_with_engagement_id(self, tmp_path):
-        from rick_mcp.tools.dick import FullAutoInput, rick_full_auto
+        from rick_mcp.tools.jarvis import FullAutoInput, rick_full_auto
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_full_auto(
                 FullAutoInput(target="10.10.10.1", target_type="network", engagement_id="test-eng-1")
             )
@@ -32,20 +32,20 @@ class TestRickFullAuto:
 
     @pytest.mark.asyncio
     async def test_full_auto_ad(self):
-        from rick_mcp.tools.dick import FullAutoInput, rick_full_auto
+        from rick_mcp.tools.jarvis import FullAutoInput, rick_full_auto
 
         result = await rick_full_auto(FullAutoInput(target="corp.local", target_type="active_directory"))
         assert "corp.local" in result
 
     @pytest.mark.asyncio
     async def test_full_auto_cloud(self):
-        from rick_mcp.tools.dick import FullAutoInput, rick_full_auto
+        from rick_mcp.tools.jarvis import FullAutoInput, rick_full_auto
 
         result = await rick_full_auto(FullAutoInput(target="aws-prod", target_type="cloud_aws"))
         assert "aws-prod" in result
 
     def test_full_auto_input_validation(self):
-        from rick_mcp.tools.dick import FullAutoInput
+        from rick_mcp.tools.jarvis import FullAutoInput
 
         with pytest.raises(ValidationError):
             FullAutoInput(target="", target_type="web_app")
@@ -54,27 +54,27 @@ class TestRickFullAuto:
 class TestRickKillChain:
     @pytest.mark.asyncio
     async def test_status_creates_new(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_kill_chain(KillChainInput(action="status", engagement_id="new-eng"))
         assert "NEW" in result or "initialized" in result.lower()
         assert (tmp_path / "new-eng.json").exists()
 
     @pytest.mark.asyncio
     async def test_advance_phase(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="adv-eng"))
             result = await rick_kill_chain(KillChainInput(action="advance", engagement_id="adv-eng", phase=1))
         assert "Phase 1" in result or "ACTIVATED" in result
 
     @pytest.mark.asyncio
     async def test_add_finding(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="find-eng"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="find-eng", phase=1))
             result = await rick_kill_chain(
@@ -85,9 +85,9 @@ class TestRickKillChain:
 
     @pytest.mark.asyncio
     async def test_add_finding_no_active_phase(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="nophase"))
             result = await rick_kill_chain(
                 KillChainInput(action="add_finding", engagement_id="nophase", finding="test")
@@ -96,43 +96,43 @@ class TestRickKillChain:
 
     @pytest.mark.asyncio
     async def test_add_finding_missing_text(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="nofind"))
             result = await rick_kill_chain(KillChainInput(action="add_finding", engagement_id="nofind", phase=1))
         assert "Error" in result
 
     @pytest.mark.asyncio
     async def test_reset(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="reset-eng"))
             result = await rick_kill_chain(KillChainInput(action="reset", engagement_id="reset-eng"))
         assert "RESET" in result
 
     @pytest.mark.asyncio
     async def test_reset_nonexistent(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_kill_chain(KillChainInput(action="reset", engagement_id="ghost"))
         assert "No engagement" in result
 
     @pytest.mark.asyncio
     async def test_list_empty(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_kill_chain(KillChainInput(action="list", engagement_id="ignored"))
         assert "No active" in result
 
     @pytest.mark.asyncio
     async def test_list_with_engagements(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="eng-a"))
             await rick_kill_chain(KillChainInput(action="status", engagement_id="eng-b"))
             result = await rick_kill_chain(KillChainInput(action="list", engagement_id="ignored"))
@@ -141,25 +141,25 @@ class TestRickKillChain:
 
     @pytest.mark.asyncio
     async def test_invalid_action(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_kill_chain(KillChainInput(action="explode", engagement_id="test"))
         assert "Error" in result
 
     @pytest.mark.asyncio
     async def test_advance_no_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_kill_chain(KillChainInput(action="advance", engagement_id="ghost"))
         assert "Error" in result
 
     @pytest.mark.asyncio
     async def test_auto_advance(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="auto-adv"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="auto-adv", phase=1))
             result = await rick_kill_chain(KillChainInput(action="advance", engagement_id="auto-adv"))
@@ -167,18 +167,18 @@ class TestRickKillChain:
 
     @pytest.mark.asyncio
     async def test_advance_no_active_phase(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="no-active"))
             result = await rick_kill_chain(KillChainInput(action="advance", engagement_id="no-active"))
         assert "No active" in result
 
     @pytest.mark.asyncio
     async def test_status_completed_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, rick_kill_chain
+        from rick_mcp.tools.jarvis import KillChainInput, rick_kill_chain
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="done-eng"))
             for phase in range(1, 8):
                 await rick_kill_chain(KillChainInput(action="advance", engagement_id="done-eng", phase=phase))
@@ -190,26 +190,26 @@ class TestRickKillChain:
 class TestRickNextMove:
     @pytest.mark.asyncio
     async def test_next_move_no_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import NextMoveInput, rick_next_move
+        from rick_mcp.tools.jarvis import NextMoveInput, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_next_move(NextMoveInput(engagement_id="ghost"))
         assert "No engagement" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_next_move_new_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="next-eng"))
             result = await rick_next_move(NextMoveInput(engagement_id="next-eng"))
         assert "rick_full_auto" in result or "recon" in result.lower()
 
     @pytest.mark.asyncio
     async def test_next_move_with_position(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="pos-eng"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="pos-eng", phase=4))
             result = await rick_next_move(NextMoveInput(engagement_id="pos-eng", current_position="linux_webserver"))
@@ -217,9 +217,9 @@ class TestRickNextMove:
 
     @pytest.mark.asyncio
     async def test_next_move_recon_phase_few_findings(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="recon-eng"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="recon-eng", phase=1))
             result = await rick_next_move(NextMoveInput(engagement_id="recon-eng"))
@@ -227,9 +227,9 @@ class TestRickNextMove:
 
     @pytest.mark.asyncio
     async def test_next_move_recon_phase_enough_findings(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="recon-full"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="recon-full", phase=1))
             for f in ["Port 80 open", "Port 443 open", "Apache 2.4.49"]:
@@ -239,9 +239,9 @@ class TestRickNextMove:
 
     @pytest.mark.asyncio
     async def test_next_move_completed(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="done-eng"))
             for phase in range(1, 8):
                 await rick_kill_chain(KillChainInput(action="advance", engagement_id="done-eng", phase=phase))
@@ -251,9 +251,9 @@ class TestRickNextMove:
 
     @pytest.mark.asyncio
     async def test_next_move_with_extra_findings(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="extra-eng"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="extra-eng", phase=1))
             result = await rick_next_move(
@@ -264,10 +264,10 @@ class TestRickNextMove:
     @pytest.mark.asyncio
     async def test_next_move_each_phase(self, tmp_path):
         """Test that next_move gives recommendations for phases 2-7."""
-        from rick_mcp.tools.dick import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
+        from rick_mcp.tools.jarvis import KillChainInput, NextMoveInput, rick_kill_chain, rick_next_move
 
         for phase in range(2, 8):
-            with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+            with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
                 eid = f"phase-{phase}-eng"
                 await rick_kill_chain(KillChainInput(action="status", engagement_id=eid))
                 await rick_kill_chain(KillChainInput(action="advance", engagement_id=eid, phase=phase))
@@ -277,19 +277,19 @@ class TestRickNextMove:
 
 class TestDickHelpers:
     def test_phase_advice_all_phases(self):
-        from rick_mcp.tools.dick import _phase_advice
+        from rick_mcp.tools.jarvis import _phase_advice
 
         for phase in range(1, 8):
             advice = _phase_advice(phase)
             assert len(advice) > 20
 
     def test_phase_advice_unknown(self):
-        from rick_mcp.tools.dick import _phase_advice
+        from rick_mcp.tools.jarvis import _phase_advice
 
         assert _phase_advice(99) == "Execute with precision."
 
     def test_state_file_sanitizes(self):
-        from rick_mcp.tools.dick import _state_file
+        from rick_mcp.tools.jarvis import _state_file
 
         path = _state_file("test/../../../etc/passwd")
         # Path traversal chars (/, .) are stripped — no directory escape
@@ -297,23 +297,23 @@ class TestDickHelpers:
         assert ".." not in path.name
 
     def test_load_state_missing(self, tmp_path):
-        from rick_mcp.tools.dick import _load_state
+        from rick_mcp.tools.jarvis import _load_state
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             state = _load_state("nonexistent")
         assert state == {}
 
     def test_save_and_load_state(self, tmp_path):
-        from rick_mcp.tools.dick import _load_state, _save_state
+        from rick_mcp.tools.jarvis import _load_state, _save_state
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state("test-id", {"id": "test-id", "target": "example.com"})
             state = _load_state("test-id")
         assert state["id"] == "test-id"
         assert state["target"] == "example.com"
 
     def test_input_validation_kill_chain(self):
-        from rick_mcp.tools.dick import KillChainInput
+        from rick_mcp.tools.jarvis import KillChainInput
 
         with pytest.raises(ValidationError):
             KillChainInput(action="status", engagement_id="x", phase=0)
@@ -324,17 +324,17 @@ class TestDickHelpers:
 class TestRickSitrep:
     @pytest.mark.asyncio
     async def test_sitrep_no_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import SitrepInput, rick_sitrep
+        from rick_mcp.tools.jarvis import SitrepInput, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             result = await rick_sitrep(SitrepInput(engagement_id="ghost"))
         assert "No engagement" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_sitrep_new_engagement(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+        from rick_mcp.tools.jarvis import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-eng"))
             result = await rick_sitrep(SitrepInput(engagement_id="sit-eng"))
         assert "SITREP" in result
@@ -342,9 +342,9 @@ class TestRickSitrep:
 
     @pytest.mark.asyncio
     async def test_sitrep_with_findings(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+        from rick_mcp.tools.jarvis import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-find"))
             await rick_kill_chain(KillChainInput(action="advance", engagement_id="sit-find", phase=1))
             await rick_kill_chain(
@@ -356,9 +356,9 @@ class TestRickSitrep:
 
     @pytest.mark.asyncio
     async def test_sitrep_completed(self, tmp_path):
-        from rick_mcp.tools.dick import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
+        from rick_mcp.tools.jarvis import KillChainInput, SitrepInput, rick_kill_chain, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             await rick_kill_chain(KillChainInput(action="status", engagement_id="sit-done"))
             for phase in range(1, 8):
                 await rick_kill_chain(KillChainInput(action="advance", engagement_id="sit-done", phase=phase))
@@ -368,9 +368,9 @@ class TestRickSitrep:
 
     @pytest.mark.asyncio
     async def test_sitrep_with_mission_log(self, tmp_path):
-        from rick_mcp.tools.dick import SitrepInput, _save_state, rick_sitrep
+        from rick_mcp.tools.jarvis import SitrepInput, _save_state, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state(
                 "log-eng",
                 {
@@ -379,7 +379,7 @@ class TestRickSitrep:
                     "target_type": "web_app",
                     "kill_chain": [
                         dict(p)
-                        for p in __import__("rick_mcp.tools.dick", fromlist=["KILL_CHAIN_PHASES"]).KILL_CHAIN_PHASES
+                        for p in __import__("rick_mcp.tools.jarvis", fromlist=["KILL_CHAIN_PHASES"]).KILL_CHAIN_PHASES
                     ],
                     "mission_log": [{"timestamp": "2026-03-23T12:00:00Z", "entry": "Test entry"}],
                 },
@@ -390,9 +390,9 @@ class TestRickSitrep:
     @pytest.mark.asyncio
     async def test_sitrep_backward_compat(self, tmp_path):
         """Old state files without mission_log/tool_history should work."""
-        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, SitrepInput, _save_state, rick_sitrep
+        from rick_mcp.tools.jarvis import KILL_CHAIN_PHASES, SitrepInput, _save_state, rick_sitrep
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state(
                 "old-eng",
                 {
@@ -407,9 +407,9 @@ class TestRickSitrep:
 
 class TestStateHelpers:
     def test_add_mission_log(self, tmp_path):
-        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_mission_log, _load_state, _save_state
+        from rick_mcp.tools.jarvis import KILL_CHAIN_PHASES, _add_mission_log, _load_state, _save_state
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state("ml-eng", {"id": "ml-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
             _add_mission_log("ml-eng", "Test log entry")
             state = _load_state("ml-eng")
@@ -417,9 +417,9 @@ class TestStateHelpers:
         assert state["mission_log"][0]["entry"] == "Test log entry"
 
     def test_add_tool_history(self, tmp_path):
-        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_tool_history, _load_state, _save_state
+        from rick_mcp.tools.jarvis import KILL_CHAIN_PHASES, _add_tool_history, _load_state, _save_state
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state("th-eng", {"id": "th-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
             _add_tool_history("th-eng", "rick_recon", "Recon for web_app")
             state = _load_state("th-eng")
@@ -427,9 +427,9 @@ class TestStateHelpers:
         assert state["tool_history"][0]["tool"] == "rick_recon"
 
     def test_add_note(self, tmp_path):
-        from rick_mcp.tools.dick import KILL_CHAIN_PHASES, _add_note, _load_state, _save_state
+        from rick_mcp.tools.jarvis import KILL_CHAIN_PHASES, _add_note, _load_state, _save_state
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _save_state("note-eng", {"id": "note-eng", "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES]})
             _add_note("note-eng", "Client uses CrowdStrike")
             state = _load_state("note-eng")
@@ -437,9 +437,9 @@ class TestStateHelpers:
 
     def test_helpers_no_state(self, tmp_path):
         """Helpers should silently return when engagement doesn't exist."""
-        from rick_mcp.tools.dick import _add_mission_log, _add_note, _add_tool_history
+        from rick_mcp.tools.jarvis import _add_mission_log, _add_note, _add_tool_history
 
-        with patch("rick_mcp.tools.dick._STATE_DIR", tmp_path):
+        with patch("rick_mcp.tools.jarvis._STATE_DIR", tmp_path):
             _add_mission_log("ghost", "entry")
             _add_tool_history("ghost", "tool")
             _add_note("ghost", "note")

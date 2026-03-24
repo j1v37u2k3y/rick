@@ -15,7 +15,7 @@ rick_mcp/
   identity.py            → Loads operator identity from ~/.rick_mcp/identity.yaml (zero internal imports)
   constants.py           → MISSION_PHASES, ResponseFormat enum
   formatting.py          → _fmt(), _sanitize(), _safe_tool(), _read_md(), _read_data()
-  prompts.py             → 6 prompt builders (be_rick, dick_mode, pentest, mentor, evaluate, engagement)
+  prompts.py             → 7 prompt builders (be_rick, dick_mode, jarvis, pentest, mentor, evaluate, engagement)
   models/inputs.py       → Pydantic input models for all tools
   tools/
     offensive.py         → rick_recon, rick_vuln_assess, rick_tool_recommend
@@ -27,7 +27,7 @@ rick_mcp/
     career.py            → rick_compatibility_check, rick_cover_letter, rick_mentorship
     cve.py               → rick_cve (NVD API, 24hr file cache)
     meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_capabilities
-    dick.py              → rick_full_auto, rick_kill_chain, rick_next_move (JARVIS tools, stateful)
+    jarvis.py            → rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep (intelligence layer, stateful)
   resources/
     profile.py           → 11 profile:// resources
     resume.py            → 4 resume:// resources
@@ -47,7 +47,7 @@ rick_mcp/
 - **Identity**: `rick_mcp/identity.py` loads from `~/.rick_mcp/identity.yaml`. Use `is_configured()` to check if custom
   identity exists. All prompts/tools must work with generic defaults (no identity.yaml).
 - **Private content**: Soul files load from `~/.rick_mcp/soul/` first, project root second, then fallback string
-- **Dick state**: Kill chain state persists to `~/.rick_mcp/dick/` as JSON files
+- **JARVIS state**: Kill chain + mission log persists to `~/.rick_mcp/dick/` as JSON files
 
 ## Commands
 
