@@ -13,6 +13,16 @@ from rick_mcp.tools.engagement import (
     rick_tracker,
 )
 from rick_mcp.tools.jarvis import rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep
+from rick_mcp.tools.jarvis_extended import (
+    rick_checklist,
+    rick_compare,
+    rick_export,
+    rick_notes,
+    rick_rollback,
+    rick_scope_check,
+    rick_tag,
+    rick_timeline,
+)
 from rick_mcp.tools.meta import rick_capabilities, rick_demo, rick_health, rick_mode, rick_status
 from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
 from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
@@ -22,7 +32,7 @@ from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet, rick_threat_mod
 
 def register_all(mcp):
     """Register all tools on the MCP server."""
-    from rick_mcp.tools import career, cve, defensive, engagement, jarvis, meta, offensive
+    from rick_mcp.tools import career, cve, defensive, engagement, jarvis, jarvis_extended, meta, offensive
 
     offensive.register(mcp)
     defensive.register(mcp)
@@ -31,14 +41,23 @@ def register_all(mcp):
     meta.register(mcp)
     cve.register(mcp)
     jarvis.register(mcp)
+    jarvis_extended.register(mcp)
 
 
 __all__ = [
     "rick_attack_chain",
+    "rick_checklist",
+    "rick_compare",
+    "rick_export",
     "rick_full_auto",
     "rick_kill_chain",
     "rick_next_move",
+    "rick_notes",
+    "rick_rollback",
+    "rick_scope_check",
     "rick_sitrep",
+    "rick_tag",
+    "rick_timeline",
     "rick_c2_compare",
     "rick_cheatsheet",
     "rick_client_onboarding",

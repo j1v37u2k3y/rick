@@ -337,3 +337,221 @@ class ScopingInput(BaseModel):
         description="'low', 'medium', 'high'",
     )
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# --- JARVIS tools ---
+
+
+class FullAutoInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    target: str = Field(
+        ...,
+        description="Target description — domain, IP, app name, org, or environment",
+        min_length=1,
+        max_length=500,
+    )
+    target_type: str = Field(
+        default="web_app",
+        description="Target type: 'web_app', 'network', 'cloud_azure', 'cloud_aws', 'active_directory', 'api', 'container', 'mobile'",
+        max_length=50,
+    )
+    engagement_id: str | None = Field(
+        default=None,
+        description="Optional engagement ID to track state. Creates new if not found.",
+        max_length=100,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class KillChainInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    action: str = Field(
+        ...,
+        description="Action: 'status', 'advance', 'add_finding', 'reset', 'list'",
+        min_length=1,
+        max_length=20,
+    )
+    engagement_id: str = Field(
+        ...,
+        description="Engagement ID to track",
+        min_length=1,
+        max_length=100,
+    )
+    phase: int | None = Field(
+        default=None,
+        description="Phase number (1-7) for advance/add_finding",
+        ge=1,
+        le=7,
+    )
+    finding: str | None = Field(
+        default=None,
+        description="Finding description to add to a phase",
+        max_length=1000,
+    )
+    image_path: str | None = Field(
+        default=None,
+        description="Optional file path to attach an image/screenshot as evidence",
+        max_length=500,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class NextMoveInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(
+        ...,
+        description="Engagement ID to analyze",
+        min_length=1,
+        max_length=100,
+    )
+    current_position: str | None = Field(
+        default=None,
+        description="Where you are right now: 'linux_webserver', 'windows_workstation', 'windows_server', 'container', 'cloud_instance', 'database_server', 'network_device', or free text",
+        max_length=500,
+    )
+    findings_so_far: str | None = Field(
+        default=None,
+        description="What you've found so far — comma separated or free text",
+        max_length=2000,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class SitrepInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(
+        ...,
+        description="Engagement ID to get sitrep for",
+        min_length=1,
+        max_length=100,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+# --- JARVIS extended tools ---
+
+
+class NotesInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    action: str = Field(
+        ...,
+        description="Action: 'add', 'list', 'search', 'delete'",
+        min_length=1,
+        max_length=10,
+    )
+    content: str | None = Field(default=None, max_length=2000)
+    search_term: str | None = Field(default=None, max_length=200)
+    note_index: int | None = Field(default=None, ge=0, description="Index for delete action")
+    image_path: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Optional file path to attach as evidence",
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class TimelineInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    filter_phase: int | None = Field(default=None, ge=1, le=7)
+    filter_type: str | None = Field(
+        default=None,
+        description="Event type: 'finding', 'log', 'tool'",
+        max_length=20,
+    )
+    since: str | None = Field(
+        default=None,
+        description="ISO timestamp — show events after this time",
+        max_length=30,
+    )
+    until: str | None = Field(
+        default=None,
+        description="ISO timestamp — show events before this time",
+        max_length=30,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class CompareInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id_a: str = Field(..., min_length=1, max_length=100)
+    engagement_id_b: str = Field(..., min_length=1, max_length=100)
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class ScopeCheckInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    target: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Target/IP/hostname to check against scope",
+    )
+    action: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Action to check against ROE",
+    )
+    add_scope: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Comma-separated scope items to add",
+    )
+    set_roe: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Free-text ROE notes to store",
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class ExportInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    export_format: str = Field(
+        default="markdown",
+        description="Export format: 'markdown', 'json', 'csv'",
+        max_length=10,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class ChecklistInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    action: str = Field(
+        ...,
+        description="Action: 'generate', 'check', 'uncheck', 'status'",
+        min_length=1,
+        max_length=10,
+    )
+    item_index: int | None = Field(default=None, ge=0, description="Checklist item index for check/uncheck")
+    phase: int | None = Field(default=None, ge=1, le=7, description="Phase to generate checklist for")
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class TagInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    phase: int = Field(..., ge=1, le=7)
+    finding_index: int = Field(..., ge=0, description="Index of finding within the phase")
+    severity: str | None = Field(
+        default=None,
+        description="'critical', 'high', 'medium', 'low', 'info'",
+        max_length=10,
+    )
+    category: str | None = Field(default=None, max_length=100)
+    mitre_id: str | None = Field(
+        default=None,
+        description="MITRE ATT&CK technique ID, e.g. 'T1059.001'",
+        max_length=20,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class RollbackInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    engagement_id: str = Field(..., min_length=1, max_length=100)
+    confirm: bool = Field(default=False, description="Must be True to execute rollback")
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)

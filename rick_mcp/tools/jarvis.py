@@ -7,191 +7,30 @@ and mission logging. Dick is the persona. JARVIS is the system.
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from rick_mcp.constants import CALLSIGN, ResponseFormat
+from rick_mcp.constants import CALLSIGN
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize
 from rick_mcp.models import (
     AttackChainInput,
+    FullAutoInput,
+    KillChainInput,
+    NextMoveInput,
     PivotInput,
     ReconInput,
+    SitrepInput,
     ToolRecInput,
     VulnInput,
 )
-
-# ═══════════════════════════════════════════════════════════════
-# Engagement state — Dick remembers where you are
-# ═══════════════════════════════════════════════════════════════
-
-_STATE_DIR = Path.home() / ".rick_mcp" / "dick"
-
-KILL_CHAIN_PHASES = [
-    {"phase": 1, "name": "Reconnaissance", "status": "pending", "findings": []},
-    {"phase": 2, "name": "Weaponization", "status": "pending", "findings": []},
-    {"phase": 3, "name": "Delivery", "status": "pending", "findings": []},
-    {"phase": 4, "name": "Exploitation", "status": "pending", "findings": []},
-    {"phase": 5, "name": "Installation", "status": "pending", "findings": []},
-    {"phase": 6, "name": "Command & Control", "status": "pending", "findings": []},
-    {"phase": 7, "name": "Actions on Objectives", "status": "pending", "findings": []},
-]
-
-
-def _state_file(engagement_id: str) -> Path:
-    """Get the state file path for an engagement."""
-    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
-    return _STATE_DIR / f"{safe_id}.json"
-
-
-def _load_state(engagement_id: str) -> dict[str, Any]:
-    """Load engagement state from disk."""
-    path = _state_file(engagement_id)
-    if path.exists():
-        result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
-        return result
-    return {}
-
-
-def _save_state(engagement_id: str, state: dict[str, Any]) -> None:
-    """Save engagement state to disk."""
-    _STATE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _state_file(engagement_id)
-    path.write_text(json.dumps(state, indent=2, default=str), encoding="utf-8")
-
-
-def _add_mission_log(engagement_id: str, entry: str) -> None:
-    """Append an entry to the mission log."""
-    state = _load_state(engagement_id)
-    if not state:
-        return
-    if "mission_log" not in state:
-        state["mission_log"] = []
-    state["mission_log"].append(
-        {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "entry": entry,
-        }
-    )
-    state["mission_log"] = state["mission_log"][-100:]
-    _save_state(engagement_id, state)
-
-
-def _add_tool_history(engagement_id: str, tool: str, summary: str = "") -> None:
-    """Log a tool call to the engagement history."""
-    state = _load_state(engagement_id)
-    if not state:
-        return
-    if "tool_history" not in state:
-        state["tool_history"] = []
-    state["tool_history"].append(
-        {
-            "tool": tool,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": summary,
-        }
-    )
-    state["tool_history"] = state["tool_history"][-100:]
-    _save_state(engagement_id, state)
-
-
-def _add_note(engagement_id: str, note: str) -> None:
-    """Add an engagement note."""
-    state = _load_state(engagement_id)
-    if not state:
-        return
-    if "notes" not in state:
-        state["notes"] = []
-    state["notes"].append(note)
-    _save_state(engagement_id, state)
-
-
-# ═══════════════════════════════════════════════════════════════
-# Input models
-# ═══════════════════════════════════════════════════════════════
-
-
-class FullAutoInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    target: str = Field(
-        ...,
-        description="Target description — domain, IP, app name, org, or environment",
-        min_length=1,
-        max_length=500,
-    )
-    target_type: str = Field(
-        default="web_app",
-        description="Target type: 'web_app', 'network', 'cloud_azure', 'cloud_aws', 'active_directory', 'api', 'container', 'mobile'",
-        max_length=50,
-    )
-    engagement_id: str | None = Field(
-        default=None,
-        description="Optional engagement ID to track state. Creates new if not found.",
-        max_length=100,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
-
-class KillChainInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    action: str = Field(
-        ...,
-        description="Action: 'status', 'advance', 'add_finding', 'reset', 'list'",
-        min_length=1,
-        max_length=20,
-    )
-    engagement_id: str = Field(
-        ...,
-        description="Engagement ID to track",
-        min_length=1,
-        max_length=100,
-    )
-    phase: int | None = Field(
-        default=None,
-        description="Phase number (1-7) for advance/add_finding",
-        ge=1,
-        le=7,
-    )
-    finding: str | None = Field(
-        default=None,
-        description="Finding description to add to a phase",
-        max_length=1000,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
-
-class NextMoveInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    engagement_id: str = Field(
-        ...,
-        description="Engagement ID to analyze",
-        min_length=1,
-        max_length=100,
-    )
-    current_position: str | None = Field(
-        default=None,
-        description="Where you are right now: 'linux_webserver', 'windows_workstation', 'windows_server', 'container', 'cloud_instance', 'database_server', 'network_device', or free text",
-        max_length=500,
-    )
-    findings_so_far: str | None = Field(
-        default=None,
-        description="What you've found so far — comma separated or free text",
-        max_length=2000,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
-
-class SitrepInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    engagement_id: str = Field(
-        ...,
-        description="Engagement ID to get sitrep for",
-        min_length=1,
-        max_length=100,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
+from rick_mcp.tools import jarvis_state as _js
+from rick_mcp.tools.jarvis_state import (
+    KILL_CHAIN_PHASES,
+    _add_mission_log,
+    _load_state,
+    _phase_advice,
+    _save_state,
+    _validate_image_path,
+)
 
 # ═══════════════════════════════════════════════════════════════
 # Tool: rick_full_auto — Chain everything. Automatically.
@@ -343,9 +182,9 @@ async def rick_kill_chain(params: KillChainInput) -> str:
 
     if action == "list":
         # List all active engagements
-        _STATE_DIR.mkdir(parents=True, exist_ok=True)
+        _js._STATE_DIR.mkdir(parents=True, exist_ok=True)
         engagements = []
-        for f in sorted(_STATE_DIR.glob("*.json")):
+        for f in sorted(_js._STATE_DIR.glob("*.json")):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
                 active_phase = "Unknown"
@@ -501,12 +340,18 @@ async def rick_kill_chain(params: KillChainInput) -> str:
         idx = phase_num - 1
         if "findings" not in state["kill_chain"][idx]:
             state["kill_chain"][idx]["findings"] = []
-        state["kill_chain"][idx]["findings"].append(
-            {
-                "description": finding,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        )
+        finding_entry: dict[str, Any] = {
+            "description": finding,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        if params.image_path:
+            try:
+                validated_path = _validate_image_path(params.image_path)
+                if validated_path:
+                    finding_entry["image_path"] = validated_path
+            except ValueError as e:
+                return f"Error: {e}"
+        state["kill_chain"][idx]["findings"].append(finding_entry)
         _save_state(eng_id, state)
         _add_mission_log(eng_id, f"Finding logged in Phase {phase_num}: {finding[:80]}")
 
@@ -535,20 +380,6 @@ async def rick_kill_chain(params: KillChainInput) -> str:
         )
 
     return f"Error: Unknown action '{action}'. Available: 'status', 'advance', 'add_finding', 'reset', 'list'"
-
-
-def _phase_advice(phase: int) -> str:
-    """Dick's advice for each kill chain phase."""
-    advice = {
-        1: "Recon is everything. Know your target better than they know themselves. OSINT, DNS, subdomains, tech stack, org chart. Don't touch anything yet.",
-        2: "Build the weapon. Match exploits to what recon found. Custom payloads > off-the-shelf. Think about evasion NOW, not later.",
-        3: "Delivery time. Phishing, exploit, or direct? Pick the path of least resistance. Test your payload before sending.",
-        4: "Exploit. This is where prep pays off. First try should work if recon was thorough. If it doesn't — don't spray, think.",
-        5: "Persistence. You're in. Now stay in. Web shells, scheduled tasks, registry keys, certs, golden tickets. Multiple persistence mechanisms.",
-        6: "C2 established. Blend your traffic. DNS, HTTPS, domain fronting. Beacon intervals matter. Don't be noisy.",
-        7: "Actions on objectives. Get what you came for. Document everything. Screenshots, hashes, proof of access. This is what goes in the report.",
-    }
-    return advice.get(phase, "Execute with precision.")
 
 
 # ═══════════════════════════════════════════════════════════════
