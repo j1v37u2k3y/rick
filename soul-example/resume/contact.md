@@ -8,11 +8,13 @@
 **LinkedIn**: linkedin.com/in/alexchen-security
 
 ## Availability
+
 - Open to red team, web app, AD, and cloud security engagements
 - Remote-first, travel for on-site red team operations
 - Available for mentorship and training engagements
 
 ## Preferred Engagement Types
+
 1. Red Team Operations (full scope)
 2. Web Application Penetration Testing
 3. Active Directory Security Assessments

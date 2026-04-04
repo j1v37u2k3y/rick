@@ -490,9 +490,17 @@ async def rick_capabilities() -> str:
             "description": "JARVIS — the intelligence layer. Proactive, chained, situationally aware.",
             "tools": {
                 "rick_full_auto": "Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained automatically.",
-                "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings. Persists across conversations.",
+                "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings (with image attachments). Persists across conversations.",
                 "rick_next_move": "Situational awareness — analyzes position, findings, and kill chain state. Tells you what to do next.",
                 "rick_sitrep": "Situation Report — one command, full tactical picture. Kill chain, findings, mission log, recommendations.",
+                "rick_notes": "Engagement notes — add, list, search, delete. Supports image attachments as evidence.",
+                "rick_timeline": "Unified chronological timeline — findings, mission log, tool history. Filterable by phase, type, time range.",
+                "rick_compare": "Diff two engagements side by side — see what changed between assessments. Retests.",
+                "rick_scope_check": "Safety rail — check targets and actions against stored scope/ROE. Know your boundaries.",
+                "rick_export": "Export engagement to markdown, JSON, or CSV. Report-ready output.",
+                "rick_checklist": "Phase-specific checklists auto-populated by target type. Generate, check, track progress.",
+                "rick_tag": "Tag findings with severity, category, and MITRE ATT&CK technique IDs.",
+                "rick_rollback": "Undo last kill chain state change. Uses automatic state snapshots.",
             },
         },
         "meta": {

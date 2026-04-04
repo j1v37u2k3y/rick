@@ -74,7 +74,7 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "3.2.0"
+        assert __version__ == "3.3.0"
         banner = _build_banner()
         assert __version__ in banner
 

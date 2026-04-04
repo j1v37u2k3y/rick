@@ -1,14 +1,14 @@
-# Rick MCP Server v3.2
+# Rick MCP Server v3.3
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-449%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-512%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-35 tools. 24 resources. Fork it, fill it, make it yours.
+43 tools. 24 resources. Fork it, fill it, make it yours.
 
 ## Why an MCP Server
 
@@ -194,14 +194,22 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 |------------|-----------------------------------------------------------|
 | `rick_cve` | NVD CVE lookup — search by ID or keyword, cached 24 hours |
 
-### Dick Mode — JARVIS Tools
+### JARVIS — Intelligence Layer
 
-| Tool              | What It Does                                                                                      |
-|-------------------|---------------------------------------------------------------------------------------------------|
-| `rick_full_auto`  | Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained. |
-| `rick_kill_chain` | Stateful 7-phase kill chain tracker — persists across conversations                               |
-| `rick_next_move`  | Situational awareness — analyzes position, findings, and kill chain state. What's next.           |
-| `rick_sitrep`     | Situation Report — one command, full tactical picture. Kill chain, findings, mission log.         |
+| Tool               | What It Does                                                                                      |
+|--------------------|---------------------------------------------------------------------------------------------------|
+| `rick_full_auto`   | Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained. |
+| `rick_kill_chain`  | Stateful 7-phase kill chain tracker — persists across conversations. Image attachments.           |
+| `rick_next_move`   | Situational awareness — analyzes position, findings, and kill chain state. What's next.           |
+| `rick_sitrep`      | Situation Report — one command, full tactical picture. Kill chain, findings, mission log.         |
+| `rick_notes`       | Engagement notes — add, list, search, delete. Supports image attachments as evidence.             |
+| `rick_timeline`    | Unified chronological timeline — findings, logs, tool history. Filterable.                        |
+| `rick_compare`     | Diff two engagements side by side — retests, what changed.                                        |
+| `rick_scope_check` | Safety rail — check targets/actions against stored scope and ROE.                                 |
+| `rick_export`      | Export engagement to markdown, JSON, or CSV. Report-ready.                                        |
+| `rick_checklist`   | Phase-specific checklists by target type. Generate, check, track.                                 |
+| `rick_tag`         | Tag findings — severity, category, MITRE ATT&CK technique IDs.                                   |
+| `rick_rollback`    | Undo last kill chain state change. Automatic state snapshots.                                     |
 
 ### Meta
 

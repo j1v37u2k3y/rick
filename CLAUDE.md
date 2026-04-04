@@ -3,7 +3,7 @@
 ## What This Is
 
 rick_mcp is a forkable MCP (Model Context Protocol) server for security professionals. It's a machine-readable identity
-platform with 34 offensive/defensive security tools, 24 identity resources, and 6 persona modes. Built with FastMCP +
+platform with 43 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
 Pydantic v2.
 
 ## Architecture
@@ -27,7 +27,9 @@ rick_mcp/
     career.py            → rick_compatibility_check, rick_cover_letter, rick_mentorship
     cve.py               → rick_cve (NVD API, 24hr file cache)
     meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_capabilities
-    jarvis.py            → rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep (intelligence layer, stateful)
+    jarvis_state.py      → Shared state persistence layer (load/save, snapshots, image validation, checklist templates)
+    jarvis.py            → rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep (core intelligence layer)
+    jarvis_extended.py   → rick_notes, rick_timeline, rick_compare, rick_scope_check, rick_export, rick_checklist, rick_tag, rick_rollback
   resources/
     profile.py           → 11 profile:// resources
     resume.py            → 4 resume:// resources
