@@ -219,6 +219,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | `rick_status`       | Server status — version, callsign, tool/resource counts, operational readiness |
 | `rick_health`       | Health check with optional self-healing (`fix=True`)                           |
 | `rick_demo`         | Guided tour — fires one tool from each category                                |
+| `rick_mantra`       | Random mantra from the operator's stored principles — one per call             |
 | `rick_mode`         | Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)   |
 
 ## Example Usage

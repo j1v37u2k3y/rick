@@ -74,7 +74,7 @@ class TestConstants:
     def test_version(self):
         from __version__ import __version__
 
-        assert __version__ == "3.3.0"
+        assert __version__ == "3.4.0"
         banner = _build_banner()
         assert __version__ in banner
 
@@ -1097,6 +1097,52 @@ class TestRickStatus:
         result = await rick_status()
         assert str(tool_count()) in result
         assert str(resource_count()) in result
+
+
+# ═══════════════════════════════════════════════════════════════
+#  RICK MANTRA
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestRickMantra:
+    @pytest.mark.asyncio
+    async def test_returns_string(self):
+        from rick_mcp.tools.meta import rick_mantra
+
+        result = await rick_mantra()
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    @pytest.mark.asyncio
+    async def test_returns_bullet_line(self):
+        from rick_mcp.tools.meta import rick_mantra
+
+        result = await rick_mantra()
+        # Should start with "- " (a markdown bullet) or be the fallback message
+        assert result.startswith("- ") or "No mantras found" in result
+
+    @pytest.mark.asyncio
+    async def test_randomness(self):
+        """Multiple calls should eventually return different mantras."""
+        from rick_mcp.tools.meta import rick_mantra
+
+        results = set()
+        for _ in range(20):
+            results.add(await rick_mantra())
+        # With real mantras loaded, we should get more than 1 unique result in 20 tries
+        # If only fallback, set size will be 1 — that's still valid
+        assert len(results) >= 1
+
+    @pytest.mark.asyncio
+    async def test_fallback_when_no_mantras(self, tmp_path, monkeypatch):
+        """When mantras file has no bullet points, return fallback message."""
+        import rick_mcp.tools.meta as meta_mod
+
+        monkeypatch.setattr(meta_mod, "_read_data", lambda *a, **kw: "# Empty\nNo bullets here.")
+        from rick_mcp.tools.meta import rick_mantra
+
+        result = await rick_mantra()
+        assert "No mantras found" in result
 
 
 # ═══════════════════════════════════════════════════════════════

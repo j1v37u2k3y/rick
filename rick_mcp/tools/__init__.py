@@ -23,7 +23,7 @@ from rick_mcp.tools.jarvis_extended import (
     rick_tag,
     rick_timeline,
 )
-from rick_mcp.tools.meta import rick_capabilities, rick_demo, rick_health, rick_mode, rick_status
+from rick_mcp.tools.meta import rick_capabilities, rick_demo, rick_health, rick_mantra, rick_mode, rick_status
 from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
 from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
 from rick_mcp.tools.offensive_extended import rick_c2_compare, rick_cloud_attack_path, rick_payload_guide, rick_wireless
@@ -74,6 +74,7 @@ __all__ = [
     "rick_health",
     "rick_incident_response",
     "rick_log_analysis",
+    "rick_mantra",
     "rick_mentorship",
     "rick_mode",
     "rick_payload_guide",

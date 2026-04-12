@@ -2,6 +2,15 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.4.0] - 2026-04-10
+
+### Random Mantra Tool
+
+- **New tool**: `rick_mantra` — pulls a random mantra from the operator's stored mantras. One per call. Reads from `~/.rick_mcp/profiles/mantras.md` at runtime.
+- 44 tools total (up from 43)
+
+---
+
 ## [3.3.0] - 2026-04-02
 
 ### JARVIS Intelligence Layer Expansion

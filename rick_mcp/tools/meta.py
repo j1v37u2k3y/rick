@@ -1,5 +1,7 @@
 """Meta tools — status and health check."""
 
+import re
+import secrets
 from pathlib import Path
 
 from __version__ import __version__
@@ -12,7 +14,7 @@ from rick_mcp.constants import (
     SPECIALIZATIONS,
     ResponseFormat,
 )
-from rick_mcp.formatting import _fmt, _read_md, _safe_tool, _sanitize
+from rick_mcp.formatting import _fmt, _read_data, _read_md, _safe_tool, _sanitize
 from rick_mcp.identity import MOTTO, TAGLINE, bio_summary, is_configured
 from rick_mcp.models import HealthInput, ModeInput
 
@@ -419,6 +421,17 @@ async def rick_mode(params: ModeInput) -> str:
     return content
 
 
+async def rick_mantra() -> str:
+    """Pull a random mantra from the operator's stored mantras. One per call."""
+    content = _read_data("profiles", "mantras")
+    # Extract bullet-point lines (- **BOLD** or plain - text)
+    lines = re.findall(r"^- .+", content, re.MULTILINE)
+    if not lines:
+        return "No mantras found. Add your mantras to ~/.rick_mcp/profiles/mantras.md"
+    picked: str = secrets.choice(lines)
+    return picked
+
+
 async def rick_capabilities() -> str:
     """What does Rick do? Full capability map — every tool, organized by mission phase."""
     from rick_mcp.server import resource_count, tool_count
@@ -510,6 +523,7 @@ async def rick_capabilities() -> str:
                 "rick_health": "Health check with optional self-healing (fix=True)",
                 "rick_demo": "Guided tour — fires one tool from each category",
                 "rick_mode": "Activate persona modes (be_rick, dick_mode, jarvis, pentest_mode, mentor_mode, etc.)",
+                "rick_mantra": "Random mantra from the operator's stored principles",
                 "rick_capabilities": "You're looking at it",
             },
         },
@@ -568,6 +582,16 @@ def register(mcp):
             "openWorldHint": False,
         },
     )(_safe_tool(rick_mode))
+    mcp.tool(
+        name="rick_mantra",
+        annotations={
+            "title": "Random Mantra",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_mantra))
     mcp.tool(
         name="rick_capabilities",
         annotations={
