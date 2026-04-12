@@ -1,5 +1,7 @@
 """Meta tools — status and health check."""
 
+import re
+import secrets
 from pathlib import Path
 
 from __version__ import __version__
@@ -12,7 +14,7 @@ from rick_mcp.constants import (
     SPECIALIZATIONS,
     ResponseFormat,
 )
-from rick_mcp.formatting import _fmt, _read_md, _safe_tool, _sanitize
+from rick_mcp.formatting import _fmt, _read_data, _read_md, _safe_tool, _sanitize
 from rick_mcp.identity import MOTTO, TAGLINE, bio_summary, is_configured
 from rick_mcp.models import HealthInput, ModeInput
 
@@ -419,6 +421,17 @@ async def rick_mode(params: ModeInput) -> str:
     return content
 
 
+async def rick_mantra() -> str:
+    """Pull a random mantra from the operator's stored mantras. One per call."""
+    content = _read_data("profiles", "mantras")
+    # Extract bullet-point lines (- **BOLD** or plain - text)
+    lines = re.findall(r"^- .+", content, re.MULTILINE)
+    if not lines:
+        return "No mantras found. Add your mantras to ~/.rick_mcp/profiles/mantras.md"
+    picked: str = secrets.choice(lines)
+    return picked
+
+
 async def rick_capabilities() -> str:
     """What does Rick do? Full capability map — every tool, organized by mission phase."""
     from rick_mcp.server import resource_count, tool_count
@@ -486,12 +499,21 @@ async def rick_capabilities() -> str:
                 "rick_cve": "NVD CVE lookup — search by ID or keyword, cached 24 hours",
             },
         },
-        "dick_mode_tools": {
-            "description": "Dick's JARVIS — proactive, chained, situationally aware",
+        "jarvis_tools": {
+            "description": "JARVIS — the intelligence layer. Proactive, chained, situationally aware.",
             "tools": {
                 "rick_full_auto": "Give a target, get the complete playbook — recon, vulns, attack chain, tools, pivot. All chained automatically.",
-                "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings. Persists across conversations.",
+                "rick_kill_chain": "Stateful kill chain tracker — status, advance, add findings (with image attachments). Persists across conversations.",
                 "rick_next_move": "Situational awareness — analyzes position, findings, and kill chain state. Tells you what to do next.",
+                "rick_sitrep": "Situation Report — one command, full tactical picture. Kill chain, findings, mission log, recommendations.",
+                "rick_notes": "Engagement notes — add, list, search, delete. Supports image attachments as evidence.",
+                "rick_timeline": "Unified chronological timeline — findings, mission log, tool history. Filterable by phase, type, time range.",
+                "rick_compare": "Diff two engagements side by side — see what changed between assessments. Retests.",
+                "rick_scope_check": "Safety rail — check targets and actions against stored scope/ROE. Know your boundaries.",
+                "rick_export": "Export engagement to markdown, JSON, or CSV. Report-ready output.",
+                "rick_checklist": "Phase-specific checklists auto-populated by target type. Generate, check, track progress.",
+                "rick_tag": "Tag findings with severity, category, and MITRE ATT&CK technique IDs.",
+                "rick_rollback": "Undo last kill chain state change. Uses automatic state snapshots.",
             },
         },
         "meta": {
@@ -500,7 +522,8 @@ async def rick_capabilities() -> str:
                 "rick_status": "Server status — version, counts, operational readiness",
                 "rick_health": "Health check with optional self-healing (fix=True)",
                 "rick_demo": "Guided tour — fires one tool from each category",
-                "rick_mode": "Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)",
+                "rick_mode": "Activate persona modes (be_rick, dick_mode, jarvis, pentest_mode, mentor_mode, etc.)",
+                "rick_mantra": "Random mantra from the operator's stored principles",
                 "rick_capabilities": "You're looking at it",
             },
         },
@@ -559,6 +582,16 @@ def register(mcp):
             "openWorldHint": False,
         },
     )(_safe_tool(rick_mode))
+    mcp.tool(
+        name="rick_mantra",
+        annotations={
+            "title": "Random Mantra",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_mantra))
     mcp.tool(
         name="rick_capabilities",
         annotations={
