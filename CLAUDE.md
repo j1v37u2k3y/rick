@@ -3,7 +3,7 @@
 ## What This Is
 
 rick_mcp is a forkable MCP (Model Context Protocol) server for security professionals. It's a machine-readable identity
-platform with 34 offensive/defensive security tools, 24 identity resources, and 6 persona modes. Built with FastMCP +
+platform with 43 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
 Pydantic v2.
 
 ## Architecture
@@ -15,7 +15,7 @@ rick_mcp/
   identity.py            → Loads operator identity from ~/.rick_mcp/identity.yaml (zero internal imports)
   constants.py           → MISSION_PHASES, ResponseFormat enum
   formatting.py          → _fmt(), _sanitize(), _safe_tool(), _read_md(), _read_data()
-  prompts.py             → 6 prompt builders (be_rick, dick_mode, pentest, mentor, evaluate, engagement)
+  prompts.py             → 7 prompt builders (be_rick, dick_mode, jarvis, pentest, mentor, evaluate, engagement)
   models/inputs.py       → Pydantic input models for all tools
   tools/
     offensive.py         → rick_recon, rick_vuln_assess, rick_tool_recommend
@@ -27,7 +27,9 @@ rick_mcp/
     career.py            → rick_compatibility_check, rick_cover_letter, rick_mentorship
     cve.py               → rick_cve (NVD API, 24hr file cache)
     meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_capabilities
-    dick.py              → rick_full_auto, rick_kill_chain, rick_next_move (JARVIS tools, stateful)
+    jarvis_state.py      → Shared state persistence layer (load/save, snapshots, image validation, checklist templates)
+    jarvis.py            → rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep (core intelligence layer)
+    jarvis_extended.py   → rick_notes, rick_timeline, rick_compare, rick_scope_check, rick_export, rick_checklist, rick_tag, rick_rollback
   resources/
     profile.py           → 11 profile:// resources
     resume.py            → 4 resume:// resources
@@ -47,7 +49,7 @@ rick_mcp/
 - **Identity**: `rick_mcp/identity.py` loads from `~/.rick_mcp/identity.yaml`. Use `is_configured()` to check if custom
   identity exists. All prompts/tools must work with generic defaults (no identity.yaml).
 - **Private content**: Soul files load from `~/.rick_mcp/soul/` first, project root second, then fallback string
-- **Dick state**: Kill chain state persists to `~/.rick_mcp/dick/` as JSON files
+- **JARVIS state**: Kill chain + mission log persists to `~/.rick_mcp/dick/` as JSON files
 
 ## Commands
 

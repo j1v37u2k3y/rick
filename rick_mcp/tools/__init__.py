@@ -3,7 +3,6 @@
 from rick_mcp.tools.career import rick_compatibility_check, rick_cover_letter, rick_mentorship
 from rick_mcp.tools.cve import rick_cve
 from rick_mcp.tools.defensive import rick_detection_rules, rick_hardening, rick_incident_response, rick_log_analysis
-from rick_mcp.tools.dick import rick_full_auto, rick_kill_chain, rick_next_move
 from rick_mcp.tools.engagement import (
     rick_client_onboarding,
     rick_debrief,
@@ -13,7 +12,18 @@ from rick_mcp.tools.engagement import (
     rick_scoping,
     rick_tracker,
 )
-from rick_mcp.tools.meta import rick_capabilities, rick_demo, rick_health, rick_mode, rick_status
+from rick_mcp.tools.jarvis import rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep
+from rick_mcp.tools.jarvis_extended import (
+    rick_checklist,
+    rick_compare,
+    rick_export,
+    rick_notes,
+    rick_rollback,
+    rick_scope_check,
+    rick_tag,
+    rick_timeline,
+)
+from rick_mcp.tools.meta import rick_capabilities, rick_demo, rick_health, rick_mantra, rick_mode, rick_status
 from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
 from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
 from rick_mcp.tools.offensive_extended import rick_c2_compare, rick_cloud_attack_path, rick_payload_guide, rick_wireless
@@ -22,7 +32,7 @@ from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet, rick_threat_mod
 
 def register_all(mcp):
     """Register all tools on the MCP server."""
-    from rick_mcp.tools import career, cve, defensive, dick, engagement, meta, offensive
+    from rick_mcp.tools import career, cve, defensive, engagement, jarvis, jarvis_extended, meta, offensive
 
     offensive.register(mcp)
     defensive.register(mcp)
@@ -30,14 +40,24 @@ def register_all(mcp):
     career.register(mcp)
     meta.register(mcp)
     cve.register(mcp)
-    dick.register(mcp)
+    jarvis.register(mcp)
+    jarvis_extended.register(mcp)
 
 
 __all__ = [
     "rick_attack_chain",
+    "rick_checklist",
+    "rick_compare",
+    "rick_export",
     "rick_full_auto",
     "rick_kill_chain",
     "rick_next_move",
+    "rick_notes",
+    "rick_rollback",
+    "rick_scope_check",
+    "rick_sitrep",
+    "rick_tag",
+    "rick_timeline",
     "rick_c2_compare",
     "rick_cheatsheet",
     "rick_client_onboarding",
@@ -54,6 +74,7 @@ __all__ = [
     "rick_health",
     "rick_incident_response",
     "rick_log_analysis",
+    "rick_mantra",
     "rick_mentorship",
     "rick_mode",
     "rick_payload_guide",

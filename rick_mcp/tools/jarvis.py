@@ -1,140 +1,36 @@
-"""Dick's tools — the alter ego. Proactive, chained, situationally aware.
+"""JARVIS — the intelligence layer. Proactive, chained, situationally aware.
 
-Dick doesn't wait for you to ask the right question. Dick chains tools together,
-tracks where you are in the kill chain, and tells you what's next before you ask.
-JARVIS energy. 1337 tradecraft. Same soul — zero hesitation.
+The nervous system connecting Rick (foundation), Dick (operator), and all tools.
+Automatic tool chaining, stateful kill chain tracking, situational awareness,
+and mission logging. Dick is the persona. JARVIS is the system.
 """
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from rick_mcp.constants import CALLSIGN, ResponseFormat
+from rick_mcp.constants import CALLSIGN
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize
 from rick_mcp.models import (
     AttackChainInput,
+    FullAutoInput,
+    KillChainInput,
+    NextMoveInput,
     PivotInput,
     ReconInput,
+    SitrepInput,
     ToolRecInput,
     VulnInput,
 )
-
-# ═══════════════════════════════════════════════════════════════
-# Engagement state — Dick remembers where you are
-# ═══════════════════════════════════════════════════════════════
-
-_STATE_DIR = Path.home() / ".rick_mcp" / "dick"
-
-KILL_CHAIN_PHASES = [
-    {"phase": 1, "name": "Reconnaissance", "status": "pending", "findings": []},
-    {"phase": 2, "name": "Weaponization", "status": "pending", "findings": []},
-    {"phase": 3, "name": "Delivery", "status": "pending", "findings": []},
-    {"phase": 4, "name": "Exploitation", "status": "pending", "findings": []},
-    {"phase": 5, "name": "Installation", "status": "pending", "findings": []},
-    {"phase": 6, "name": "Command & Control", "status": "pending", "findings": []},
-    {"phase": 7, "name": "Actions on Objectives", "status": "pending", "findings": []},
-]
-
-
-def _state_file(engagement_id: str) -> Path:
-    """Get the state file path for an engagement."""
-    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
-    return _STATE_DIR / f"{safe_id}.json"
-
-
-def _load_state(engagement_id: str) -> dict[str, Any]:
-    """Load engagement state from disk."""
-    path = _state_file(engagement_id)
-    if path.exists():
-        result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
-        return result
-    return {}
-
-
-def _save_state(engagement_id: str, state: dict[str, Any]) -> None:
-    """Save engagement state to disk."""
-    _STATE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _state_file(engagement_id)
-    path.write_text(json.dumps(state, indent=2, default=str), encoding="utf-8")
-
-
-# ═══════════════════════════════════════════════════════════════
-# Input models
-# ═══════════════════════════════════════════════════════════════
-
-
-class FullAutoInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    target: str = Field(
-        ...,
-        description="Target description — domain, IP, app name, org, or environment",
-        min_length=1,
-        max_length=500,
-    )
-    target_type: str = Field(
-        default="web_app",
-        description="Target type: 'web_app', 'network', 'cloud_azure', 'cloud_aws', 'active_directory', 'api', 'container', 'mobile'",
-        max_length=50,
-    )
-    engagement_id: str | None = Field(
-        default=None,
-        description="Optional engagement ID to track state. Creates new if not found.",
-        max_length=100,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
-
-class KillChainInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    action: str = Field(
-        ...,
-        description="Action: 'status', 'advance', 'add_finding', 'reset', 'list'",
-        min_length=1,
-        max_length=20,
-    )
-    engagement_id: str = Field(
-        ...,
-        description="Engagement ID to track",
-        min_length=1,
-        max_length=100,
-    )
-    phase: int | None = Field(
-        default=None,
-        description="Phase number (1-7) for advance/add_finding",
-        ge=1,
-        le=7,
-    )
-    finding: str | None = Field(
-        default=None,
-        description="Finding description to add to a phase",
-        max_length=1000,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
-
-class NextMoveInput(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    engagement_id: str = Field(
-        ...,
-        description="Engagement ID to analyze",
-        min_length=1,
-        max_length=100,
-    )
-    current_position: str | None = Field(
-        default=None,
-        description="Where you are right now: 'linux_webserver', 'windows_workstation', 'windows_server', 'container', 'cloud_instance', 'database_server', 'network_device', or free text",
-        max_length=500,
-    )
-    findings_so_far: str | None = Field(
-        default=None,
-        description="What you've found so far — comma separated or free text",
-        max_length=2000,
-    )
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
-
+from rick_mcp.tools import jarvis_state as _js
+from rick_mcp.tools.jarvis_state import (
+    KILL_CHAIN_PHASES,
+    _add_mission_log,
+    _load_state,
+    _phase_advice,
+    _save_state,
+    _validate_image_path,
+)
 
 # ═══════════════════════════════════════════════════════════════
 # Tool: rick_full_auto — Chain everything. Automatically.
@@ -247,12 +143,17 @@ async def rick_full_auto(params: FullAutoInput) -> str:
         eng_id = _sanitize(params.engagement_id) or params.engagement_id
         kill_chain = [dict(p) for p in KILL_CHAIN_PHASES]
         kill_chain[0]["status"] = "active"
+        now = datetime.now(timezone.utc).isoformat()
         state: dict[str, Any] = {
             "id": eng_id,
             "target": target,
             "target_type": target_type,
-            "created": datetime.now(timezone.utc).isoformat(),
+            "created": now,
+            "objective": "",
+            "notes": [],
             "kill_chain": kill_chain,
+            "mission_log": [{"timestamp": now, "entry": f"Full auto initiated for {target} ({target_type})"}],
+            "tool_history": [{"tool": "rick_full_auto", "timestamp": now, "summary": f"Full auto for {target}"}],
         }
         _save_state(eng_id, state)
         sections.append("---")
@@ -281,9 +182,9 @@ async def rick_kill_chain(params: KillChainInput) -> str:
 
     if action == "list":
         # List all active engagements
-        _STATE_DIR.mkdir(parents=True, exist_ok=True)
+        _js._STATE_DIR.mkdir(parents=True, exist_ok=True)
         engagements = []
-        for f in sorted(_STATE_DIR.glob("*.json")):
+        for f in sorted(_js._STATE_DIR.glob("*.json")):
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
                 active_phase = "Unknown"
@@ -377,6 +278,9 @@ async def rick_kill_chain(params: KillChainInput) -> str:
                 if next_phase:
                     next_phase["status"] = "active"
                     _save_state(eng_id, state)
+                    _add_mission_log(
+                        eng_id, f"Advanced: Phase {phase_num} complete → Phase {next_phase['phase']} active"
+                    )
                     return _fmt(
                         {
                             "action": "ADVANCED",
@@ -436,13 +340,20 @@ async def rick_kill_chain(params: KillChainInput) -> str:
         idx = phase_num - 1
         if "findings" not in state["kill_chain"][idx]:
             state["kill_chain"][idx]["findings"] = []
-        state["kill_chain"][idx]["findings"].append(
-            {
-                "description": finding,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        )
+        finding_entry: dict[str, Any] = {
+            "description": finding,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        if params.image_path:
+            try:
+                validated_path = _validate_image_path(params.image_path)
+                if validated_path:
+                    finding_entry["image_path"] = validated_path
+            except ValueError as e:
+                return f"Error: {e}"
+        state["kill_chain"][idx]["findings"].append(finding_entry)
         _save_state(eng_id, state)
+        _add_mission_log(eng_id, f"Finding logged in Phase {phase_num}: {finding[:80]}")
 
         return _fmt(
             {
@@ -469,20 +380,6 @@ async def rick_kill_chain(params: KillChainInput) -> str:
         )
 
     return f"Error: Unknown action '{action}'. Available: 'status', 'advance', 'add_finding', 'reset', 'list'"
-
-
-def _phase_advice(phase: int) -> str:
-    """Dick's advice for each kill chain phase."""
-    advice = {
-        1: "Recon is everything. Know your target better than they know themselves. OSINT, DNS, subdomains, tech stack, org chart. Don't touch anything yet.",
-        2: "Build the weapon. Match exploits to what recon found. Custom payloads > off-the-shelf. Think about evasion NOW, not later.",
-        3: "Delivery time. Phishing, exploit, or direct? Pick the path of least resistance. Test your payload before sending.",
-        4: "Exploit. This is where prep pays off. First try should work if recon was thorough. If it doesn't — don't spray, think.",
-        5: "Persistence. You're in. Now stay in. Web shells, scheduled tasks, registry keys, certs, golden tickets. Multiple persistence mechanisms.",
-        6: "C2 established. Blend your traffic. DNS, HTTPS, domain fronting. Beacon intervals matter. Don't be noisy.",
-        7: "Actions on objectives. Get what you came for. Document everything. Screenshots, hashes, proof of access. This is what goes in the report.",
-    }
-    return advice.get(phase, "Execute with precision.")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -642,6 +539,135 @@ async def rick_next_move(params: NextMoveInput) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════
+# Tool: rick_sitrep — Situation Report. Where are we.
+# ═══════════════════════════════════════════════════════════════
+
+
+async def rick_sitrep(params: SitrepInput) -> str:
+    """Situation Report. One command, full tactical picture — kill chain, findings, mission log, recommendations."""
+    eng_id = _sanitize(params.engagement_id) or params.engagement_id
+    state = _load_state(eng_id)
+    fmt = params.response_format
+
+    if not state:
+        return _fmt(
+            {
+                "error": f"No engagement '{eng_id}' found.",
+                "suggestion": f"Start one: rick_full_auto(target='...', engagement_id='{eng_id}')",
+            },
+            fmt,
+            title=f"{CALLSIGN} SITREP",
+        )
+
+    # Engagement identity
+    target = state.get("target", "Unknown")
+    target_type = state.get("target_type", "Unknown")
+    created = state.get("created", "Unknown")
+    objective = state.get("objective", "Not specified")
+
+    # Kill chain analysis
+    kill_chain = state.get("kill_chain", [])
+    completed = [p for p in kill_chain if p.get("status") == "completed"]
+    active = [p for p in kill_chain if p.get("status") == "active"]
+    pending = [p for p in kill_chain if p.get("status") == "pending"]
+
+    # Build progress bar
+    completed_count = len(completed)
+    progress_filled = "=" * (completed_count * 2)
+    if active:
+        progress_filled += ">"
+    progress_empty = " " * ((7 - completed_count - len(active)) * 2)
+    active_label = (
+        f"Phase {active[0]['phase']}: {active[0]['name']}"
+        if active
+        else ("COMPLETE" if completed_count == 7 else "No active phase")
+    )
+
+    # Collect all findings across phases
+    all_findings: list[dict[str, Any]] = []
+    phase_summary: list[str] = []
+    for p in kill_chain:
+        findings = p.get("findings", [])
+        status_icon = {"completed": "DONE", "active": "ACTIVE", "pending": "---"}.get(p["status"], "---")
+        finding_count = f"({len(findings)} findings)" if findings else ""
+        phase_summary.append(f"Phase {p['phase']}: {p['name']} — {status_icon} {finding_count}")
+        for f in findings:
+            all_findings.append({"phase": p["name"], "phase_num": p["phase"], **f})
+
+    # Recent findings (last 5)
+    recent_findings = sorted(all_findings, key=lambda x: x.get("timestamp", ""), reverse=True)[:5]
+    recent_formatted = []
+    for f in recent_findings:
+        ts = f.get("timestamp", "")[:16].replace("T", " ")
+        recent_formatted.append(f"[Phase {f['phase_num']}] {f.get('description', '?')} — {ts}")
+
+    # Mission log (last 10)
+    mission_log = state.get("mission_log", [])
+    recent_log = mission_log[-10:]
+    log_formatted = []
+    for entry in reversed(recent_log):
+        ts = entry.get("timestamp", "")[:16].replace("T", " ")
+        log_formatted.append(f"{ts} — {entry.get('entry', '?')}")
+
+    # Tool history (last 10)
+    tool_history = state.get("tool_history", [])
+    recent_tools = tool_history[-10:]
+    tools_formatted = []
+    for t in reversed(recent_tools):
+        ts = t.get("timestamp", "")[:16].replace("T", " ")
+        tools_formatted.append(f"{t.get('tool', '?')} — {ts}")
+
+    # Notes
+    notes = state.get("notes", [])
+
+    # Tactical assessment
+    assessment: list[str] = []
+    if completed_count == 7:
+        assessment.append("All phases complete. Time to write the report.")
+        assessment.append("Use rick_report_template and rick_debrief to close out.")
+    elif active:
+        active_phase = active[0]
+        phase_findings = len(active_phase.get("findings", []))
+        if active_phase["phase"] == 1 and phase_findings < 3:
+            assessment.append(f"Recon in progress — {phase_findings} findings. Keep digging before advancing.")
+        elif active_phase["phase"] == 1 and phase_findings >= 3:
+            assessment.append(f"Recon looks solid — {phase_findings} findings. Consider advancing to Weaponization.")
+        elif phase_findings == 0:
+            assessment.append(f"Phase {active_phase['phase']} ({active_phase['name']}) active but no findings yet.")
+        else:
+            assessment.append(
+                f"Phase {active_phase['phase']} ({active_phase['name']}) in progress — {phase_findings} findings logged."
+            )
+    elif completed_count == 0:
+        assessment.append("Engagement initialized but no phases active. Advance to Phase 1 to begin.")
+    else:
+        next_p = pending[0] if pending else None
+        if next_p:
+            assessment.append(f"Between phases. Next up: Phase {next_p['phase']} ({next_p['name']}).")
+
+    result: dict[str, Any] = {
+        "engagement": eng_id,
+        "target": f"{target} ({target_type})",
+        "objective": objective,
+        "created": created,
+        "progress": f"[{progress_filled}{progress_empty}] {completed_count}/7 — {active_label}",
+        "kill_chain": phase_summary,
+        "total_findings": len(all_findings),
+    }
+    if recent_formatted:
+        result["recent_findings"] = recent_formatted
+    if log_formatted:
+        result["mission_log"] = log_formatted
+    if tools_formatted:
+        result["tool_activity"] = tools_formatted
+    if notes:
+        result["notes"] = notes
+    result["tactical_assessment"] = assessment
+
+    return _fmt(result, fmt, title=f"{CALLSIGN} SITREP — {eng_id}")
+
+
+# ═══════════════════════════════════════════════════════════════
 # Registration
 # ═══════════════════════════════════════════════════════════════
 
@@ -678,3 +704,13 @@ def register(mcp):
             "openWorldHint": False,
         },
     )(_safe_tool(rick_next_move))
+    mcp.tool(
+        name="rick_sitrep",
+        annotations={
+            "title": "Situation Report",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )(_safe_tool(rick_sitrep))
