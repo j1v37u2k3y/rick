@@ -16,7 +16,7 @@ dev = [
     "pytest-asyncio>=1.0",
     "pytest-cov>=5.0",
     "ruff>=0.4",
-    "mypy>=1.10",
+    "mypy>=1.20.1",
     "hypothesis>=6.0",
 ]
 
