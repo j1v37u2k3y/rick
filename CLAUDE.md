@@ -3,7 +3,7 @@
 ## What This Is
 
 rick_mcp is a forkable MCP (Model Context Protocol) server for security professionals. It's a machine-readable identity
-platform with 43 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
+platform with 45 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
 Pydantic v2.
 
 ## Architecture

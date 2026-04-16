@@ -41,6 +41,7 @@ from rick_mcp.models.inputs import (
     TrackerInput,
     VulnInput,
     WirelessInput,
+    WriteupInput,
 )
 
 __all__ = [
@@ -84,4 +85,5 @@ __all__ = [
     "TrackerInput",
     "VulnInput",
     "WirelessInput",
+    "WriteupInput",
 ]

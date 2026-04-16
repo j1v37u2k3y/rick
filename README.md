@@ -8,7 +8,7 @@
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-43 tools. 24 resources. Fork it, fill it, make it yours.
+45 tools. 24 resources. Fork it, fill it, make it yours.
 
 ## Why an MCP Server
 
@@ -221,6 +221,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | `rick_demo`         | Guided tour — fires one tool from each category                                |
 | `rick_mantra`       | Random mantra from the operator's stored principles — one per call             |
 | `rick_mode`         | Activate persona modes (be_rick, dick_mode, pentest_mode, mentor_mode, etc.)   |
+| `rick_writeups`     | Browse, read, and search operator write-ups from `~/.rick_mcp/writeups/`       |
 
 ## Example Usage
 

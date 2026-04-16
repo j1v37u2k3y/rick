@@ -6,6 +6,26 @@ from rick_mcp.models import (
     AttackChainInput,
     PivotInput,
 )
+from rick_mcp.tools.writeups import cite_writeups
+
+# Natural-language search terms — writeups talk about "kerberos" not "external_to_da"
+_ATTACK_CITE_TERMS = {
+    "external_to_da": "kerberos",
+    "web_to_cloud": "aws",
+    "phishing_to_empire": "phishing",
+    "internal_to_adcs": "adcs",
+    "container_escape": "container",
+    "supply_chain": "supply chain",
+}
+_PIVOT_CITE_TERMS = {
+    "linux_webserver": "linux",
+    "windows_workstation": "windows",
+    "windows_server": "windows",
+    "container": "container",
+    "cloud_instance": "cloud",
+    "database_server": "database",
+    "network_device": "router",
+}
 
 
 async def rick_attack_chain(params: AttackChainInput) -> str:
@@ -400,6 +420,9 @@ async def rick_attack_chain(params: AttackChainInput) -> str:
         chain["target_environment"] = params.target_environment
     chain["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY — Attack chains are for planning authorized operations."
     chain["mitre_reference"] = "https://attack.mitre.org/"
+    cites = cite_writeups(_ATTACK_CITE_TERMS.get(s, s))
+    if cites:
+        chain["seen_in_writeups"] = cites
     return _fmt(chain, params.response_format, title=f"{CALLSIGN} Attack Chain")
 
 
@@ -673,6 +696,9 @@ async def rick_pivot_plan(params: PivotInput) -> str:
     if params.target_network:
         result["target_network"] = params.target_network
     result["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
+    cites = cite_writeups(_PIVOT_CITE_TERMS.get(p, p))
+    if cites:
+        result["seen_in_writeups"] = cites
     return _fmt(result, params.response_format, title=f"{CALLSIGN} Pivot Plan")
 
 

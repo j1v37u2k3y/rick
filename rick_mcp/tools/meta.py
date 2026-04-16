@@ -87,6 +87,7 @@ async def rick_health(params: HealthInput | None = None) -> str:
     from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
     from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
     from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet, rick_threat_model
+    from rick_mcp.tools.writeups import rick_writeups
 
     fix = params.fix if params else False
     fmt = params.response_format if params else ResponseFormat.MARKDOWN
@@ -132,6 +133,7 @@ async def rick_health(params: HealthInput | None = None) -> str:
         rick_health,
         rick_cve,
         rick_tracker,
+        rick_writeups,
     ]
     callable_count = sum(1 for fn in tool_fns if callable(fn))
     checks["tools_callable"] = f"PASS ({callable_count}/{len(tool_fns)})"
@@ -392,6 +394,7 @@ async def rick_demo() -> str:
     sections.append("- `rick_compatibility_check` — Job posting fit analyzer")
     sections.append("- `rick_cover_letter` — Cover letter generator (3 tones)")
     sections.append("- `rick_debrief` — Post-engagement debrief template")
+    sections.append("- `rick_writeups` — Browse, read, and search operator write-ups (HTB, CTF, engagements)")
     sections.append("- `rick_capabilities` — Full capability map")
     sections.append("")
     sections.append(
@@ -514,6 +517,12 @@ async def rick_capabilities() -> str:
                 "rick_checklist": "Phase-specific checklists auto-populated by target type. Generate, check, track progress.",
                 "rick_tag": "Tag findings with severity, category, and MITRE ATT&CK technique IDs.",
                 "rick_rollback": "Undo last kill chain state change. Uses automatic state snapshots.",
+            },
+        },
+        "writeups": {
+            "description": "Operator write-ups — browse, read, and search",
+            "tools": {
+                "rick_writeups": "HTB/CTF/engagement write-ups from ~/.rick_mcp/writeups/. List, read, or keyword search across all markdown files.",
             },
         },
         "meta": {

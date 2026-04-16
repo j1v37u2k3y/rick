@@ -2,6 +2,37 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.6.0] - 2026-04-16
+
+### Writeups as Reference Material
+
+- **New action**: `rick_writeups(action='index')` — corpus intelligence. Scans all write-ups, extracts top 20 tools mentioned, CVEs (regex `CVE-YYYY-NNNNN`), MITRE technique IDs (regex `T\d{4}`), and Linux/Windows OS breakdown. Cached to `.index.json` with 24hr TTL.
+- **Cross-referencing**: 6 existing tools now cite your writeups alongside theoretical guidance:
+  - `rick_cheatsheet` — "Seen in your writeups: [paths]" cites boxes where you used the tool
+  - `rick_recon` — cites writeups matching the target type (AD, cloud, web, etc.)
+  - `rick_vuln_assess` — cites writeups demonstrating the vulnerability category
+  - `rick_attack_chain` — cites writeups showing the scenario's techniques
+  - `rick_pivot_plan` — cites writeups matching the compromised position
+  - `rick_tool_recommend` — cites writeups featuring the top recommended tool
+- **New exported helper**: `cite_writeups(term, limit=5)` — used by any tool that wants citation support. Silent when no writeups exist (generic output unchanged).
+- Citation uses ripgrep for speed, falls back to pure-Python grep. Dedupes by file so the same writeup isn't cited twice.
+
+---
+
+## [3.5.0] - 2026-04-15
+
+### Operator Writeups Tool
+
+- **New tool**: `rick_writeups` — browse, read, and keyword search operator write-ups from `~/.rick_mcp/writeups/`
+- **Actions**: `list` (enumerate by category), `read` (fetch one file), `search` (ripgrep with Python fallback)
+- Nested directory support — organize by `htb/`, `ctf/`, `engagements/`, or any category structure
+- Path traversal hardening — `resolve()` + `is_relative_to()` rejects escape attempts
+- Search uses ripgrep for speed, falls back to pure-Python when `rg` is unavailable
+- **Soul example**: added `writeups/` directory with HTB and CTF examples
+- 45 tools total (up from 44)
+
+---
+
 ## [3.4.0] - 2026-04-10
 
 ### Random Mantra Tool

@@ -6,6 +6,7 @@ from rick_mcp.models import (
     CheatsheetInput,
     ThreatModelInput,
 )
+from rick_mcp.tools.writeups import cite_writeups
 
 
 async def rick_cheatsheet(params: CheatsheetInput) -> str:
@@ -305,6 +306,9 @@ async def rick_cheatsheet(params: CheatsheetInput) -> str:
     if not sheet:
         return f"Error: Unknown tool '{t}'. Available: {', '.join(sheets.keys())}"
     sheet["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
+    cites = cite_writeups(t)
+    if cites:
+        sheet["seen_in_writeups"] = cites
     return _fmt(sheet, params.response_format, title=f"{CALLSIGN} Field Manual")
 
 

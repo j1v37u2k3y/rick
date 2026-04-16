@@ -555,3 +555,30 @@ class RollbackInput(BaseModel):
     engagement_id: str = Field(..., min_length=1, max_length=100)
     confirm: bool = Field(default=False, description="Must be True to execute rollback")
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
+class WriteupInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    action: str = Field(
+        ...,
+        description="'list' (enumerate), 'read' (fetch one), 'search' (keyword search), 'index' (corpus intelligence)",
+        min_length=1,
+        max_length=20,
+    )
+    query: str | None = Field(
+        default=None,
+        description="Keyword/substring for search action",
+        max_length=200,
+    )
+    path: str | None = Field(
+        default=None,
+        description="Relative path for read action, e.g. 'htb/lame.md'",
+        max_length=500,
+    )
+    category: str | None = Field(
+        default=None,
+        description="Filter list/search by top-level directory, e.g. 'htb'",
+        max_length=100,
+    )
+    limit: int = Field(default=20, ge=1, le=200)
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
