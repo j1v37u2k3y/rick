@@ -8,7 +8,7 @@ This directory contains fully worked examples for configuring your Rick MCP iden
 ```bash
 # Copy the example files (excluding this README)
 cp soul-example/identity.yaml ~/.rick_mcp/
-cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/
+cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs soul-example/writeups ~/.rick_mcp/
 
 # Edit identity.yaml with your details
 $EDITOR ~/.rick_mcp/identity.yaml
@@ -41,6 +41,9 @@ $EDITOR ~/.rick_mcp/identity.yaml
         contact.md         # Contact information
     docs/
         war_stories.md     # Anonymized engagement narratives
+    writeups/
+        htb/               # HackTheBox write-ups
+        ctf/               # CTF challenge write-ups
 ```
 
 ## How It Works
@@ -55,6 +58,8 @@ $EDITOR ~/.rick_mcp/identity.yaml
    `resume://overview` and get your identity data back.
 
 4. **docs/** contains additional content like engagement war stories.
+
+5. **writeups/** are browsable via `rick_writeups`. Nest by category (htb/, ctf/, engagements/). Markdown only.
 
 ## What Happens Without Identity
 

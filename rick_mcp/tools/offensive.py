@@ -7,6 +7,31 @@ from rick_mcp.models import (
     ToolRecInput,
     VulnInput,
 )
+from rick_mcp.tools.writeups import cite_writeups
+
+# Human-readable search phrases for each enum target/category (writeups don't use underscores)
+_RECON_CITE_TERMS = {
+    "web_app": "web application",
+    "network": "nmap",
+    "cloud_azure": "azure",
+    "cloud_aws": "aws",
+    "active_directory": "active directory",
+    "api": "api",
+    "container": "kubernetes",
+    "mobile": "apk",
+}
+_VULN_CITE_TERMS = {
+    "injection": "sql injection",
+    "auth": "authentication",
+    "xss": "xss",
+    "ssrf": "ssrf",
+    "idor": "idor",
+    "file_upload": "file upload",
+    "deserialization": "deserialization",
+    "misconfig": "misconfiguration",
+    "crypto": "crypto",
+    "privesc": "privilege escalation",
+}
 
 
 async def rick_recon(params: ReconInput) -> str:
@@ -177,6 +202,9 @@ async def rick_recon(params: ReconInput) -> str:
     if params.scope_notes:
         p["scope_notes"] = _sanitize(params.scope_notes)
     p["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
+    cites = cite_writeups(_RECON_CITE_TERMS.get(t, t))
+    if cites:
+        p["seen_in_writeups"] = cites
     return _fmt(p, params.response_format, title=f"{CALLSIGN} Recon Playbook")
 
 
@@ -366,6 +394,9 @@ async def rick_vuln_assess(params: VulnInput) -> str:
     if params.context:
         f["context"] = _sanitize(params.context)
     f["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
+    cites = cite_writeups(_VULN_CITE_TERMS.get(c, c))
+    if cites:
+        f["seen_in_writeups"] = cites
     return _fmt(f, params.response_format, title=f"{CALLSIGN} Vuln Assessment")
 
 
@@ -407,6 +438,12 @@ async def rick_tool_recommend(params: ToolRecInput) -> str:
         r["secondary"] = ["Metasploit", "CrackMapExec", "ffuf"]
         r["rick_note"].append("Burp + Nmap + Nuclei covers massive attack surface.")
     r["scenario"] = params.scenario
+    # Cite writeups using the first primary tool recommendation (most representative signal)
+    if r["primary"]:
+        first_tool = r["primary"][0].split()[0].lower()
+        cites = cite_writeups(first_tool)
+        if cites:
+            r["seen_in_writeups"] = cites
     return _fmt(r, params.response_format, title=f"{CALLSIGN} Tool Recommendations")
 
 
