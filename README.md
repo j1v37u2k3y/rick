@@ -1,9 +1,9 @@
-# Rick MCP Server v3.3
+# Rick MCP Server v3.6
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-512%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-552%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
@@ -16,7 +16,7 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
 who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
-structured resources an AI can reason over. And there are 35 functional tools that *do things* — generate ROE docs,
+structured resources an AI can reason over. And there are 45 functional tools that *do things* — generate ROE docs,
 model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
 IR playbooks, compare C2 frameworks, and scope entire engagements.
 
@@ -70,7 +70,7 @@ $EDITOR ~/.rick_mcp/identity.yaml
 | `~/.rick_mcp/soul/SOUL.md`     | Core principles and values — feeds `be_rick` and `dick_mode` |
 | `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode`           |
 | `~/.rick_mcp/soul/PROFILE.md`  | Current state, what's on the horizon                         |
-| `~/.rick_mcp/profiles/`        | 10 identity resources (stack, methodology, timeline, etc.)   |
+| `~/.rick_mcp/profiles/`        | 11 identity resources (stack, methodology, timeline, etc.)   |
 | `~/.rick_mcp/resume/`          | 4 resume resources (overview, evidence, portfolio, contact)  |
 | `~/.rick_mcp/docs/`            | War stories and additional content                           |
 
@@ -136,7 +136,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 35 Functional Tools
+## Tools — 45 Functional Tools
 
 ### Offensive — Recon & Assessment
 
@@ -308,7 +308,7 @@ Access these via MCP resource URIs. Content is loaded from your private `~/.rick
 ### Run Tests
 
 ```bash
-make test        # 449 tests across 5 test files
+make test        # 552 tests across 7 test files
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -331,7 +331,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run 449 tests                                               |
+| `make test`        | Run 552 tests                                               |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |

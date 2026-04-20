@@ -15,6 +15,7 @@ rick_mcp/
   identity.py            → Loads operator identity from ~/.rick_mcp/identity.yaml (zero internal imports)
   constants.py           → MISSION_PHASES, ResponseFormat enum
   formatting.py          → _fmt(), _sanitize(), _safe_tool(), _read_md(), _read_data()
+  logging_config.py      → Structured logging setup
   prompts.py             → 7 prompt builders (be_rick, dick_mode, jarvis, pentest, mentor, evaluate, engagement)
   models/inputs.py       → Pydantic input models for all tools
   tools/
@@ -26,7 +27,8 @@ rick_mcp/
     engagement.py        → rick_roe, rick_engagement_proposal, rick_client_onboarding, rick_report_template, rick_scoping, rick_debrief, rick_tracker
     career.py            → rick_compatibility_check, rick_cover_letter, rick_mentorship
     cve.py               → rick_cve (NVD API, 24hr file cache)
-    meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_capabilities
+    writeups.py          → rick_writeups (writeup search + citation cross-referencing)
+    meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_mantra, rick_capabilities
     jarvis_state.py      → Shared state persistence layer (load/save, snapshots, image validation, checklist templates)
     jarvis.py            → rick_full_auto, rick_kill_chain, rick_next_move, rick_sitrep (core intelligence layer)
     jarvis_extended.py   → rick_notes, rick_timeline, rick_compare, rick_scope_check, rick_export, rick_checklist, rick_tag, rick_rollback
@@ -55,7 +57,7 @@ rick_mcp/
 
 ```bash
 make check       # Full pipeline: lint + format + typecheck + file-length + tests
-make test        # Run 439 tests
+make test        # Run 552 tests
 make coverage    # Tests with 80% coverage minimum
 make typecheck   # mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
 make fix         # Auto-fix lint and format

@@ -30,7 +30,7 @@ A webpage sits there and waits to be read. Rick responds.
 
 Rick is a living system that an AI can query, reason about, and use as a tool. An LLM asks Rick for identity data and
 gets structured results back. It queries values, methodology, and capabilities — all as resources an AI can reason
-over. And there are 34 functional tools that *do things* — generate ROE docs, model threats, look up CVEs, track
+over. And there are 45 functional tools that *do things* — generate ROE docs, model threats, look up CVEs, track
 engagements, recommend tools, write cover letters matched to job postings.
 
 Most people send a PDF resume. Rick MCP is a running server that proves every claim it makes. `make check` and it
@@ -40,10 +40,10 @@ See [CHANGELOG.md](CHANGELOG.md) for version-by-version details.
 
 ## The Numbers
 
-- 34 tools
+- 45 tools
 - 24 resources
-- 6 MCP prompts
-- 439 tests
+- 7 MCP prompts
+- 552 tests
 - Full CI/CD pipeline with Docker verification
 - Integration tests through MCP protocol layer
 - Property-based fuzz testing on all input models
