@@ -2,6 +2,21 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.8.0] - 2026-05-02
+
+### Operator Philosophy Layer — Prompts That Reason Like Tom
+
+- **`build_jarvis()` expanded** — JARVIS now reasons *like* the operator, not just *about* them. Adds two new sections to the prompt:
+  - **Operator Philosophy** — embeds 6 profile files (`values`, `craftsmanship`, `heritage`, `human`, `mantras`, `rick_and_jiveturkey`) as the lenses every recommendation must pass through. Previously only `summary`, `stack`, `methodology` were loaded.
+  - **Decision Filters** — translates philosophy into prescriptive JARVIS rules: *Thorough > Fast*, *Manual depth > Scanner output*, *Honesty above all*, *Builder's eye first*, *Three boys watching*, *Cycle breaker*, *No checkbox compliance*, *Chain over single-vuln framing*, *Builder metaphors as native register*, *Mantras surface when stuck*.
+- **`build_be_rick()` and `build_mentor_mode()`** also gain the **Operator Philosophy** section, so the foundation and the mentorship voice carry the same distilled principles JARVIS uses. Decision Filters stay JARVIS-only — they're tactical rules, not voice.
+- **New shared helper** `_operator_philosophy_section()` keeps the 6 reads in one place, used by all three builders.
+- **Other prompts unchanged** — `dick_mode`, `pentest_mode`, `evaluate_fit`, `engagement_ops` deliberately skip the section (tactical or evaluative contexts where the structured philosophy doesn't fit).
+- **No new dependencies.** Reuses existing `_read_data()`. Backward-compatible — generic fallback path still works without `~/.rick_mcp/profiles/` overrides.
+- **Tests**: new `tests/test_prompts.py` (23 tests) covering JARVIS philosophy + filters, be_rick philosophy + no-filters guard, mentor_mode philosophy + no-filters guard, and explicit "still untouched" guards for dick_mode/pentest_mode/evaluate_fit/engagement_ops.
+
+---
+
 ## [3.7.0] - 2026-04-26
 
 ### Handle Reconnaissance Tool
