@@ -3,8 +3,18 @@
 ## What This Is
 
 rick_mcp is a forkable MCP (Model Context Protocol) server for security professionals. It's a machine-readable identity
-platform with 45 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
+platform with 46 offensive/defensive security tools, 24 identity resources, and 7 persona modes. Built with FastMCP +
 Pydantic v2.
+
+## MCP Tool Usage
+
+When working with rick_mcp or jarvis projects, ALWAYS use the available MCP tools first (e.g., for profile/identity/family queries) instead of falling back to Grep/Read on raw files. Check ToolSearch/ReadMcpResourceTool before file-based exploration.
+
+## Workflow
+
+### Planning & Approval
+
+For any non-trivial task (new feature, refactor, multi-file changes), present a brief plan and wait for approval BEFORE editing or building. Do not start backend work, scaffolding, or exploratory builds without explicit confirmation.
 
 ## Architecture
 
@@ -27,6 +37,7 @@ rick_mcp/
     engagement.py        → rick_roe, rick_engagement_proposal, rick_client_onboarding, rick_report_template, rick_scoping, rick_debrief, rick_tracker
     career.py            → rick_compatibility_check, rick_cover_letter, rick_mentorship
     cve.py               → rick_cve (NVD API, 24hr file cache)
+    recon_handle.py      → rick_recon_handle (GitHub/CTFTime/HTB OSINT, 24hr file cache)
     writeups.py          → rick_writeups (writeup search + citation cross-referencing)
     meta.py              → rick_status, rick_health, rick_demo, rick_mode, rick_mantra, rick_capabilities
     jarvis_state.py      → Shared state persistence layer (load/save, snapshots, image validation, checklist templates)
@@ -57,13 +68,17 @@ rick_mcp/
 
 ```bash
 make check       # Full pipeline: lint + format + typecheck + file-length + tests
-make test        # Run 552 tests
+make test        # Run 567 tests
 make coverage    # Tests with 80% coverage minimum
 make typecheck   # mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
 make fix         # Auto-fix lint and format
 make smoke       # Fire every tool once
 make setup       # Install deps, pre-commit hooks, create ~/.rick_mcp/
 ```
+
+## Python / Environment
+
+Always use the project's venv (not global pip) in scripts like `start.sh`. Verify Python version compatibility (e.g., librosa requires <3.14) before installing audio/ML deps.
 
 ## Rules
 
@@ -77,6 +92,14 @@ make setup       # Install deps, pre-commit hooks, create ~/.rick_mcp/
 - **Coverage**: 80% minimum enforced. New tools must include tests.
 - **No hardcoded identity**: All personal data comes from identity.yaml or soul files. Python source stays generic.
 - **Async**: All tools and resources are async functions.
+
+## File Editing
+
+When asked to clear or reset JSON/data files, use Write to produce a proper rewritten file rather than Edit to blank contents. Respect intentionally-separated files (e.g., personal vs shared mantras) — do not merge them unless explicitly told to.
+
+## Git / Commit Conventions
+
+Do NOT add Claude co-author lines or "Generated with Claude" footers to commit messages. Keep commits clean and attributed only to the user.
 
 ## Adding a Tool
 
