@@ -2,6 +2,21 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.7.0] - 2026-04-26
+
+### Handle Reconnaissance Tool
+
+- **New tool**: `rick_recon_handle` — OSINT against a hacker handle. Returns a structured JSON profile from public sources. Default response format is JSON (machine-readable, chain-friendly).
+- **GitHub** (load-bearing wall): real REST API fetch for `/users/{h}`, `/users/{h}/repos`, and `/users/{h}/events/public` — profile fields, top 5 starred non-fork repos, top 5 languages, recent activity count. Optional `github_token` raises rate limit 60/hr → 5000/hr.
+- **CTFTime**: optional `ctftime_id` triggers direct enrichment via `/api/v1/users/{id}/` (team, ranking). Without an ID, returns a search URL — CTFTime's API requires numeric IDs, not handles.
+- **HackTheBox**: returns the public profile URL with a note that programmatic enrichment requires an API token.
+- **Search pivots** (URLs only, no scraping): HackerOne, Bugcrowd, Mastodon (infosec.exchange), Google dorks for blogs and conference talks, LinkedIn search.
+- **Cache**: 24hr file cache at `~/.rick_mcp/handle_cache/` (sha256-keyed by URL), mirroring `rick_cve`'s pattern.
+- **Soul-bounded**: `authorization` field on every output, public sources only, no email harvesting, no doxxing, no paid OSINT brokers, graceful degrade when sources fail.
+- 46 tools total (up from 45).
+
+---
+
 ## [3.6.0] - 2026-04-16
 
 ### Writeups as Reference Material
