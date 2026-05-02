@@ -450,6 +450,7 @@ async def rick_capabilities() -> str:
             "description": "Phase 1-2: Know your target before you touch it",
             "tools": {
                 "rick_recon": "Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)",
+                "rick_recon_handle": "OSINT against a hacker handle — GitHub profile/repos/activity + pivot URLs to CTFTime, HTB, HackerOne, Bugcrowd, Mastodon",
                 "rick_vuln_assess": "Vuln testing methodology for 10 categories (SQLi, XSS, SSRF, IDOR, auth, etc.)",
                 "rick_tool_recommend": "Scenario-aware tool recommendations — describe the job, get the toolbox",
                 "rick_threat_model": "STRIDE threat modeling for 8 system types",

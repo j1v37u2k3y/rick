@@ -196,6 +196,27 @@ class CVEInput(BaseModel):
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
+class ReconHandleInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    handle: str = Field(
+        ...,
+        description="Hacker handle / username to profile across public sources (e.g. 'j1v37u2k3y')",
+        min_length=1,
+        max_length=100,
+    )
+    ctftime_id: int | None = Field(
+        default=None,
+        description="Optional CTFTime numeric user ID — enables direct API enrichment instead of search-only",
+        ge=1,
+    )
+    github_token: str | None = Field(
+        default=None,
+        description="Optional GitHub PAT to raise rate limit from 60/hr to 5000/hr",
+        max_length=200,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.JSON)
+
+
 class ModeInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     mode: str = Field(

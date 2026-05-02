@@ -28,12 +28,24 @@ from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_
 from rick_mcp.tools.offensive_chains import rick_attack_chain, rick_pivot_plan
 from rick_mcp.tools.offensive_extended import rick_c2_compare, rick_cloud_attack_path, rick_payload_guide, rick_wireless
 from rick_mcp.tools.offensive_tradecraft import rick_cheatsheet, rick_threat_model
+from rick_mcp.tools.recon_handle import rick_recon_handle
 from rick_mcp.tools.writeups import rick_writeups
 
 
 def register_all(mcp):
     """Register all tools on the MCP server."""
-    from rick_mcp.tools import career, cve, defensive, engagement, jarvis, jarvis_extended, meta, offensive, writeups
+    from rick_mcp.tools import (
+        career,
+        cve,
+        defensive,
+        engagement,
+        jarvis,
+        jarvis_extended,
+        meta,
+        offensive,
+        recon_handle,
+        writeups,
+    )
 
     offensive.register(mcp)
     defensive.register(mcp)
@@ -43,6 +55,7 @@ def register_all(mcp):
     cve.register(mcp)
     jarvis.register(mcp)
     jarvis_extended.register(mcp)
+    recon_handle.register(mcp)
     writeups.register(mcp)
 
 
@@ -82,6 +95,7 @@ __all__ = [
     "rick_payload_guide",
     "rick_pivot_plan",
     "rick_recon",
+    "rick_recon_handle",
     "rick_report_template",
     "rick_roe",
     "rick_scoping",

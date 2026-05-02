@@ -136,16 +136,17 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 45 Functional Tools
+## Tools — 46 Functional Tools
 
 ### Offensive — Recon & Assessment
 
-| Tool                  | What It Does                                                                         |
-|-----------------------|--------------------------------------------------------------------------------------|
-| `rick_recon`          | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile) |
-| `rick_vuln_assess`    | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, etc.)          |
-| `rick_tool_recommend` | Scenario-aware security tool recommendations                                         |
-| `rick_threat_model`   | STRIDE threat modeling for 8 system types                                            |
+| Tool                  | What It Does                                                                                  |
+|-----------------------|-----------------------------------------------------------------------------------------------|
+| `rick_recon`          | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)          |
+| `rick_recon_handle`   | OSINT against a hacker handle — GitHub profile/repos/activity + pivot URLs to HTB, H1, etc.   |
+| `rick_vuln_assess`    | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, etc.)                   |
+| `rick_tool_recommend` | Scenario-aware security tool recommendations                                                  |
+| `rick_threat_model`   | STRIDE threat modeling for 8 system types                                                     |
 
 ### Offensive — Attack Methodology
 
