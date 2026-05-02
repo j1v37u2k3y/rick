@@ -68,7 +68,7 @@ rick_mcp/
 
 ```bash
 make check       # Full pipeline: lint + format + typecheck + file-length + tests
-make test        # Run 567 tests
+make test        # Run 590 tests
 make coverage    # Tests with 80% coverage minimum
 make typecheck   # mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
 make fix         # Auto-fix lint and format

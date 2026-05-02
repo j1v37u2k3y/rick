@@ -138,6 +138,37 @@ def _military_adjective() -> str:
     return "Rigorous"
 
 
+def _operator_philosophy_section() -> str:
+    """Distilled philosophy block — 6 profile reads under one heading.
+
+    Used by build_jarvis, build_be_rick, build_mentor_mode. The headings stay
+    stable across contexts; surrounding builders add their own framing prose.
+    """
+    from rick_mcp.formatting import _read_data
+
+    return (
+        f"## Operator Philosophy — How {CALLSIGN} Thinks\n"
+        "\n"
+        "### Values\n"
+        f"{_read_data('profiles', 'values')}\n"
+        "\n"
+        "### Craftsmanship\n"
+        f"{_read_data('profiles', 'craftsmanship')}\n"
+        "\n"
+        "### Heritage\n"
+        f"{_read_data('profiles', 'heritage')}\n"
+        "\n"
+        "### Human\n"
+        f"{_read_data('profiles', 'human')}\n"
+        "\n"
+        "### Mantras\n"
+        f"{_read_data('profiles', 'mantras')}\n"
+        "\n"
+        f"### Rick & {CALLSIGN}\n"
+        f"{_read_data('profiles', 'rick_and_jiveturkey')}"
+    )
+
+
 AVAILABLE_MODES = ["be_rick", "dick_mode", "jarvis", "pentest_mode", "mentor_mode", "evaluate_fit", "engagement_ops"]
 
 
@@ -147,6 +178,7 @@ def build_be_rick() -> str:
 
     soul = _read_soul()
     book = _read_book()
+    philosophy = _operator_philosophy_section()
     phases = json.dumps(
         [{"phase": p["phase"], "name": p["name"]} for p in MISSION_PHASES],
         indent=2,
@@ -216,6 +248,8 @@ def build_be_rick() -> str:
 
 ## The Book — Memoirs (from my book.txt)
 {book}
+
+{philosophy}
 
 ## Your Methodology
 {phases}
@@ -362,6 +396,7 @@ You're on mission. Acknowledge and ask for target parameters if none provided.""
 def build_mentor_mode(student_level: str = "beginner") -> str:
     """Build the mentor_mode prompt content."""
     book = _read_book()
+    philosophy = _operator_philosophy_section()
 
     # Build identity headline for mentor intro
     headline_parts = [CALLSIGN]
@@ -413,6 +448,8 @@ def build_mentor_mode(student_level: str = "beginner") -> str:
 
 ## The Book — This Is How {CALLSIGN} Thinks (from my book.txt)
 {book}
+
+{philosophy}
 
 {personal_voice}
 
@@ -565,6 +602,7 @@ def build_jarvis(target: str = "", engagement_id: str = "", objective: str = "")
     summary = _read_data("profiles", "summary")
     stack = _read_data("profiles", "stack")
     methodology = _read_data("profiles", "methodology")
+    philosophy = _operator_philosophy_section()
 
     target_context = f"\n**Active Target:** {target}" if target else ""
     eng_context = f"\n**Engagement ID:** {engagement_id}" if engagement_id else ""
@@ -589,6 +627,21 @@ You don't wait to be asked. You anticipate, chain, and execute. You are {CALLSIG
 
 ## Methodology
 {methodology}
+
+{philosophy}
+
+## Decision Filters — Translating Philosophy Into JARVIS Behavior
+The philosophy above is not background reading. Apply these as active constraints on every output. When tension arises between speed and these rules, these rules win.
+
+- **Thorough > Fast.** Flag when recon depth feels insufficient before recommending a phase advance. If the operator pushes to advance early, name what's missing.
+- **Manual depth > Scanner output.** Every scanner result earns a "what the scanner missed" follow-up — second-order effects, business logic, race conditions, trust boundaries.
+- **Honesty above all.** Exploitation viability estimates are realistic, never optimistic. "I'm not sure" is a valid answer. Never inflate severity to make a finding look good.
+- **Builder's eye first.** Before "how to break it," ask "why was this built this way." Architectural intent shapes the right attack — and the right remediation.
+- **Cycle breaker.** Model best practices explicitly. Never recommend a shortcut that compromises integrity, even when it would work.
+- **No checkbox compliance.** Never surface a finding that's just a scanner echo without manual confirmation. If you can't reproduce it, say so.
+- **Chain over single-vuln framing.** A medium + a medium can equal a critical. Always evaluate findings in combination, not isolation.
+- **Builder metaphors are the native register.** Walls, foundations, joints, blueprints, load-bearing — physical-craft language is preferred over abstract jargon.
+- **Mantras surface when stuck.** When the operator hesitates, recall a mantra rather than producing more options.
 
 ## JARVIS Protocol — How You Operate
 
