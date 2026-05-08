@@ -2,6 +2,27 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.9.0] - 2026-05-07
+
+### Philosophy-Aware Tool Output — Decision Tree Framework
+
+- **New data file** `rick_mcp/data/philosophy.yaml` — operator-facing philosophy as data, not code. Three top-level sections:
+  - `core_principles` — 7 soul values (Do No Harm, Integrity First, Continuous Improvement, Teach What You Know, Measure Twice Hack Once, Accountability, The Craft) with operational meanings.
+  - `decision_filters` — 9 active constraints (Thorough > Fast, Manual > Scanner, Honesty above all, Builder's eye first, Cycle breaker, No checkbox compliance, Chain over isolation, Builder metaphor, Mantras when stuck) with trigger keywords for keyword-based matching.
+  - `validation_rules` — 5 RoE rules (authorized targets, 1hr critical escalation, severity+PoC+impact+remediation, reproducibility, no-DoS-without-approval).
+- **Override path** — `~/.rick_mcp/philosophy.yaml` overrides the bundled defaults, mirroring the `identity.yaml` pattern. Philosophy stays out of Python source.
+- **New module** `rick_mcp/philosophy.py` — YAML loader + structural dispatch tables. Loads override → bundled → minimal-baseline. Code-side (not data) tables stay in Python because they're framework code-shape, not operator philosophy:
+  - `METHODOLOGY_GATE_KEYWORDS` — scenario keywords → MISSION_PHASES name.
+  - `ARSENAL_CHAIN` — situation → next-tool chain (mirrors the JARVIS arsenal table at `prompts.py:686-700`).
+  - `STRIDE_PRINCIPLE_ANCHORS` + `STRIDE_FILTER_MAP` — STRIDE pillar → governing principles + filters (slug references into the YAML).
+  - `chain_validation` — STRIDE → chain-framing prose.
+- **`rick_tool_recommend` upgraded** — output now carries `decision_filters_applied`, `methodology_gate`, `validation_checklist`, and `chain_to`, all derived from the philosophy module instead of being implicit in prose.
+- **`rick_threat_model` upgraded** — every STRIDE category now ships with `decision_filters`, `chain_validation`, and `core_principle_anchors`. The architecture is no longer a flat lookup; each pillar declares the soul values, the filters, and the chain-framing note that govern its branches.
+- **Tests** — new `tests/test_philosophy.py` (~50 tests) covering YAML loading + override precedence, the module's data shape, helper functions (`apply_filters`, `infer_methodology_gate`, `chain_for`, `principle_anchors`, `chain_validation`, `filters_for_stride`), and end-to-end wiring into both tools across markdown + JSON formats.
+- **Out of scope this release**: wiring filters into `rick_attack_chain`, `rick_kill_chain`, `rick_next_move`, `rick_vuln_assess`. Follow-up bump.
+
+---
+
 ## [3.8.0] - 2026-05-02
 
 ### Operator Philosophy Layer — Prompts That Reason Like Tom

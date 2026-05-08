@@ -452,8 +452,8 @@ async def rick_capabilities() -> str:
                 "rick_recon": "Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)",
                 "rick_recon_handle": "OSINT against a hacker handle — GitHub profile/repos/activity + pivot URLs to CTFTime, HTB, HackerOne, Bugcrowd, Mastodon",
                 "rick_vuln_assess": "Vuln testing methodology for 10 categories (SQLi, XSS, SSRF, IDOR, auth, etc.)",
-                "rick_tool_recommend": "Scenario-aware tool recommendations — describe the job, get the toolbox",
-                "rick_threat_model": "STRIDE threat modeling for 8 system types",
+                "rick_tool_recommend": "Scenario-aware tool recommendations — philosophy-aware: emits decision filters, methodology gate, validation checklist, chain_to",
+                "rick_threat_model": "STRIDE threat modeling for 8 system types — each pillar carries decision filters, chain validation, and core principle anchors",
             },
         },
         "offensive_attack_methodology": {

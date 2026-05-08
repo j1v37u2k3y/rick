@@ -1,10 +1,17 @@
 """Offensive tools — cheatsheets and threat models."""
 
+from typing import cast
+
 from rick_mcp.constants import CALLSIGN
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize
 from rick_mcp.models import (
     CheatsheetInput,
     ThreatModelInput,
+)
+from rick_mcp.philosophy import (
+    chain_validation,
+    filters_for_stride,
+    principle_anchors,
 )
 from rick_mcp.tools.writeups import cite_writeups
 
@@ -1114,6 +1121,20 @@ async def rick_threat_model(params: ThreatModelInput) -> str:
         model["context"] = _sanitize(params.context)
     model["methodology"] = "STRIDE (Microsoft Threat Modeling)"
     model["authorization"] = "Use for defensive security architecture and authorized assessments only."
+    # Philosophy-aware enrichment — annotate each STRIDE category with the
+    # decision filters that govern its branches, the chain-framing note, and
+    # the core principles anchoring it. Values come from rick_mcp.philosophy.
+    stride = cast(dict, model["stride"])
+    for category, payload in stride.items():
+        filters = filters_for_stride(category)
+        if filters:
+            payload["decision_filters"] = [f"{f['name']} — {f['rule']}" for f in filters]
+        chain_note = chain_validation(category)
+        if chain_note:
+            payload["chain_validation"] = chain_note
+        anchors = principle_anchors(category)
+        if anchors:
+            payload["core_principle_anchors"] = anchors
     return _fmt(model, params.response_format, title=f"{CALLSIGN} Threat Model")
 
 

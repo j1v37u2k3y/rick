@@ -7,6 +7,12 @@ from rick_mcp.models import (
     ToolRecInput,
     VulnInput,
 )
+from rick_mcp.philosophy import (
+    VALIDATION_RULES,
+    apply_filters,
+    chain_for,
+    infer_methodology_gate,
+)
 from rick_mcp.tools.writeups import cite_writeups
 
 # Human-readable search phrases for each enum target/category (writeups don't use underscores)
@@ -438,6 +444,15 @@ async def rick_tool_recommend(params: ToolRecInput) -> str:
         r["secondary"] = ["Metasploit", "CrackMapExec", "ffuf"]
         r["rick_note"].append("Burp + Nmap + Nuclei covers massive attack surface.")
     r["scenario"] = params.scenario
+    # Philosophy-aware fields — pulled from rick_mcp.philosophy
+    filters = apply_filters(params.scenario)
+    if filters:
+        r["decision_filters_applied"] = [f"{f['name']} — {f['rule']}" for f in filters]
+    r["methodology_gate"] = infer_methodology_gate(params.scenario)
+    r["validation_checklist"] = VALIDATION_RULES
+    chain = chain_for(params.scenario)
+    if chain:
+        r["chain_to"] = chain
     # Cite writeups using the first primary tool recommendation (most representative signal)
     if r["primary"]:
         first_tool = r["primary"][0].split()[0].lower()
