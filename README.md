@@ -304,6 +304,47 @@ Access these via MCP resource URIs. Content is loaded from your private `~/.rick
 - `resume://portfolio` — External portfolio links
 - `resume://contact` — How to engage, next steps
 
+### Vault (11) — Optional, requires Obsidian Second Brain
+
+- `vault://manual` — Vault `_CLAUDE.md` (operating manual)
+- `vault://index` — Vault catalog (all notes by folder)
+- `vault://log` — Chronological vault activity log
+- `vault://identity/tom` — Identity hub (aggregates soul, profiles, certs, tools)
+- `vault://identity/methodology` — Bridge to Rick's 7-phase methodology
+- `vault://identity/values` — Bridge to the four core values
+- `vault://identity/soul` — Bridge to `~/.rick_mcp/soul/SOUL.md`
+- `vault://identity/rick` — Father-son frame
+- `vault://engagements` — JSON list of all engagement notes
+- `vault://templates/engagement` — Templater-based engagement template
+- `vault://status` — Vault health (JSON)
+
+## Vault Integration (v3.10+)
+
+When `~/.rick_mcp/vault/` is bootstrapped as an Obsidian Second Brain, Rick MCP becomes a vault
+contributor. Engagement tools auto-write Rick-voice AI-first notes to `vault/Engagements/`:
+
+- `rick_engagement_proposal` creates `<Client - Type (Date)>.md` anchor with full Rick-voice body,
+  wikilinks to `[[Identity/Methodology]]`, `[[Identity/Specializations/...]]`, `[[Identity/Tools/...]]`
+- `rick_debrief`, `rick_roe`, `rick_client_onboarding` append their respective sections to the
+  matching engagement note
+- `rick_tracker` projects engagement state to `vault/Engagements/<eng_id>.md` — JSON canonical,
+  vault is the human-readable mirror with dynamic findings table
+
+Bootstrap the vault via [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain):
+
+```bash
+git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain
+mkdir -p ~/.rick_mcp/vault
+python3 ~/.claude/skills/obsidian-second-brain/scripts/bootstrap_vault.py \
+  --path ~/.rick_mcp/vault --name "Your Name"
+```
+
+**Fork-friendly:** without the vault, every tool still works — vault writes are gated by
+`vault.is_configured()` and degrade silently.
+
+**Architectural rule:** vault references bedrock; bedrock is never duplicated. The soul, profiles,
+and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at them.
+
 ## Development
 
 ### Run Tests

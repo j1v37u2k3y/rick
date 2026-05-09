@@ -1,9 +1,19 @@
-"""Engagement lifecycle tools — ROE, reports, proposals, onboarding, debrief, tracker."""
+"""Engagement lifecycle tools — ROE, reports, proposals, onboarding, debrief, tracker.
+
+When ~/.rick_mcp/vault/ is configured (proper Obsidian Second Brain bootstrap detected by
+rick_mcp.vault.is_configured()), every engagement tool also writes a Rick-voice AI-first note
+to vault/Engagements/. Proposal creates the anchor note. Debrief, scoping, roe, and
+client_onboarding append their respective sections to the matching note (best-effort match by
+client+type). Tracker maintains its eng_id-anchored vault note with findings table.
+
+Fork-friendly: tools degrade gracefully to text-only when no vault is configured.
+"""
 
 import json
 from datetime import datetime
 from pathlib import Path
 
+from rick_mcp import vault
 from rick_mcp.constants import CALLSIGN, MISSION_PHASES
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize, logger
 from rick_mcp.identity import MOTTO
@@ -16,6 +26,409 @@ from rick_mcp.models import (
     ScopingInput,
     TrackerInput,
 )
+
+# ── Vault body builders (Rick voice, AI-first wikilinks) ────────────────────────────────────
+
+
+def _bullet_list(items: list[str], indent: str = "") -> str:
+    return "\n".join(f"{indent}- {item}" for item in items)
+
+
+def _proposal_vault_body(
+    *,
+    client: str,
+    engagement_type: str,
+    type_title: str,
+    scope_desc: str,
+    test_type: str,
+    techniques: list[str],
+    days: int,
+    recommended_days: int,
+    special_requirements: str | None,
+) -> str:
+    """Build the Rick-voice markdown body for a proposal-anchored engagement note.
+
+    Wikilinks methodology, specialization, and default toolset. Caller-supplied context lines
+    (techniques, scope_desc) are preserved verbatim from the proposal generator.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    spec_link = vault.specialization_wikilink(engagement_type)
+    tool_links = vault.tools_wikilinks(engagement_type)
+    operator_link = "[[Identity/Tom]]"
+    methodology_link = "[[Identity/Methodology]]"
+
+    sections = [
+        f"# {client} — {type_title}",
+        "",
+        "> **Status:** scoping",
+        f"> **Prepared by:** {operator_link}",
+        f"> **Date:** {today}",
+        f"> **Recommended duration:** {recommended_days} business days",
+        f"> **Requested duration:** {days} business days",
+        "",
+        "## Summary",
+        "",
+        f"{type_title} for {client}. {days} business days. PTES + OWASP + MITRE ATT&CK methodology, "
+        f"applied with manual depth — scanner output is a starting point, not a finding.",
+        "",
+        "## Scope",
+        "",
+        f"- **Type:** {test_type}",
+        f"- **Description:** {scope_desc}",
+        "- **In-scope:** _[TBD — finalize in ROE]_",
+        "- **Out-of-scope:** _[TBD — finalize in ROE]_",
+        "",
+        "## Methodology",
+        "",
+        f"Rick's 7-phase pipeline ({methodology_link}) layered on PTES + OWASP + MITRE ATT&CK. "
+        f"Builder-to-breaker discipline — understand how the system was built before swinging the hammer.",
+        "",
+        "**Techniques:**",
+        "",
+        _bullet_list(techniques),
+        "",
+    ]
+
+    if spec_link:
+        sections += [
+            "## Specialization",
+            "",
+            spec_link,
+            "",
+        ]
+
+    if tool_links:
+        sections += [
+            "## Default Toolset",
+            "",
+            _bullet_list(tool_links),
+            "",
+        ]
+
+    # Phase tracking — anchored to Rick's 7-phase methodology
+    phase_lines = [
+        "- Phase 1 — Reconnaissance: pending",
+        "- Phase 2 — Vulnerability Assessment: pending",
+        "- Phase 3 — Exploitation: pending",
+        "- Phase 4 — Privilege Escalation: pending",
+        "- Phase 5 — Lateral Movement: pending",
+        "- Phase 6 — Documentation: pending",
+        "- Phase 7 — Remediation Strategy: pending",
+    ]
+    sections += [
+        "## Phase Tracking",
+        "",
+        "> Updated by `rick_tracker`, `rick_debrief`, and other engagement tools as work progresses.",
+        "",
+        *phase_lines,
+        "",
+    ]
+
+    # Timeline — derive same way the proposal tool does
+    sections += [
+        f"## Timeline ({days} business days)",
+        "",
+        f"- **Recon:** {max(1, days // 5)}d",
+        f"- **Testing:** {max(1, int(days * 0.5))}d",
+        f"- **Exploitation:** {max(1, int(days * 0.2))}d",
+        f"- **Reporting:** {max(1, int(days * 0.2))}d",
+        "",
+        "## Deliverables",
+        "",
+        _bullet_list(
+            [
+                "Executive Summary",
+                "Technical Report",
+                "Remediation Roadmap",
+                "Evidence Package",
+                "Debrief Presentation",
+            ]
+        ),
+        "",
+        "## Terms",
+        "",
+        "- **Authorization:** Written required",
+        "- **Scope:** Authorized only",
+        "- **Data handling:** PoC-level, securely deleted",
+        "- **Escalation:** 1 hour for critical findings",
+        "",
+    ]
+
+    if special_requirements:
+        sections += [
+            "## Special Requirements",
+            "",
+            special_requirements,
+            "",
+        ]
+
+    sections += [
+        "## Findings",
+        "",
+        "> Severity-sorted. Updated by `rick_tracker(action='add_finding')`.",
+        "",
+        "| Severity | Title | Status |",
+        "|----------|-------|--------|",
+        "| _(no findings yet)_ |  |  |",
+        "",
+        "## Key Decisions",
+        "",
+        "> Append directional decisions made during the engagement.",
+        "",
+        "## Debrief",
+        "",
+        "> Populated by `rick_debrief` post-engagement.",
+        "",
+        "---",
+        "",
+        f"*Generated by `rick_engagement_proposal` on {today}. Voice: Rick. Built like Rick's name is on it.*",
+        "",
+        f"> Recommended: {recommended_days}d. Requested: {days}d. Thorough > fast. Measure twice, cut once.",
+        "> ",
+        f"> — {operator_link}",
+        "",
+    ]
+
+    return "\n".join(sections)
+
+
+def _tracker_vault_body(eng_data: dict) -> str:
+    """Build the Rick-voice body for a tracker-anchored engagement note (eng_id codename).
+
+    Dynamic findings table is built from eng_data['findings']. Designed to be regenerated on
+    every tracker write — the JSON state at ~/.rick_mcp/engagements/<eng_id>.json is canonical;
+    this body is the human-readable vault projection of it.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    eng_id = eng_data.get("id", "[ENG-ID]")
+    client = eng_data.get("client", "[CLIENT]")
+    eng_type = eng_data.get("type", "pentest")
+    eng_status = eng_data.get("status", "active")
+    created_at = eng_data.get("created_at", today)
+    type_title = eng_type.replace("_", " ").title()
+    operator_link = "[[Identity/Tom]]"
+    methodology_link = "[[Identity/Methodology]]"
+    spec_link = vault.specialization_wikilink(eng_type)
+    tool_links = vault.tools_wikilinks(eng_type)
+
+    sections = [
+        f"# {eng_id} — {client}",
+        "",
+        f"> **Engagement ID:** `{eng_id}`",
+        f"> **Type:** {type_title}",
+        f"> **Status:** {eng_status}",
+        f"> **Operator:** {operator_link}",
+        f"> **Created:** {created_at}",
+        "",
+        "## Summary",
+        "",
+        f"Tracker-anchored engagement record for {client}. Findings, status, and timeline persist via "
+        f"`rick_tracker`. Methodology: {methodology_link} (7-phase). This note mirrors the JSON state at "
+        f"`~/.rick_mcp/engagements/{eng_id}.json` — JSON is canonical, vault is the human-readable "
+        f"projection. Regenerated on every tracker write.",
+        "",
+    ]
+
+    if spec_link:
+        sections += ["## Specialization", "", spec_link, ""]
+    if tool_links:
+        sections += ["## Default Toolset", "", _bullet_list(tool_links), ""]
+
+    findings = eng_data.get("findings", [])
+    sections += [
+        "## Findings",
+        "",
+        "> Updated by `rick_tracker(action='add_finding')`. JSON state in `~/.rick_mcp/engagements/`.",
+        "",
+        "| ID | Title | Severity | Status |",
+        "|----|-------|----------|--------|",
+    ]
+    if findings:
+        for f in findings:
+            fid = f.get("id", "—")
+            title = f.get("title", "—")
+            sev = f.get("severity", "—")
+            st = f.get("status", "—")
+            sections.append(f"| {fid} | {title} | {sev} | {st} |")
+    else:
+        sections.append("| _(no findings yet)_ |  |  |  |")
+    sections.append("")
+
+    # Severity breakdown (only if findings exist)
+    if findings:
+        sev_counts: dict[str, int] = {}
+        for f in findings:
+            s = f.get("severity", "unknown")
+            sev_counts[s] = sev_counts.get(s, 0) + 1
+        sections += [
+            "**Severity breakdown:** " + " · ".join(f"{s}={c}" for s, c in sorted(sev_counts.items())),
+            "",
+        ]
+
+    sections += [
+        "## Key Decisions",
+        "",
+        "## Debrief",
+        "",
+        "---",
+        "",
+        f"*Tracker-anchored engagement note. Last refreshed by `rick_tracker` on {today}.*",
+        "",
+    ]
+    return "\n".join(sections)
+
+
+def _refresh_tracker_vault_note(eng_data: dict) -> str | None:
+    """Refresh the vault projection for a tracker-anchored engagement note.
+
+    Always overwrites — the JSON state is canonical, the vault note is the projection.
+    Returns the vault-relative path (str) on success, or None if vault is not configured.
+    """
+    if not vault._is_configured():
+        return None
+    eng_id = eng_data.get("id", "ENG-UNKNOWN")
+    client = str(eng_data.get("client", "[CLIENT]"))
+    eng_type = str(eng_data.get("type", "pentest"))
+    body = _tracker_vault_body(eng_data)
+    result = vault.write_engagement(
+        eng_id,
+        client=client,
+        engagement_type=eng_type,
+        body=body,
+        status=str(eng_data.get("status", "active")),
+        overwrite=True,
+    )
+    if result is None:
+        return None
+    written_path, _ = result
+    return vault.relative_path(written_path)
+
+
+def _debrief_vault_section(params: DebriefInput, findings_list: list[str]) -> str:
+    """Build the Debrief section body for appending to an existing engagement note."""
+    operator_link = "[[Identity/Tom]]"
+    sections = [
+        f"**Engagement type:** {params.engagement_type.replace('_', ' ').title()}",
+        f"**Operator:** {operator_link}",
+        f"**Closing voice:** {MOTTO + '. ' if MOTTO else ''}_The work isn't done until the fixes are verified._",
+        "",
+        "### Key Findings",
+        "",
+        _bullet_list(findings_list),
+        "",
+        "### Lessons Learned",
+        "",
+        "**What worked:** _[techniques/tools that landed; client controls that held]_",
+        "",
+        "**What didn't:** _[detected/blocked techniques; scope or access friction]_",
+        "",
+        "**Surprises:** _[unexpected findings — good or bad]_",
+        "",
+        "### Remediation Priorities",
+        "",
+        "- **Immediate (0-7d):** Critical findings requiring emergency response",
+        "- **Short-term (7-30d):** High findings with clear remediation paths",
+        "- **Medium-term (30-90d):** Medium findings + hardening",
+        "- **Strategic (90d+):** Architectural changes",
+        "",
+        "### Retest",
+        "",
+        "Recommended 90 days after remediation of critical/high findings. Focused retest on remediated "
+        "findings + regression. Verify fixes are effective and haven't introduced new issues.",
+        "",
+    ]
+    return "\n".join(sections)
+
+
+def _scoping_vault_section(params: ScopingInput, total_hours: int, total_days: int, total_estimate: int) -> str:
+    """Build the Scoping section body."""
+    return "\n".join(
+        [
+            f"**Engagement type:** {params.engagement_type.replace('_', ' ').title()}",
+            f"**Targets:** {params.target_count}",
+            f"**Complexity:** {(params.complexity or 'medium')}",
+            f"**Estimated hours:** {total_hours}",
+            f"**Estimated days:** {total_days}",
+            f"**Estimated cost:** ${total_estimate:,} (senior pentester day rate)",
+            "",
+            "_Estimates only. Pad 20% for the unexpected. The builder who underestimates the foundation pays for it on the roof._",
+            "",
+            "Source: `rick_scoping` calculator.",
+        ]
+    )
+
+
+def _roe_vault_section(params: ROEInput) -> str:
+    """Build the ROE section body."""
+    return "\n".join(
+        [
+            f"**Engagement type:** {params.engagement_type.replace('_', ' ').title()}",
+            f"**Client:** {params.client_name}",
+            f"**Duration:** {params.duration_days} business days",
+            "",
+            "**Authorization:** Written required before testing. Detailed scope signed by both parties. "
+            "24/7 emergency contact required.",
+            "",
+            "**Rules:**",
+            "",
+            _bullet_list(
+                [
+                    "Testing confined to authorized scope",
+                    "No DoS without written approval",
+                    "No social engineering of non-approved targets",
+                    "No modification of production data",
+                    "PoC-level data handling only",
+                    "All findings documented with timestamps",
+                    "Critical findings reported immediately",
+                    "Testing paused if unintended impact",
+                ]
+            ),
+            "",
+            "**Standards:** PTES, OWASP Testing Guide, NIST SP 800-115.",
+            "",
+            "Source: `rick_roe`. Scope is legal protection. No ambiguity. Measure twice, cut once.",
+        ]
+    )
+
+
+def _onboarding_vault_section(client: str, engagement_type: str) -> str:
+    """Build the Onboarding section body."""
+    return "\n".join(
+        [
+            f"**Client:** {client}",
+            f"**Engagement type:** {engagement_type.replace('_', ' ').title()}",
+            "",
+            "**Authorization checklist:** Signed SOW · Written authorization letter · Scope agreed · Get-out-of-jail "
+            "letter (if on-site)",
+            "",
+            "**Technical checklist:** Target list (URLs/IPs/domains) · Credentials (if gray/white) · VPN/connectivity "
+            "· Architecture diagrams · Previous reports · Fragile/off-limits systems",
+            "",
+            "**Contacts:** Technical POC · Executive escalation · Emergency contact · Preferred comms channel",
+            "",
+            "**Scheduling:** Testing window confirmed · Blackout periods · Kick-off scheduled · Report delivery date",
+            "",
+            "Source: `rick_client_onboarding`. Good onboarding sets the tone. Preparation prevents poor performance.",
+        ]
+    )
+
+
+def _find_matching_engagement(client: str, engagement_type: str) -> str | None:
+    """Best-effort lookup: find an existing vault engagement codename matching client+type prefix.
+
+    Returns the codename (filename stem) of the most recent match, or None if no vault / no match.
+    Pattern: '<Client> - <Type Title> (<Date>).md'
+    """
+    if not vault._is_configured():
+        return None
+    type_title = engagement_type.replace("_", " ").title()
+    prefix = f"{client} - {type_title}"
+    candidates = [p for p in vault.list_engagements() if p.stem.startswith(prefix)]
+    if not candidates:
+        return None
+    # Sort by mtime desc — most recent first
+    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return candidates[0].stem
 
 
 async def rick_roe(params: ROEInput) -> str:
@@ -59,6 +472,21 @@ async def rick_roe(params: ROEInput) -> str:
         "standards": "PTES, OWASP Testing Guide, NIST SP 800-115",
         "rick_note": f"{params.duration_days} days planned. Build in 20% buffer for documentation. Thorough > fast.",
     }
+
+    # ── Vault integration: append ROE section to matching engagement note ────────────────
+    if vault._is_configured():
+        client_str = _sanitize(params.client_name) or "Client"
+        codename = _find_matching_engagement(client_str, params.engagement_type)
+        if codename:
+            written = vault.append_engagement_section(
+                codename, section_heading="Rules of Engagement", section_body=_roe_vault_section(params)
+            )
+            if written is not None:
+                roe["vault_path"] = vault.relative_path(written)
+                roe["vault_status"] = "ROE appended"
+                vault.append_log_entry("roe", f"Appended to [[Engagements/{codename}]] (client: {client_str})")
+        else:
+            roe["vault_status"] = "no matching engagement note found — text-only output"
     return _fmt(roe, params.response_format, title=f"{CALLSIGN} Rules of Engagement")
 
 
@@ -240,6 +668,32 @@ async def rick_engagement_proposal(params: ProposalInput) -> str:
     if params.special_requirements:
         p["special_requirements"] = params.special_requirements
     p["rick_note"] = f"Recommended: {d['rd']}d. Requested: {days}d. Thorough > fast. Measure twice, cut once."
+
+    # ── Vault integration: write the engagement note when vault is configured ─────────────
+    if vault._is_configured():
+        client_str = _sanitize(params.client_name) or "Client"
+        codename = vault.codename_for(client_str, et, date=ts)
+        body = _proposal_vault_body(
+            client=client_str,
+            engagement_type=et,
+            type_title=str(d["t"]),
+            scope_desc=str(d["s"]),
+            test_type=str(d["tt"]),
+            techniques=list(d["tech"]),  # type: ignore[call-overload]
+            days=days,
+            recommended_days=int(default_days),
+            special_requirements=params.special_requirements,
+        )
+        result = vault.write_engagement(codename, client=client_str, engagement_type=et, body=body, status="scoping")
+        if result is not None:
+            written_path, created = result
+            p["vault_path"] = vault.relative_path(written_path)
+            p["vault_status"] = "created" if created else "preserved (existing note untouched)"
+            if created:
+                vault.append_log_entry(
+                    "engagement",
+                    f"Proposal anchor created: [[Engagements/{codename}]] (client: {client_str}, type: {et}, {days}d)",
+                )
     return _fmt(p, params.response_format, title=f"{CALLSIGN} Proposal")
 
 
@@ -299,6 +753,24 @@ async def rick_client_onboarding(params: OnboardInput) -> str:
         ],
         "rick_note": "Good onboarding sets the tone. Preparation prevents poor performance. Measure twice, cut once.",
     }
+
+    # ── Vault integration: append Onboarding section to matching engagement note ──────────
+    if vault._is_configured():
+        client_str = _sanitize(params.client_name) or "Client"
+        eng_type = params.engagement_type or "pentest"
+        codename = _find_matching_engagement(client_str, eng_type)
+        if codename:
+            written = vault.append_engagement_section(
+                codename,
+                section_heading="Client Onboarding",
+                section_body=_onboarding_vault_section(client_str, eng_type),
+            )
+            if written is not None:
+                pk["vault_path"] = vault.relative_path(written)
+                pk["vault_status"] = "onboarding appended"
+                vault.append_log_entry("onboarding", f"Appended to [[Engagements/{codename}]] (client: {client_str})")
+        else:
+            pk["vault_status"] = "no matching engagement note found — text-only output"
     return _fmt(pk, params.response_format, title=f"{CALLSIGN} Client Onboarding")
 
 
@@ -371,6 +843,20 @@ async def rick_debrief(params: DebriefInput) -> str:
         "closing": f"Engagement complete. Findings documented. Remediation roadmap delivered. Standing by for questions and retest scheduling. {MOTTO + '. ' if MOTTO else ''}— {CALLSIGN}",
         "rick_note": "The debrief is where you prove you're a partner, not just a tester. Tell the story. Acknowledge what they do well. Make the remediation actionable. And always recommend a retest — the work isn't done until the fixes are verified.",
     }
+
+    # ── Vault integration: append Debrief section to matching engagement note ────────────
+    if vault._is_configured():
+        client_str = _sanitize(params.client_name) or "Client"
+        codename = _find_matching_engagement(client_str, params.engagement_type)
+        if codename:
+            section_body = _debrief_vault_section(params, findings_list)
+            written = vault.append_engagement_section(codename, section_heading="Debrief", section_body=section_body)
+            if written is not None:
+                debrief["vault_path"] = vault.relative_path(written)
+                debrief["vault_status"] = "debrief appended"
+                vault.append_log_entry("debrief", f"Appended to [[Engagements/{codename}]] (client: {client_str})")
+        else:
+            debrief["vault_status"] = "no matching engagement note found — text-only output"
     return _fmt(debrief, params.response_format, title=f"{CALLSIGN} Debrief")
 
 
@@ -406,11 +892,17 @@ async def rick_tracker(params: TrackerInput) -> str:
         eng_file.write_text(json.dumps(engagement, indent=2))
         logger.info(f"Engagement created: {eng_id}")
 
-        return _fmt(
-            {"engagement_created": eng_id, **engagement},
-            params.response_format,
-            title=f"{CALLSIGN} Engagement Created",
-        )
+        response: dict = {"engagement_created": eng_id, **engagement}
+
+        # ── Vault projection: write/refresh the eng_id-anchored note ──────────────
+        vault_path = _refresh_tracker_vault_note(engagement)
+        if vault_path:
+            response["vault_path"] = vault_path
+            vault.append_log_entry(
+                "tracker", f"Engagement created: [[Engagements/{eng_id}]] (client: {engagement['client']})"
+            )
+
+        return _fmt(response, params.response_format, title=f"{CALLSIGN} Engagement Created")
 
     elif action == "add_finding":
         if not engagement_id:
@@ -437,11 +929,22 @@ async def rick_tracker(params: TrackerInput) -> str:
         eng_file.write_text(json.dumps(engagement, indent=2))
         logger.info(f"Finding added to {engagement_id}: {finding['id']}")
 
-        return _fmt(
-            {"finding_added": finding, "engagement": engagement_id, "total_findings": len(engagement["findings"])},
-            params.response_format,
-            title=f"{CALLSIGN} Finding Added",
-        )
+        response = {
+            "finding_added": finding,
+            "engagement": engagement_id,
+            "total_findings": len(engagement["findings"]),
+        }
+
+        # ── Vault projection: refresh the eng_id-anchored note with new finding ──
+        vault_path = _refresh_tracker_vault_note(engagement)
+        if vault_path:
+            response["vault_path"] = vault_path
+            vault.append_log_entry(
+                "tracker",
+                f"Finding {finding['id']} added to [[Engagements/{engagement_id}]] (severity: {finding['severity']})",
+            )
+
+        return _fmt(response, params.response_format, title=f"{CALLSIGN} Finding Added")
 
     elif action == "update_finding":
         if not engagement_id:
@@ -480,11 +983,14 @@ async def rick_tracker(params: TrackerInput) -> str:
         eng_file.write_text(json.dumps(engagement, indent=2))
         logger.info(f"Finding updated in {engagement_id}: {finding_id}")
 
-        return _fmt(
-            {"finding_updated": finding_id, "engagement": engagement_id},
-            params.response_format,
-            title=f"{CALLSIGN} Finding Updated",
-        )
+        response = {"finding_updated": finding_id, "engagement": engagement_id}
+
+        # ── Vault projection: refresh the eng_id-anchored note ──────────────────
+        vault_path = _refresh_tracker_vault_note(engagement)
+        if vault_path:
+            response["vault_path"] = vault_path
+
+        return _fmt(response, params.response_format, title=f"{CALLSIGN} Finding Updated")
 
     elif action == "status":
         if not engagement_id:
@@ -660,6 +1166,15 @@ async def rick_scoping(params: ScopingInput) -> str:
         ],
         "rick_note": "These are estimates, not bids. Every engagement is different — complexity, target maturity, and scope creep all affect the final number. Always pad 20% for the unexpected. The builder who underestimates the foundation pays for it on the roof.",
     }
+
+    # ── Vault integration: log calculator run (no client→note matching available here) ──
+    if vault._is_configured():
+        vault.append_log_entry(
+            "scoping",
+            f"Calculator run — type: {et}, targets: {params.target_count}, complexity: {complexity}, "
+            f"hours: {total_hours}, days: {total_days}, est: ${total_estimate:,}",
+        )
+        result["vault_status"] = "calculator run logged to vault/log.md"
     return _fmt(result, params.response_format, title=f"{CALLSIGN} Engagement Scoping")
 
 

@@ -437,7 +437,10 @@ async def rick_mantra() -> str:
 
 async def rick_capabilities() -> str:
     """What does Rick do? Full capability map — every tool, organized by mission phase."""
+    from rick_mcp import vault as _vault
     from rick_mcp.server import resource_count, tool_count
+
+    vault_status = _vault.status()
 
     caps = {
         "who_is_rick": (
@@ -544,6 +547,31 @@ async def rick_capabilities() -> str:
                 "doc://": "9 resources — soul, the-book, working-with-me, profile, achievements, contributing, changelog, security, war-stories",
                 "resume://": "4 resources — overview, evidence, portfolio, contact",
             },
+        },
+        "vault_integration": {
+            "description": (
+                "Obsidian Second Brain bridge. When ~/.rick_mcp/vault/ is bootstrapped, "
+                "engagement tools auto-write Rick-voice AI-first notes to vault/Engagements/. "
+                "The MCP becomes a vault contributor — every engagement gets a wikilink-traversable "
+                "node in the graph."
+            ),
+            "configured": str(vault_status["configured"]),
+            "vault_path": vault_status["path"],
+            "engagements_count": str(vault_status["engagements_count"]),
+            "auto_write_tools": [
+                "rick_engagement_proposal — creates vault/Engagements/<Client - Type (Date)>.md anchor",
+                "rick_debrief — appends Debrief section to matching engagement note",
+                "rick_roe — appends Rules of Engagement section",
+                "rick_client_onboarding — appends Client Onboarding section",
+                "rick_scoping — logs calculator runs to vault/log.md",
+                "rick_tracker — projects engagement state to vault/Engagements/<eng_id>.md (refreshed on every write)",
+            ],
+            "vault_resources": (
+                "vault://identity/tom, vault://identity/methodology, vault://identity/values, "
+                "vault://engagements/{codename}, vault://templates/engagement"
+                if vault_status["configured"]
+                else "(unavailable — bootstrap vault to enable)"
+            ),
         },
         "rick_note": "Don't just read the menu — order something. Pick a tool and fire it. The craft is in the doing, not the reading.",
     }
