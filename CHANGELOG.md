@@ -2,6 +2,70 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.10.0] - 2026-05-09
+
+### Vault Integration — Rick Becomes a Vault Contributor
+
+Rick MCP now natively writes to the operator's Obsidian Second Brain at `~/.rick_mcp/vault/`.
+When the vault is bootstrapped (detected by presence of `_CLAUDE.md`), engagement tools auto-write
+Rick-voice AI-first notes to `vault/Engagements/`. Fork-friendly: tools degrade gracefully when no
+vault is configured — text-only output, no errors, no surprises.
+
+- **New module** `rick_mcp/vault.py` — parallel to `identity.py`. Zero internal imports, loads path
+  config at import time, exposes module-level constants. `is_configured()` gates every behavior.
+  Helpers:
+  - `frontmatter(fields)` — builds AI-first YAML with space-padded inline arrays (`tags: [ a, b ]`)
+    matching the operator's vault formatting preferences.
+  - `preamble(text)` — builds the `## For future Claude` block.
+  - `write_engagement(codename, ...)` — non-destructive by default; pass `overwrite=True` to refresh.
+    Returns `(path, created)` tuple.
+  - `append_engagement_section(codename, heading, body)` — appends a dated section to an existing
+    engagement note.
+  - `append_log_entry(action, description)` — chronological vault/log.md append.
+  - `specialization_wikilink()` / `tools_wikilinks()` — engagement-type → vault Identity wikilinks.
+  - `status()` — health view used by `rick_capabilities`.
+- **Engagement tools wired** to vault writes:
+  - `rick_engagement_proposal` — creates `vault/Engagements/<Client - Type (Date)>.md` anchor with
+    Rick-voice body. Wikilinks to `[[Identity/Methodology]]`, `[[Identity/Specializations/...]]`,
+    `[[Identity/Tools/...]]`. Non-destructive: existing note preserved on re-run.
+  - `rick_debrief` — appends a `Debrief` section to the matching engagement note (best-effort match
+    by client+type prefix). Falls through to text-only when no match.
+  - `rick_roe` — appends a `Rules of Engagement` section.
+  - `rick_client_onboarding` — appends a `Client Onboarding` section.
+  - `rick_scoping` — logs calculator runs to `vault/log.md` (no client→note matching available
+    from ScopingInput).
+  - `rick_tracker` — projects engagement state to `vault/Engagements/<eng_id>.md`. The JSON state at
+    `~/.rick_mcp/engagements/<eng_id>.json` remains canonical; the vault note is regenerated on
+    every `create`, `add_finding`, and `update_finding` action via `overwrite=True`. Includes
+    dynamic findings table + severity breakdown.
+- **`rick_capabilities`** gains a `vault_integration` section surfacing vault status (configured,
+  path, engagement count) and the auto-write tool list.
+- **New `vault://` MCP resources** (11):
+  - `vault://manual` — `_CLAUDE.md`
+  - `vault://index` — vault catalog
+  - `vault://log` — chronological activity log
+  - `vault://identity/tom` / `methodology` / `values` / `soul` / `rick` — identity stubs
+  - `vault://engagements` — JSON list of all engagement notes
+  - `vault://templates/engagement` — Templater-based engagement template
+  - `vault://status` — JSON health view
+- **Test isolation** — new `tests/conftest.py` with autouse fixture patching `Path.home()` to a
+  fresh `tmp_path` for every test. Prevents tools that write to `~/.rick_mcp/{vault,engagements,
+  dick}` from polluting the operator's real home during test runs. Catches a real leak that was
+  silently writing to `~/.rick_mcp/vault/log.md` when engagement tools ran in tests.
+- **Tests** — new `tests/test_vault.py` (64 tests) covering the vault module, AI-first frontmatter
+  helpers, write/append primitives, find-by-prefix lookup, and all 11 vault:// resources.
+  `tests/test_extended.py::TestEngagementVaultIntegration` adds 10 tests covering each engagement
+  tool's vault behavior (write, append, no-match fallback, tracker findings refresh).
+- **Architectural rule** documented in `vault.py`: vault references bedrock (`soul/`, `profiles/`,
+  `resume/`, `identity.yaml`); bedrock is never duplicated in the vault. If a stub diverges from
+  canonical, canonical wins.
+- **Voice**: when `is_configured()` is true (custom identity loaded), vault note bodies carry Rick's
+  voice — first person, builder metaphors, USMC precision, dry humor. AI-first structural rules
+  (preamble, frontmatter, wikilinks, recency markers) apply regardless of voice.
+- **Zero new dependencies.** Uses stdlib `pathlib` + existing `pyyaml`.
+
+---
+
 ## [3.9.0] - 2026-05-07
 
 ### Philosophy-Aware Tool Output — Decision Tree Framework

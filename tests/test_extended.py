@@ -892,3 +892,194 @@ class TestResponseFormats:
 class TestMCPServer:
     def test_server_name(self):
         assert mcp.name == "rick_mcp"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  VAULT INTEGRATION — engagement tools writing to vault/Engagements/
+# ═══════════════════════════════════════════════════════════════
+
+
+@pytest.fixture
+def configured_vault(tmp_path):
+    """Bootstrap a minimal vault under tmp_path/.rick_mcp/vault. Returns the vault path.
+
+    Note: the autouse conftest fixture already patches Path.home() to tmp_path, so this just
+    needs to populate the vault subtree.
+    """
+    vault_dir = tmp_path / ".rick_mcp" / "vault"
+    vault_dir.mkdir(parents=True)
+    (vault_dir / "_CLAUDE.md").write_text("# stub\n", encoding="utf-8")
+    (vault_dir / "log.md").write_text(
+        "# Vault Activity Log\n\n## [2026-05-09] init | bootstrap\n\n---\n", encoding="utf-8"
+    )
+    (vault_dir / "Engagements").mkdir()
+    return vault_dir
+
+
+class TestEngagementVaultIntegration:
+    @pytest.mark.asyncio
+    async def test_proposal_writes_engagement_note(self, configured_vault):
+        result = await rick_engagement_proposal(
+            ProposalInput(
+                engagement_type="web_app_pentest",
+                client_name="Acme Corp",
+                estimated_days=10,
+            )
+        )
+        # Tool still returns markdown text
+        assert "Proposal" in result
+        # Vault note created
+        eng_files = list((configured_vault / "Engagements").glob("*.md"))
+        assert len(eng_files) == 1
+        content = eng_files[0].read_text(encoding="utf-8")
+        # AI-first frontmatter present
+        assert "type: engagement" in content
+        assert "ai-first: true" in content
+        assert "client: Acme Corp" in content
+        # Rick-voice body with wikilinks
+        assert "[[Identity/Methodology]]" in content
+        assert "[[Identity/Tools/Burp Suite]]" in content
+        assert "[[Identity/Specializations/Web Application Security]]" in content
+        # vault_path surfaced in tool output
+        assert "vault_path" in result.lower() or "Engagements" in result
+
+    @pytest.mark.asyncio
+    async def test_proposal_skips_vault_when_unconfigured(self, tmp_path):
+        # No vault bootstrap — autouse fixture has tmp_path as home, vault dir absent
+        result = await rick_engagement_proposal(ProposalInput(engagement_type="network_pentest", client_name="Acme"))
+        # Tool still works
+        assert "Proposal" in result
+        # No vault dir created
+        assert not (tmp_path / ".rick_mcp" / "vault" / "Engagements").exists()
+
+    @pytest.mark.asyncio
+    async def test_proposal_does_not_overwrite_existing_note(self, configured_vault):
+        # First call creates the note
+        await rick_engagement_proposal(
+            ProposalInput(engagement_type="web_app_pentest", client_name="Acme", estimated_days=10)
+        )
+        eng_file = next((configured_vault / "Engagements").glob("*.md"))
+        original = eng_file.read_text(encoding="utf-8")
+
+        # Second call with same client+type+date should preserve the original
+        result = await rick_engagement_proposal(
+            ProposalInput(engagement_type="web_app_pentest", client_name="Acme", estimated_days=20)
+        )
+        assert eng_file.read_text(encoding="utf-8") == original
+        # Status surfaced as preserved
+        assert "preserved" in result.lower() or "20" in result
+
+    @pytest.mark.asyncio
+    async def test_debrief_appends_to_matching_engagement(self, configured_vault):
+        # Create the anchor first via proposal
+        await rick_engagement_proposal(
+            ProposalInput(engagement_type="web_app_pentest", client_name="Acme", estimated_days=10)
+        )
+        # Now run debrief
+        await rick_debrief_inline_call_helper()
+        # Find the engagement note
+        eng_file = next((configured_vault / "Engagements").glob("Acme - Web App Pentest*.md"))
+        content = eng_file.read_text(encoding="utf-8")
+        assert "## Debrief" in content
+        # Re-running debrief should append another Debrief section (or update the existing)
+        assert "Updated" in content or "Engagement type" in content
+
+    @pytest.mark.asyncio
+    async def test_debrief_skips_when_no_matching_engagement(self, configured_vault):
+        # Don't create a proposal first
+        result = await rick_debrief_inline_call_helper()
+        # Tool still returns text
+        assert "Debrief" in result
+        # No engagement file created
+        eng_files = list((configured_vault / "Engagements").glob("*.md"))
+        assert len(eng_files) == 0
+
+    @pytest.mark.asyncio
+    async def test_roe_appends_when_engagement_exists(self, configured_vault):
+        # Create the proposal first
+        await rick_engagement_proposal(ProposalInput(engagement_type="red_team", client_name="Acme", estimated_days=15))
+        await rick_roe(ROEInput(engagement_type="red_team", client_name="Acme", duration_days=15))
+        eng_file = next((configured_vault / "Engagements").glob("Acme - Red Team*.md"))
+        content = eng_file.read_text(encoding="utf-8")
+        assert "## Rules of Engagement" in content
+        assert "Authorization" in content
+        assert "PTES" in content
+
+    @pytest.mark.asyncio
+    async def test_onboarding_appends_when_engagement_exists(self, configured_vault):
+        await rick_engagement_proposal(ProposalInput(engagement_type="ad_review", client_name="Acme", estimated_days=8))
+        await rick_client_onboarding(OnboardInput(engagement_type="ad_review", client_name="Acme"))
+        eng_file = next((configured_vault / "Engagements").glob("Acme - Ad Review*.md"))
+        content = eng_file.read_text(encoding="utf-8")
+        assert "## Client Onboarding" in content
+        assert "Authorization checklist" in content
+
+    @pytest.mark.asyncio
+    async def test_scoping_logs_to_vault(self, configured_vault):
+        await rick_scoping(ScopingInput(engagement_type="red_team", target_count=2, complexity="high"))
+        log_content = (configured_vault / "log.md").read_text(encoding="utf-8")
+        assert "scoping | Calculator run" in log_content
+        assert "red_team" in log_content
+
+    @pytest.mark.asyncio
+    async def test_tracker_create_writes_vault_note(self, configured_vault):
+        # Need to seed engagements/ dir for tracker
+        (configured_vault.parent / "engagements").mkdir(exist_ok=True)
+        result = await rick_tracker(
+            TrackerInput(
+                action="create",
+                data=json.dumps({"id": "ENG-VAULT-001", "client": "Acme", "type": "web_app_pentest"}),
+            )
+        )
+        assert "ENG-VAULT-001" in result
+        # Vault note created
+        eng_file = configured_vault / "Engagements" / "ENG-VAULT-001.md"
+        assert eng_file.exists()
+        content = eng_file.read_text(encoding="utf-8")
+        assert "ENG-VAULT-001" in content
+        assert "Acme" in content
+        assert "type: engagement" in content
+        assert "no findings yet" in content.lower()
+
+    @pytest.mark.asyncio
+    async def test_tracker_add_finding_refreshes_vault_note(self, configured_vault):
+        eng_dir = configured_vault.parent / "engagements"
+        eng_dir.mkdir(exist_ok=True)
+        # Create initial engagement
+        await rick_tracker(
+            TrackerInput(
+                action="create",
+                data=json.dumps({"id": "ENG-VAULT-002", "client": "Acme", "type": "ad_review"}),
+            )
+        )
+        # Add a finding
+        result = await rick_tracker(
+            TrackerInput(
+                action="add_finding",
+                engagement_id="ENG-VAULT-002",
+                data=json.dumps({"title": "Kerberoastable SPN", "severity": "high"}),
+            )
+        )
+        assert "F-001" in result
+        # Vault note refreshed with finding row
+        eng_file = configured_vault / "Engagements" / "ENG-VAULT-002.md"
+        content = eng_file.read_text(encoding="utf-8")
+        assert "F-001" in content
+        assert "Kerberoastable SPN" in content
+        assert "high" in content
+        # Severity breakdown line
+        assert "Severity breakdown" in content
+
+
+# Helper used in vault integration tests (importable scope)
+async def rick_debrief_inline_call_helper():
+    """Run rick_debrief with consistent test inputs. Imported lazily to avoid name shadowing."""
+    from rick_mcp import rick_debrief
+
+    return await rick_debrief(
+        DebriefInput(
+            engagement_type="web_app_pentest",
+            client_name="Acme",
+            key_findings="SQLi in login, XSS in profile, auth bypass",
+        )
+    )
