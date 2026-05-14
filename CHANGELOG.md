@@ -2,6 +2,42 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.11.0] - 2026-05-14
+
+### Per-engagement MCP resource — `vault://engagements/{codename}`
+
+Pulling a single engagement note by codename now works. Filesystem-resolved, consistent with
+the existing `vault://engagements` list resource.
+
+- **New resource** `vault://engagements/{codename}` (parameterized URI template) — reads
+  `vault/Engagements/<codename>.md` directly. Returns:
+  - File content when the codename matches a file stem.
+  - A missing-codename stub listing available codenames as a hint when the codename doesn't match.
+  - The standard "not available" stub when the vault is not configured.
+- **Works for both engagement shapes:**
+  - Proposal-shape notes (created by `rick_engagement_proposal`, named
+    `<Client> - <Type Title> (<Date>).md`).
+  - Tracker-shape notes (created by `rick_tracker create`, named `<ENG-ID>.md`).
+- **Filesystem-canonical for the resource layer** — mirrors how `vault://engagements` (the
+  list) already resolves. Proposal-shape notes have no native JSON state, so no backfill is
+  manufactured. Tracker JSON at `~/.rick_mcp/engagements/<ENG-ID>.json` remains canonical for
+  tracker-driven state mutations (findings, status); the vault file is the read surface.
+- **No changes** to `rick_tracker` semantics, `vault://engagements` (list), or
+  `rick_capabilities` output (the `{codename}` URI was already documented at
+  `rick_mcp/tools/meta.py:570-571` — now accurate).
+- **Tests**: 5 new cases in `tests/test_vault.py::TestVaultResources` covering unconfigured
+  vault, missing codename, proposal-shape read, tracker-shape read, and not-found hint
+  enumeration.
+
+### Notes for future Claude
+
+The original 2026-05-14 brief diagnosed yesterday's `Unknown resource` failures as a
+tracker-JSON-vs-filesystem split needing a JSON backfill. Verify-premise step found the actual
+root cause was simpler: `vault://engagements/{codename}` was never a registered resource (only
+`vault://engagements` was). The list and capabilities count both already trusted the
+filesystem and agreed — there was no split. Fixing the missing registration restored the pull
+without manufacturing JSON for proposal-shape notes that have no native JSON state.
+
 ## [3.10.0] - 2026-05-09
 
 ### Vault Integration — Rick Becomes a Vault Contributor

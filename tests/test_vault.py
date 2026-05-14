@@ -522,3 +522,47 @@ class TestVaultResources:
         (configured_vault / "Templates" / "Engagement.md").write_text("# Engagement Template\n", encoding="utf-8")
         result = await res_vault_template_engagement()
         assert "Engagement Template" in result
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_returns_stub_when_unconfigured(self, fake_home):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        result = await res_vault_engagement_detail("Anything")
+        assert "not available" in result.lower() or "not configured" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_returns_not_found_for_missing_codename(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        result = await res_vault_engagement_detail("Nonexistent Engagement")
+        assert "not found" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_reads_proposal_shape(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        codename = "HTB - MonitorsFour (2026-05-09)"
+        body = "# HTB MonitorsFour\n\nProposal-shape content.\n"
+        (configured_vault / "Engagements" / f"{codename}.md").write_text(body, encoding="utf-8")
+        result = await res_vault_engagement_detail(codename)
+        assert "Proposal-shape content." in result
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_reads_tracker_shape(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        codename = "ENG-20260513-143022"
+        body = "# Tracker engagement\n\nFindings table here.\n"
+        (configured_vault / "Engagements" / f"{codename}.md").write_text(body, encoding="utf-8")
+        result = await res_vault_engagement_detail(codename)
+        assert "Findings table here." in result
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_not_found_hint_lists_available(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        existing = "Test Corp - Web App Pentest (2026-05-09)"
+        (configured_vault / "Engagements" / f"{existing}.md").write_text("x", encoding="utf-8")
+        result = await res_vault_engagement_detail("Bogus Name")
+        assert "not found" in result.lower()
+        assert existing in result

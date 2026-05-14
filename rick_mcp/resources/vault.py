@@ -14,6 +14,7 @@ URIs:
 - vault://identity/soul        → vault/Identity/Soul.md
 - vault://identity/rick        → vault/Identity/Rick.md
 - vault://engagements          → list of all engagement notes (codename + path)
+- vault://engagements/{codename} → vault/Engagements/<codename>.md (single engagement, filesystem-resolved)
 - vault://templates/engagement → vault/Templates/Engagement.md
 - vault://status               → vault status (JSON-formatted)
 """
@@ -98,6 +99,30 @@ async def res_vault_engagements() -> str:
     return json.dumps({"engagements": items, "total": len(items)}, indent=2)
 
 
+async def res_vault_engagement_detail(codename: str) -> str:
+    """Read a single engagement note by codename (filesystem-resolved).
+
+    Codename is the file stem in vault/Engagements/ — e.g.
+    "HTB - MonitorsFour (2026-05-09)" → vault/Engagements/HTB - MonitorsFour (2026-05-09).md.
+
+    Mirrors the list resource (`vault://engagements`): filesystem is canonical for the vault
+    projection layer. Works for both proposal-shape notes (created by `rick_engagement_proposal`)
+    and tracker-shape notes (created by `rick_tracker create`, named by ENG-ID).
+    """
+    if not vault._is_configured():
+        return (
+            f"[vault://engagements/{codename}] not available — the operator's vault at "
+            "`~/.rick_mcp/vault/` is not configured. Bootstrap it via the obsidian-second-brain skill."
+        )
+    safe = vault.codename_to_filename(codename)
+    target = vault._engagements_dir() / f"{safe}.md"
+    if not target.exists():
+        available = [p.stem for p in vault.list_engagements()]
+        hint = f" Available codenames: {', '.join(available)}." if available else " No engagement notes exist yet."
+        return f"[vault://engagements/{codename}] not found at `Engagements/{safe}.md`.{hint}"
+    return target.read_text(encoding="utf-8")
+
+
 async def res_vault_template_engagement() -> str:
     """The Engagement template (Templater-based) — wired to Rick's 7-phase methodology."""
     return _read_or_stub("Templates/Engagement.md", "vault://templates/engagement")
@@ -119,5 +144,6 @@ def register(mcp):
     mcp.resource("vault://identity/soul")(res_vault_identity_soul)
     mcp.resource("vault://identity/rick")(res_vault_identity_rick)
     mcp.resource("vault://engagements")(res_vault_engagements)
+    mcp.resource("vault://engagements/{codename}")(res_vault_engagement_detail)
     mcp.resource("vault://templates/engagement")(res_vault_template_engagement)
     mcp.resource("vault://status")(res_vault_status)
