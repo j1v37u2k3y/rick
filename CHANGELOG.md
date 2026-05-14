@@ -2,6 +2,26 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.11.1] - 2026-05-14
+
+### Fix: percent-decoding + path containment for `vault://engagements/{codename}`
+
+End-to-end MCP verification of v3.11.0 turned up two issues, both now fixed:
+
+- **Percent-decoding** — FastMCP passes URI path parameters in their percent-encoded form
+  (e.g. `HTB%20-%20MonitorsFour%20(2026-05-09)`). The v3.11.0 handler was matching the
+  encoded string against on-disk filenames that contain literal spaces, so every live
+  pull hit the missing-codename branch. Handler now decodes via `urllib.parse.unquote`
+  before sanitizing.
+- **Path containment** — defense-in-depth check added. The resolved target path is
+  verified to be inside `vault/Engagements/` before any filesystem read. Guards against:
+  rogue symlinks inside the engagements dir pointing outside the vault, and any future
+  change to `codename_to_filename` that loosens the slash strip. Returns a generic
+  "invalid codename" stub on escape; never echoes attempted resolved paths.
+- **Tests** — 2 new cases: `test_engagement_detail_decodes_percent_encoded_codename`,
+  `test_engagement_detail_path_traversal_rejected`,
+  `test_engagement_detail_symlink_escape_rejected`. 721 tests total.
+
 ## [3.11.0] - 2026-05-14
 
 ### Per-engagement MCP resource — `vault://engagements/{codename}`

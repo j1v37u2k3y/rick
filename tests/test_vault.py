@@ -566,3 +566,41 @@ class TestVaultResources:
         result = await res_vault_engagement_detail("Bogus Name")
         assert "not found" in result.lower()
         assert existing in result
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_decodes_percent_encoded_codename(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        codename = "HTB - MonitorsFour (2026-05-09)"
+        body = "# HTB MonitorsFour\n\nDecoded content.\n"
+        (configured_vault / "Engagements" / f"{codename}.md").write_text(body, encoding="utf-8")
+        # FastMCP passes the URI path param percent-encoded
+        encoded = "HTB%20-%20MonitorsFour%20(2026-05-09)"
+        result = await res_vault_engagement_detail(encoded)
+        assert "Decoded content." in result
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_path_traversal_rejected(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        # Write a secret file outside the engagements dir
+        (configured_vault / "_CLAUDE.md").write_text("SECRET MANUAL CONTENT", encoding="utf-8")
+        # Slashes are stripped by codename_to_filename; even if a future change allowed them,
+        # the containment check guards. Attempt encoded slashes that decode to a traversal.
+        result = await res_vault_engagement_detail("..%2F..%2F_CLAUDE")
+        assert "SECRET MANUAL CONTENT" not in result
+        # Resolves to a sanitized filename inside Engagements/, so "not found" is the expected outcome
+        assert "not found" in result.lower() or "invalid codename" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_engagement_detail_symlink_escape_rejected(self, configured_vault, tmp_path):
+        from rick_mcp.resources.vault import res_vault_engagement_detail
+
+        # Create a secret file outside the engagements dir, then symlink into Engagements/
+        secret = tmp_path / "outside_secret.md"
+        secret.write_text("OUTSIDE SECRET", encoding="utf-8")
+        link = configured_vault / "Engagements" / "escape.md"
+        link.symlink_to(secret)
+        result = await res_vault_engagement_detail("escape")
+        assert "OUTSIDE SECRET" not in result
+        assert "invalid codename" in result.lower()
