@@ -20,6 +20,7 @@ URIs:
 """
 
 import json
+from urllib.parse import unquote
 
 from rick_mcp import vault
 
@@ -104,18 +105,31 @@ async def res_vault_engagement_detail(codename: str) -> str:
 
     Codename is the file stem in vault/Engagements/ — e.g.
     "HTB - MonitorsFour (2026-05-09)" → vault/Engagements/HTB - MonitorsFour (2026-05-09).md.
+    FastMCP passes URI path params percent-encoded; the handler decodes before resolving.
 
     Mirrors the list resource (`vault://engagements`): filesystem is canonical for the vault
     projection layer. Works for both proposal-shape notes (created by `rick_engagement_proposal`)
     and tracker-shape notes (created by `rick_tracker create`, named by ENG-ID).
+
+    Defense-in-depth: the resolved target must remain inside `vault/Engagements/`. Slashes are
+    stripped by `codename_to_filename`, but the resolved path is verified to be inside the
+    engagements dir before any filesystem read — guards against future filter changes and
+    against symlinks inside the dir pointing outside the vault.
     """
     if not vault._is_configured():
         return (
             f"[vault://engagements/{codename}] not available — the operator's vault at "
             "`~/.rick_mcp/vault/` is not configured. Bootstrap it via the obsidian-second-brain skill."
         )
-    safe = vault.codename_to_filename(codename)
-    target = vault._engagements_dir() / f"{safe}.md"
+    decoded = unquote(codename)
+    safe = vault.codename_to_filename(decoded)
+    eng_dir = vault._engagements_dir()
+    target = eng_dir / f"{safe}.md"
+    try:
+        resolved = target.resolve(strict=False)
+        resolved.relative_to(eng_dir.resolve(strict=False))
+    except ValueError:
+        return f"[vault://engagements/{codename}] invalid codename — resolves outside the engagements directory."
     if not target.exists():
         available = [p.stem for p in vault.list_engagements()]
         hint = f" Available codenames: {', '.join(available)}." if available else " No engagement notes exist yet."
