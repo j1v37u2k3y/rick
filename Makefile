@@ -1,4 +1,4 @@
-.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup
+.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts
 
 MAX_FILE_LINES := 1500
 
@@ -90,6 +90,14 @@ setup:
 	@echo "═══════════════════════════════════════════════"
 	@echo " Setup complete. Run 'make check' to verify."
 	@echo "═══════════════════════════════════════════════"
+
+# Sync count placeholders (tools / resources / skills / tests / version) into README + SKILLS.md
+refresh-counts:
+	python scripts/refresh_counts.py
+
+# CI-friendly: fail if any tagged count region is stale
+check-counts:
+	python scripts/refresh_counts.py --check
 
 # Clean build/test artifacts
 clean:

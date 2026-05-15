@@ -2,7 +2,7 @@
 
 ## This MCP Server
 
-The server itself is the primary portfolio piece. 34 tools, 24 resources, 439 tests, full CI/CD pipeline. The code
+The server itself is the primary portfolio piece. 46 tools, 36 resources, 721 tests, full CI/CD pipeline. The code
 demonstrates every skill claim in the resume.
 
 ## Open Source Contributions

@@ -2,6 +2,139 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.12.0] - 2026-05-15
+
+### Claude Code skills landed — 9 forkable orchestration playbooks + catalog + template
+
+The repo now ships project-local Claude Code skills at `.claude/skills/`. They auto-discover
+when Claude Code launches from the repo root, so anyone who clones rick_mcp gets the full
+suite. Skills are pure orchestration — they chain `rick_mcp` MCP tools into higher-level
+workflows and return content to chat; they do not write to the operator's filesystem.
+
+- **9 skills (~1,786 lines):**
+    - *Engagement lifecycle* — `/engagement-kickoff`, `/htb-day`, `/kill-chain-walk`,
+      `/debrief-then-publish`
+    - *Content production* — `/writeup-publish`, `/voice-check`
+    - *Operations support* — `/arsenal-report`, `/cheatsheet-build`
+    - *Career* — `/resume-tailor`
+- **Catalog** — `.claude/skills/SKILLS.md` — categorized index, trigger phrases,
+  composition patterns (engagement and CTF lifecycles, pre-publish QA).
+- **Template** — `.claude/skills/SKILL_TEMPLATE.md` — runnable scaffold mirroring the
+  reference shape (`engagement-kickoff`): frontmatter, elevator pitch, Prerequisites, Inputs,
+  optional skill-specific section, Workflow with concrete MCP call blocks, Acceptance,
+  Failure modes, Voice, NOT-does, Related skills.
+- **Authoring conventions** — codified in `CLAUDE.md` § Claude Code Skills: kebab-case
+  naming, generic-not-personal (`is_configured()` pattern, no `~/.rick_mcp/` hardcodes,
+  no operator-personal wikilinks), pure orchestration, `AskUserQuestion` at every config
+  decision.
+- **Voice / register shifts stay server-side.** Persona prompts live in `rick_mcp/prompts.py`
+  and are invoked via `rick_mode(persona="be_rick" | "mentor" | "evaluate" | ...)`. Skills
+  do not duplicate voice instructions — one source of truth, no drift between channels.
+- **No tool changes** — skills are workflow primitives on top of the existing 46 tools and
+  36 resources. Test count unchanged from 3.11.1 (721 tests).
+
+### Single source of truth for counts (no more drift across docs)
+
+Tool / resource / skill / test counts and version previously appeared hardcoded in ~14
+spots across 5 markdown files. Every feature change cost a multi-file cleanup, and a
+brittle substring check in `rick_health` had already proven the drift was load-bearing.
+Reworked the docs to a two-surface model:
+
+- **`scripts/refresh_counts.py`** — computes counts at runtime from `__version__.py`,
+  regex over `rick_mcp/tools/*.py` and `rick_mcp/resources/*.py`, the `.claude/skills/`
+  directory, and `pytest --collect-only`. Rewrites HTML-comment-tagged regions in target
+  files. Supports `--check` (exit 1 on drift, for CI) and `--skip-tests` (faster path).
+- **`make refresh-counts`** + **`make check-counts`** — Makefile targets wrap the script.
+- **README.md and `.claude/skills/SKILLS.md`** are the only two files with tagged counts;
+  the script keeps them synced.
+- **CLAUDE.md, ACHIEVEMENTS.md** no longer hardcode counts. They point at
+  `rick_capabilities` for live state.
+- **CHANGELOG entries** stay as point-in-time records — historical counts within a
+  released version are correct for that release and are not auto-synced.
+
+Tagged regions use HTML comments (render as nothing on GitHub):
+`<!-- counts:tools -->46<!-- /counts:tools -->`. Coverage badge and per-resource-family
+sub-counts (Profile / Documents / Resume / Vault) remain manually maintained for now.
+
+### Structural tests for `.claude/skills/`
+
+Added `tests/test_skills.py` — 68 structural assertions over the skills suite. Catches
+drift between skill files, the `SKILLS.md` catalog, and the MCP tool registry. Does NOT
+attempt to validate Claude Code's natural-language matching or runtime LLM behavior —
+those are non-deterministic and out of scope.
+
+Covers: every skill dir has a `SKILL.md`; kebab-case dir names; YAML frontmatter parses
+and has `name` + `description`; `name` matches the dir; description includes the
+`/<skill-name>` trigger phrase; required body sections present (Prerequisites / Workflow /
+Acceptance); `mcp__rick_mcp__*` references resolve to real registered tools; sibling
+`/<skill-name>` references exist on disk; catalog lists every skill and every catalog
+entry is a real skill; `SKILL_TEMPLATE.md` lives at the catalog root (not inside a
+subdir where it would become a phantom skill).
+
+Caught one drift bug on first run: `voice-check/SKILL.md` referenced `/research`, a
+global Claude Code skill that doesn't ship with rick_mcp. Generalized the reference to
+"use a research tool or vault history" for forkability.
+
+Test count: 721 → 789. Pipeline still passes clean under `make check`.
+
+### Removed hardcoded operator identity from vault layer + shipped `soul-example/vault/` skeleton
+
+Discovered during work on the vault example: the production code hardcoded the operator's
+real name in three places, violating the project's "no hardcoded identity in Python source"
+rule (CLAUDE.md § Rules). Cleaned it up and shipped a forkable vault skeleton so the
+`vault://` resource family resolves out of the box for anyone who clones rick_mcp.
+
+**Code (the violations and their fixes):**
+
+- **Identity-hub URI renamed to `vault://identity/hub`** — the previous URI hardcoded the
+  operator's first name as the path segment. New URI is generic; the handler resolves
+  `Identity/<NAME>.md` dynamically from the operator's display name (from `identity.yaml`),
+  falling back to the generic `Identity/Operator.md` that ships with soul-example. Final
+  fallback: a missing-file stub.
+- **Operator wikilink hardcoded in `engagement.py` × 3** — `rick_engagement_proposal`,
+  `rick_roe`, and `rick_tracker` wrote a literal `[[Identity/<first-name>]]` wikilink into
+  every vault engagement note. Now uses `f"[[Identity/{NAME}]]"`.
+- **Bootstrap stub baked the operator's name into the suggested `--name` argument** —
+  generalized to `--name '<your name>'`.
+- **`rick_capabilities` URI list** — updated to advertise the new `vault://identity/hub` URI.
+
+**Soul-example vault skeleton at `soul-example/vault/`:**
+
+- `_CLAUDE.md`, `index.md`, `log.md` — operating manual, catalog, activity log
+- `Identity/Operator.md` — generic identity hub fallback (always resolves for forkers)
+- `Identity/Soul.md`, `Identity/Values.md`, `Identity/Methodology.md`, `Identity/Mantras.md`,
+  `Identity/Rick.md` — bridge stubs that point at canonical sources in `~/.rick_mcp/`
+- `Templates/Engagement.md` — engagement note template
+- `Engagements/Acme Corp - Web App Pentest (2026-01-15).md` — proposal-shape example
+- Updated `README.md` "Make It Yours" to include `cp -r soul-example/vault ~/.rick_mcp/`.
+
+**Tests:**
+
+- Renamed two existing vault tests for the renamed handler.
+- Added `test_identity_hub_reads_name_derived_file` and
+  `test_identity_hub_falls_back_to_operator_md` — coverage for the dynamic resolution
+    + the soul-example fallback path.
+
+**Follow-up scrub:**
+
+- `tests/test_recon_handle.py` — fake GitHub API response fixture: identifying fields
+  (name, bio, location, company) replaced with generic placeholders. No test assertions
+  depended on the values.
+- `rick_mcp/resources/vault.py` docstring example — illustrative `NAME` reference
+  swapped to the soul-example fictional persona's display name for consistency.
+- `soul-example/vault/` — handle references aligned with the existing soul-example
+  fictional persona used elsewhere in the example tree.
+
+**What stays:** GitHub username in URLs (CI badges, clone commands, security-advisory
+links, issue-template assignees) — factual references to where the repo lives, not
+personal data. The `rick_and_jiveturkey` resource family is project branding (the
+father-son lineage), not operator identity. The `REF_HANDLE` constant in
+`tests/test_recon_handle.py` is an intentional test target for the OSINT pivot logic.
+
+**Breaking change for MCP clients:** The old identity-hub URI no longer exists; use
+`vault://identity/hub`. Internal-only break — the URI was new in v3.10.0 and has no
+external consumers known.
+
 ## [3.11.1] - 2026-05-14
 
 ### Fix: percent-decoding + path containment for `vault://engagements/{codename}`
@@ -31,13 +164,13 @@ the existing `vault://engagements` list resource.
 
 - **New resource** `vault://engagements/{codename}` (parameterized URI template) — reads
   `vault/Engagements/<codename>.md` directly. Returns:
-  - File content when the codename matches a file stem.
-  - A missing-codename stub listing available codenames as a hint when the codename doesn't match.
-  - The standard "not available" stub when the vault is not configured.
+    - File content when the codename matches a file stem.
+    - A missing-codename stub listing available codenames as a hint when the codename doesn't match.
+    - The standard "not available" stub when the vault is not configured.
 - **Works for both engagement shapes:**
-  - Proposal-shape notes (created by `rick_engagement_proposal`, named
-    `<Client> - <Type Title> (<Date>).md`).
-  - Tracker-shape notes (created by `rick_tracker create`, named `<ENG-ID>.md`).
+    - Proposal-shape notes (created by `rick_engagement_proposal`, named
+      `<Client> - <Type Title> (<Date>).md`).
+    - Tracker-shape notes (created by `rick_tracker create`, named `<ENG-ID>.md`).
 - **Filesystem-canonical for the resource layer** — mirrors how `vault://engagements` (the
   list) already resolves. Proposal-shape notes have no native JSON state, so no backfill is
   manufactured. Tracker JSON at `~/.rick_mcp/engagements/<ENG-ID>.json` remains canonical for
@@ -70,40 +203,41 @@ vault is configured — text-only output, no errors, no surprises.
 - **New module** `rick_mcp/vault.py` — parallel to `identity.py`. Zero internal imports, loads path
   config at import time, exposes module-level constants. `is_configured()` gates every behavior.
   Helpers:
-  - `frontmatter(fields)` — builds AI-first YAML with space-padded inline arrays (`tags: [ a, b ]`)
-    matching the operator's vault formatting preferences.
-  - `preamble(text)` — builds the `## For future Claude` block.
-  - `write_engagement(codename, ...)` — non-destructive by default; pass `overwrite=True` to refresh.
-    Returns `(path, created)` tuple.
-  - `append_engagement_section(codename, heading, body)` — appends a dated section to an existing
-    engagement note.
-  - `append_log_entry(action, description)` — chronological vault/log.md append.
-  - `specialization_wikilink()` / `tools_wikilinks()` — engagement-type → vault Identity wikilinks.
-  - `status()` — health view used by `rick_capabilities`.
+    - `frontmatter(fields)` — builds AI-first YAML with space-padded inline arrays (`tags: [ a, b ]`)
+      matching the operator's vault formatting preferences.
+    - `preamble(text)` — builds the `## For future Claude` block.
+    - `write_engagement(codename, ...)` — non-destructive by default; pass `overwrite=True` to refresh.
+      Returns `(path, created)` tuple.
+    - `append_engagement_section(codename, heading, body)` — appends a dated section to an existing
+      engagement note.
+    - `append_log_entry(action, description)` — chronological vault/log.md append.
+    - `specialization_wikilink()` / `tools_wikilinks()` — engagement-type → vault Identity wikilinks.
+    - `status()` — health view used by `rick_capabilities`.
 - **Engagement tools wired** to vault writes:
-  - `rick_engagement_proposal` — creates `vault/Engagements/<Client - Type (Date)>.md` anchor with
-    Rick-voice body. Wikilinks to `[[Identity/Methodology]]`, `[[Identity/Specializations/...]]`,
-    `[[Identity/Tools/...]]`. Non-destructive: existing note preserved on re-run.
-  - `rick_debrief` — appends a `Debrief` section to the matching engagement note (best-effort match
-    by client+type prefix). Falls through to text-only when no match.
-  - `rick_roe` — appends a `Rules of Engagement` section.
-  - `rick_client_onboarding` — appends a `Client Onboarding` section.
-  - `rick_scoping` — logs calculator runs to `vault/log.md` (no client→note matching available
-    from ScopingInput).
-  - `rick_tracker` — projects engagement state to `vault/Engagements/<eng_id>.md`. The JSON state at
-    `~/.rick_mcp/engagements/<eng_id>.json` remains canonical; the vault note is regenerated on
-    every `create`, `add_finding`, and `update_finding` action via `overwrite=True`. Includes
-    dynamic findings table + severity breakdown.
+    - `rick_engagement_proposal` — creates `vault/Engagements/<Client - Type (Date)>.md` anchor with
+      Rick-voice body. Wikilinks to `[[Identity/Methodology]]`, `[[Identity/Specializations/...]]`,
+      `[[Identity/Tools/...]]`. Non-destructive: existing note preserved on re-run.
+    - `rick_debrief` — appends a `Debrief` section to the matching engagement note (best-effort match
+      by client+type prefix). Falls through to text-only when no match.
+    - `rick_roe` — appends a `Rules of Engagement` section.
+    - `rick_client_onboarding` — appends a `Client Onboarding` section.
+    - `rick_scoping` — logs calculator runs to `vault/log.md` (no client→note matching available
+      from ScopingInput).
+    - `rick_tracker` — projects engagement state to `vault/Engagements/<eng_id>.md`. The JSON state at
+      `~/.rick_mcp/engagements/<eng_id>.json` remains canonical; the vault note is regenerated on
+      every `create`, `add_finding`, and `update_finding` action via `overwrite=True`. Includes
+      dynamic findings table + severity breakdown.
 - **`rick_capabilities`** gains a `vault_integration` section surfacing vault status (configured,
   path, engagement count) and the auto-write tool list.
 - **New `vault://` MCP resources** (11):
-  - `vault://manual` — `_CLAUDE.md`
-  - `vault://index` — vault catalog
-  - `vault://log` — chronological activity log
-  - `vault://identity/tom` / `methodology` / `values` / `soul` / `rick` — identity stubs
-  - `vault://engagements` — JSON list of all engagement notes
-  - `vault://templates/engagement` — Templater-based engagement template
-  - `vault://status` — JSON health view
+    - `vault://manual` — `_CLAUDE.md`
+    - `vault://index` — vault catalog
+    - `vault://log` — chronological activity log
+    - `vault://identity/hub` (originally hardcoded to the operator's name; renamed in v3.12.0) / `methodology` /
+      `values` / `soul` / `rick` — identity stubs
+    - `vault://engagements` — JSON list of all engagement notes
+    - `vault://templates/engagement` — Templater-based engagement template
+    - `vault://status` — JSON health view
 - **Test isolation** — new `tests/conftest.py` with autouse fixture patching `Path.home()` to a
   fresh `tmp_path` for every test. Prevents tools that write to `~/.rick_mcp/{vault,engagements,
   dick}` from polluting the operator's real home during test runs. Catches a real leak that was
@@ -116,7 +250,7 @@ vault is configured — text-only output, no errors, no surprises.
   `resume/`, `identity.yaml`); bedrock is never duplicated in the vault. If a stub diverges from
   canonical, canonical wins.
 - **Voice**: when `is_configured()` is true (custom identity loaded), vault note bodies carry Rick's
-  voice — first person, builder metaphors, USMC precision, dry humor. AI-first structural rules
+  voice — first person, builder metaphors, military-grade precision, dry humor. AI-first structural rules
   (preamble, frontmatter, wikilinks, recency markers) apply regardless of voice.
 - **Zero new dependencies.** Uses stdlib `pathlib` + existing `pyyaml`.
 
@@ -126,35 +260,62 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### Philosophy-Aware Tool Output — Decision Tree Framework
 
-- **New data file** `rick_mcp/data/philosophy.yaml` — operator-facing philosophy as data, not code. Three top-level sections:
-  - `core_principles` — 7 soul values (Do No Harm, Integrity First, Continuous Improvement, Teach What You Know, Measure Twice Hack Once, Accountability, The Craft) with operational meanings.
-  - `decision_filters` — 9 active constraints (Thorough > Fast, Manual > Scanner, Honesty above all, Builder's eye first, Cycle breaker, No checkbox compliance, Chain over isolation, Builder metaphor, Mantras when stuck) with trigger keywords for keyword-based matching.
-  - `validation_rules` — 5 RoE rules (authorized targets, 1hr critical escalation, severity+PoC+impact+remediation, reproducibility, no-DoS-without-approval).
-- **Override path** — `~/.rick_mcp/philosophy.yaml` overrides the bundled defaults, mirroring the `identity.yaml` pattern. Philosophy stays out of Python source.
-- **New module** `rick_mcp/philosophy.py` — YAML loader + structural dispatch tables. Loads override → bundled → minimal-baseline. Code-side (not data) tables stay in Python because they're framework code-shape, not operator philosophy:
-  - `METHODOLOGY_GATE_KEYWORDS` — scenario keywords → MISSION_PHASES name.
-  - `ARSENAL_CHAIN` — situation → next-tool chain (mirrors the JARVIS arsenal table at `prompts.py:686-700`).
-  - `STRIDE_PRINCIPLE_ANCHORS` + `STRIDE_FILTER_MAP` — STRIDE pillar → governing principles + filters (slug references into the YAML).
-  - `chain_validation` — STRIDE → chain-framing prose.
-- **`rick_tool_recommend` upgraded** — output now carries `decision_filters_applied`, `methodology_gate`, `validation_checklist`, and `chain_to`, all derived from the philosophy module instead of being implicit in prose.
-- **`rick_threat_model` upgraded** — every STRIDE category now ships with `decision_filters`, `chain_validation`, and `core_principle_anchors`. The architecture is no longer a flat lookup; each pillar declares the soul values, the filters, and the chain-framing note that govern its branches.
-- **Tests** — new `tests/test_philosophy.py` (~50 tests) covering YAML loading + override precedence, the module's data shape, helper functions (`apply_filters`, `infer_methodology_gate`, `chain_for`, `principle_anchors`, `chain_validation`, `filters_for_stride`), and end-to-end wiring into both tools across markdown + JSON formats.
-- **Out of scope this release**: wiring filters into `rick_attack_chain`, `rick_kill_chain`, `rick_next_move`, `rick_vuln_assess`. Follow-up bump.
+- **New data file** `rick_mcp/data/philosophy.yaml` — operator-facing philosophy as data, not code. Three top-level
+  sections:
+    - `core_principles` — 7 soul values (Do No Harm, Integrity First, Continuous Improvement, Teach What You Know,
+      Measure Twice Hack Once, Accountability, The Craft) with operational meanings.
+    - `decision_filters` — 9 active constraints (Thorough > Fast, Manual > Scanner, Honesty above all, Builder's eye
+      first, Cycle breaker, No checkbox compliance, Chain over isolation, Builder metaphor, Mantras when stuck) with
+      trigger keywords for keyword-based matching.
+    - `validation_rules` — 5 RoE rules (authorized targets, 1hr critical escalation, severity+PoC+impact+remediation,
+      reproducibility, no-DoS-without-approval).
+- **Override path** — `~/.rick_mcp/philosophy.yaml` overrides the bundled defaults, mirroring the `identity.yaml`
+  pattern. Philosophy stays out of Python source.
+- **New module** `rick_mcp/philosophy.py` — YAML loader + structural dispatch tables. Loads override → bundled →
+  minimal-baseline. Code-side (not data) tables stay in Python because they're framework code-shape, not operator
+  philosophy:
+    - `METHODOLOGY_GATE_KEYWORDS` — scenario keywords → MISSION_PHASES name.
+    - `ARSENAL_CHAIN` — situation → next-tool chain (mirrors the JARVIS arsenal table at `prompts.py:686-700`).
+    - `STRIDE_PRINCIPLE_ANCHORS` + `STRIDE_FILTER_MAP` — STRIDE pillar → governing principles + filters (slug references
+      into the YAML).
+    - `chain_validation` — STRIDE → chain-framing prose.
+- **`rick_tool_recommend` upgraded** — output now carries `decision_filters_applied`, `methodology_gate`,
+  `validation_checklist`, and `chain_to`, all derived from the philosophy module instead of being implicit in prose.
+- **`rick_threat_model` upgraded** — every STRIDE category now ships with `decision_filters`, `chain_validation`, and
+  `core_principle_anchors`. The architecture is no longer a flat lookup; each pillar declares the soul values, the
+  filters, and the chain-framing note that govern its branches.
+- **Tests** — new `tests/test_philosophy.py` (~50 tests) covering YAML loading + override precedence, the module's data
+  shape, helper functions (`apply_filters`, `infer_methodology_gate`, `chain_for`, `principle_anchors`,
+  `chain_validation`, `filters_for_stride`), and end-to-end wiring into both tools across markdown + JSON formats.
+- **Out of scope this release**: wiring filters into `rick_attack_chain`, `rick_kill_chain`, `rick_next_move`,
+  `rick_vuln_assess`. Follow-up bump.
 
 ---
 
 ## [3.8.0] - 2026-05-02
 
-### Operator Philosophy Layer — Prompts That Reason Like Tom
+### Operator Philosophy Layer — Prompts That Reason Like the Operator
 
-- **`build_jarvis()` expanded** — JARVIS now reasons *like* the operator, not just *about* them. Adds two new sections to the prompt:
-  - **Operator Philosophy** — embeds 6 profile files (`values`, `craftsmanship`, `heritage`, `human`, `mantras`, `rick_and_jiveturkey`) as the lenses every recommendation must pass through. Previously only `summary`, `stack`, `methodology` were loaded.
-  - **Decision Filters** — translates philosophy into prescriptive JARVIS rules: *Thorough > Fast*, *Manual depth > Scanner output*, *Honesty above all*, *Builder's eye first*, *Three boys watching*, *Cycle breaker*, *No checkbox compliance*, *Chain over single-vuln framing*, *Builder metaphors as native register*, *Mantras surface when stuck*.
-- **`build_be_rick()` and `build_mentor_mode()`** also gain the **Operator Philosophy** section, so the foundation and the mentorship voice carry the same distilled principles JARVIS uses. Decision Filters stay JARVIS-only — they're tactical rules, not voice.
+- **`build_jarvis()` expanded** — JARVIS now reasons *like* the operator, not just *about* them. Adds two new sections
+  to the prompt:
+    - **Operator Philosophy** — embeds 6 profile files (`values`, `craftsmanship`, `heritage`, `human`, `mantras`,
+      `rick_and_jiveturkey`) as the lenses every recommendation must pass through. Previously only `summary`, `stack`,
+      `methodology` were loaded.
+    - **Decision Filters** — translates philosophy into prescriptive JARVIS rules: *Thorough > Fast*, *Manual depth >
+      Scanner output*, *Honesty above all*, *Builder's eye first*, *Three boys watching*, *Cycle breaker*, *No checkbox
+      compliance*, *Chain over single-vuln framing*, *Builder metaphors as native register*, *Mantras surface when
+      stuck*.
+- **`build_be_rick()` and `build_mentor_mode()`** also gain the **Operator Philosophy** section, so the foundation and
+  the mentorship voice carry the same distilled principles JARVIS uses. Decision Filters stay JARVIS-only — they're
+  tactical rules, not voice.
 - **New shared helper** `_operator_philosophy_section()` keeps the 6 reads in one place, used by all three builders.
-- **Other prompts unchanged** — `dick_mode`, `pentest_mode`, `evaluate_fit`, `engagement_ops` deliberately skip the section (tactical or evaluative contexts where the structured philosophy doesn't fit).
-- **No new dependencies.** Reuses existing `_read_data()`. Backward-compatible — generic fallback path still works without `~/.rick_mcp/profiles/` overrides.
-- **Tests**: new `tests/test_prompts.py` (23 tests) covering JARVIS philosophy + filters, be_rick philosophy + no-filters guard, mentor_mode philosophy + no-filters guard, and explicit "still untouched" guards for dick_mode/pentest_mode/evaluate_fit/engagement_ops.
+- **Other prompts unchanged** — `dick_mode`, `pentest_mode`, `evaluate_fit`, `engagement_ops` deliberately skip the
+  section (tactical or evaluative contexts where the structured philosophy doesn't fit).
+- **No new dependencies.** Reuses existing `_read_data()`. Backward-compatible — generic fallback path still works
+  without `~/.rick_mcp/profiles/` overrides.
+- **Tests**: new `tests/test_prompts.py` (23 tests) covering JARVIS philosophy + filters, be_rick philosophy +
+  no-filters guard, mentor_mode philosophy + no-filters guard, and explicit "still untouched" guards for
+  dick_mode/pentest_mode/evaluate_fit/engagement_ops.
 
 ---
 
@@ -162,13 +323,19 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### Handle Reconnaissance Tool
 
-- **New tool**: `rick_recon_handle` — OSINT against a hacker handle. Returns a structured JSON profile from public sources. Default response format is JSON (machine-readable, chain-friendly).
-- **GitHub** (load-bearing wall): real REST API fetch for `/users/{h}`, `/users/{h}/repos`, and `/users/{h}/events/public` — profile fields, top 5 starred non-fork repos, top 5 languages, recent activity count. Optional `github_token` raises rate limit 60/hr → 5000/hr.
-- **CTFTime**: optional `ctftime_id` triggers direct enrichment via `/api/v1/users/{id}/` (team, ranking). Without an ID, returns a search URL — CTFTime's API requires numeric IDs, not handles.
+- **New tool**: `rick_recon_handle` — OSINT against a hacker handle. Returns a structured JSON profile from public
+  sources. Default response format is JSON (machine-readable, chain-friendly).
+- **GitHub** (load-bearing wall): real REST API fetch for `/users/{h}`, `/users/{h}/repos`, and
+  `/users/{h}/events/public` — profile fields, top 5 starred non-fork repos, top 5 languages, recent activity count.
+  Optional `github_token` raises rate limit 60/hr → 5000/hr.
+- **CTFTime**: optional `ctftime_id` triggers direct enrichment via `/api/v1/users/{id}/` (team, ranking). Without an
+  ID, returns a search URL — CTFTime's API requires numeric IDs, not handles.
 - **HackTheBox**: returns the public profile URL with a note that programmatic enrichment requires an API token.
-- **Search pivots** (URLs only, no scraping): HackerOne, Bugcrowd, Mastodon (infosec.exchange), Google dorks for blogs and conference talks, LinkedIn search.
+- **Search pivots** (URLs only, no scraping): HackerOne, Bugcrowd, Mastodon (infosec.exchange), Google dorks for blogs
+  and conference talks, LinkedIn search.
 - **Cache**: 24hr file cache at `~/.rick_mcp/handle_cache/` (sha256-keyed by URL), mirroring `rick_cve`'s pattern.
-- **Soul-bounded**: `authorization` field on every output, public sources only, no email harvesting, no doxxing, no paid OSINT brokers, graceful degrade when sources fail.
+- **Soul-bounded**: `authorization` field on every output, public sources only, no email harvesting, no doxxing, no paid
+  OSINT brokers, graceful degrade when sources fail.
 - 46 tools total (up from 45).
 
 ---
@@ -177,16 +344,20 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### Writeups as Reference Material
 
-- **New action**: `rick_writeups(action='index')` — corpus intelligence. Scans all write-ups, extracts top 20 tools mentioned, CVEs (regex `CVE-YYYY-NNNNN`), MITRE technique IDs (regex `T\d{4}`), and Linux/Windows OS breakdown. Cached to `.index.json` with 24hr TTL.
+- **New action**: `rick_writeups(action='index')` — corpus intelligence. Scans all write-ups, extracts top 20 tools
+  mentioned, CVEs (regex `CVE-YYYY-NNNNN`), MITRE technique IDs (regex `T\d{4}`), and Linux/Windows OS breakdown. Cached
+  to `.index.json` with 24hr TTL.
 - **Cross-referencing**: 6 existing tools now cite your writeups alongside theoretical guidance:
-  - `rick_cheatsheet` — "Seen in your writeups: [paths]" cites boxes where you used the tool
-  - `rick_recon` — cites writeups matching the target type (AD, cloud, web, etc.)
-  - `rick_vuln_assess` — cites writeups demonstrating the vulnerability category
-  - `rick_attack_chain` — cites writeups showing the scenario's techniques
-  - `rick_pivot_plan` — cites writeups matching the compromised position
-  - `rick_tool_recommend` — cites writeups featuring the top recommended tool
-- **New exported helper**: `cite_writeups(term, limit=5)` — used by any tool that wants citation support. Silent when no writeups exist (generic output unchanged).
-- Citation uses ripgrep for speed, falls back to pure-Python grep. Dedupes by file so the same writeup isn't cited twice.
+    - `rick_cheatsheet` — "Seen in your writeups: [paths]" cites boxes where you used the tool
+    - `rick_recon` — cites writeups matching the target type (AD, cloud, web, etc.)
+    - `rick_vuln_assess` — cites writeups demonstrating the vulnerability category
+    - `rick_attack_chain` — cites writeups showing the scenario's techniques
+    - `rick_pivot_plan` — cites writeups matching the compromised position
+    - `rick_tool_recommend` — cites writeups featuring the top recommended tool
+- **New exported helper**: `cite_writeups(term, limit=5)` — used by any tool that wants citation support. Silent when no
+  writeups exist (generic output unchanged).
+- Citation uses ripgrep for speed, falls back to pure-Python grep. Dedupes by file so the same writeup isn't cited
+  twice.
 
 ---
 
@@ -208,7 +379,8 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### Random Mantra Tool
 
-- **New tool**: `rick_mantra` — pulls a random mantra from the operator's stored mantras. One per call. Reads from `~/.rick_mcp/profiles/mantras.md` at runtime.
+- **New tool**: `rick_mantra` — pulls a random mantra from the operator's stored mantras. One per call. Reads from
+  `~/.rick_mcp/profiles/mantras.md` at runtime.
 - 44 tools total (up from 43)
 
 ---
@@ -217,15 +389,18 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### JARVIS Intelligence Layer Expansion
 
-- **8 new tools**: `rick_notes`, `rick_timeline`, `rick_compare`, `rick_scope_check`, `rick_export`, `rick_checklist`, `rick_tag`, `rick_rollback`
-- **Image attachments**: `rick_notes` and `rick_kill_chain` add_finding support image path references (png, jpg, gif, svg, pdf, webp)
+- **8 new tools**: `rick_notes`, `rick_timeline`, `rick_compare`, `rick_scope_check`, `rick_export`, `rick_checklist`,
+  `rick_tag`, `rick_rollback`
+- **Image attachments**: `rick_notes` and `rick_kill_chain` add_finding support image path references (png, jpg, gif,
+  svg, pdf, webp)
 - **Scope safety rail**: `rick_scope_check` stores in-scope targets and ROE, validates before you touch anything
 - **Engagement comparison**: `rick_compare` diffs two engagements side by side for retests
 - **Export**: markdown, JSON, CSV — report-ready output from any engagement
 - **Phase checklists**: auto-generated by target type with 8 environment-specific templates
 - **Finding tags**: severity, category, MITRE ATT&CK technique IDs on any finding
 - **State rollback**: automatic snapshots before mutations, undo with `rick_rollback`
-- **Architecture**: split `jarvis.py` into `jarvis_state.py` (shared persistence), `jarvis.py` (core 4 tools), `jarvis_extended.py` (8 new tools)
+- **Architecture**: split `jarvis.py` into `jarvis_state.py` (shared persistence), `jarvis.py` (core 4 tools),
+  `jarvis_extended.py` (8 new tools)
 - **Input models**: all JARVIS models moved to `models/inputs.py` — consistent with project convention
 - 43 tools total (up from 35)
 - 512 tests total (up from 449)
@@ -236,8 +411,10 @@ vault is configured — text-only output, no errors, no surprises.
 
 ### JARVIS — The Intelligence Layer
 
-- **New mode**: `jarvis` — master prompt that turns Claude into a proactive orchestrator with automatic tool chaining, kill chain tracking, and situational awareness
-- **New tool**: `rick_sitrep` — Situation Report. One command, full tactical picture: kill chain progress, findings, mission log, tool history, tactical assessment
+- **New mode**: `jarvis` — master prompt that turns Claude into a proactive orchestrator with automatic tool chaining,
+  kill chain tracking, and situational awareness
+- **New tool**: `rick_sitrep` — Situation Report. One command, full tactical picture: kill chain progress, findings,
+  mission log, tool history, tactical assessment
 - **Enhanced state model**: engagement JSON now tracks `mission_log`, `tool_history`, `notes`, and `objective`
 - Three new state helpers: `_add_mission_log()`, `_add_tool_history()`, `_add_note()`
 - `rick_full_auto` now auto-populates mission log and tool history on engagement creation
@@ -327,7 +504,7 @@ vault is configured — text-only output, no errors, no surprises.
 #### New Resources
 
 - `doc://war-stories` — Anonymized engagement narratives from the field
-- `profile://timeline` — Career timeline from USMC barracks to offensive security
+- `profile://timeline` — Career timeline from early-career start through offensive security
 
 #### Code Quality
 

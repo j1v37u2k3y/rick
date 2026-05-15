@@ -28,10 +28,10 @@ def _opener(payload):
 def _github_user_payload(handle=REF_HANDLE):
     return {
         "login": handle,
-        "name": "Tom",
-        "bio": "Offensive Security Engineer | OSCP | USMC",
-        "location": "the US",
-        "company": "@offsec",
+        "name": "Operator",
+        "bio": "Security Engineer",
+        "location": "Remote",
+        "company": "@example",
         "blog": "https://example.com",
         "html_url": f"https://github.com/{handle}",
         "public_repos": 42,
