@@ -32,10 +32,10 @@ from rick_mcp.resources.resume import (
 )
 from rick_mcp.resources.vault import (
     res_vault_engagements,
+    res_vault_identity_hub,
     res_vault_identity_methodology,
     res_vault_identity_rick,
     res_vault_identity_soul,
-    res_vault_identity_tom,
     res_vault_identity_values,
     res_vault_index,
     res_vault_log,
@@ -82,7 +82,7 @@ __all__ = [
     "res_vault_identity_methodology",
     "res_vault_identity_rick",
     "res_vault_identity_soul",
-    "res_vault_identity_tom",
+    "res_vault_identity_hub",
     "res_vault_identity_values",
     "res_vault_index",
     "res_vault_log",

@@ -16,7 +16,7 @@ from pathlib import Path
 from rick_mcp import vault
 from rick_mcp.constants import CALLSIGN, MISSION_PHASES
 from rick_mcp.formatting import _fmt, _safe_tool, _sanitize, logger
-from rick_mcp.identity import MOTTO
+from rick_mcp.identity import MOTTO, NAME
 from rick_mcp.models import (
     DebriefInput,
     OnboardInput,
@@ -54,7 +54,7 @@ def _proposal_vault_body(
     today = datetime.now().strftime("%Y-%m-%d")
     spec_link = vault.specialization_wikilink(engagement_type)
     tool_links = vault.tools_wikilinks(engagement_type)
-    operator_link = "[[Identity/Tom]]"
+    operator_link = f"[[Identity/{NAME}]]"
     methodology_link = "[[Identity/Methodology]]"
 
     sections = [
@@ -206,7 +206,7 @@ def _tracker_vault_body(eng_data: dict) -> str:
     eng_status = eng_data.get("status", "active")
     created_at = eng_data.get("created_at", today)
     type_title = eng_type.replace("_", " ").title()
-    operator_link = "[[Identity/Tom]]"
+    operator_link = f"[[Identity/{NAME}]]"
     methodology_link = "[[Identity/Methodology]]"
     spec_link = vault.specialization_wikilink(eng_type)
     tool_links = vault.tools_wikilinks(eng_type)
@@ -306,7 +306,7 @@ def _refresh_tracker_vault_note(eng_data: dict) -> str | None:
 
 def _debrief_vault_section(params: DebriefInput, findings_list: list[str]) -> str:
     """Build the Debrief section body for appending to an existing engagement note."""
-    operator_link = "[[Identity/Tom]]"
+    operator_link = f"[[Identity/{NAME}]]"
     sections = [
         f"**Engagement type:** {params.engagement_type.replace('_', ' ').title()}",
         f"**Operator:** {operator_link}",

@@ -8,7 +8,7 @@ URIs:
 - vault://manual               → vault/_CLAUDE.md
 - vault://index                → vault/index.md
 - vault://log                  → vault/log.md
-- vault://identity/tom         → vault/Identity/Tom.md (the hub)
+- vault://identity/hub         → vault/Identity/<NAME>.md (operator identity hub; falls back to Identity/Operator.md)
 - vault://identity/methodology → vault/Identity/Methodology.md
 - vault://identity/values      → vault/Identity/Values.md
 - vault://identity/soul        → vault/Identity/Soul.md
@@ -32,7 +32,7 @@ def _read_or_stub(relative_path: str, label: str) -> str:
             f"[{label}] not available — the operator's vault at `~/.rick_mcp/vault/` is not configured. "
             f"Bootstrap it via the obsidian-second-brain skill: "
             f"`python ~/.claude/skills/obsidian-second-brain/scripts/bootstrap_vault.py "
-            f"--path ~/.rick_mcp/vault --name 'Tom'`"
+            f"--path ~/.rick_mcp/vault --name '<your name>'`"
         )
     target = vault._vault_path() / relative_path
     if not target.exists():
@@ -55,9 +55,34 @@ async def res_vault_log() -> str:
     return _read_or_stub("log.md", "vault://log")
 
 
-async def res_vault_identity_tom() -> str:
-    """Identity hub — aggregates soul, profiles, certs, tools, specializations, values."""
-    return _read_or_stub("Identity/Tom.md", "vault://identity/tom")
+async def res_vault_identity_hub() -> str:
+    """Operator identity hub — aggregates soul, profiles, certs, tools, specializations, values.
+
+    Resolves the filename dynamically from the operator's display name in `identity.yaml`
+    (e.g. NAME="Alex Chen" → `Identity/Alex Chen.md`). Falls back to the generic `Identity/Operator.md`
+    that ships in `soul-example/vault/` so forkers get a resolvable resource out of the box
+    before they personalize their hub.
+    """
+    from rick_mcp.identity import NAME
+
+    if not vault._is_configured():
+        return (
+            "[vault://identity/hub] not available — the operator's vault at `~/.rick_mcp/vault/` "
+            "is not configured. Bootstrap it via the obsidian-second-brain skill: "
+            "`python ~/.claude/skills/obsidian-second-brain/scripts/bootstrap_vault.py "
+            "--path ~/.rick_mcp/vault --name '<your name>'`"
+        )
+    vault_root = vault._vault_path()
+    primary = vault_root / f"Identity/{NAME}.md"
+    if primary.exists():
+        return primary.read_text(encoding="utf-8")
+    fallback = vault_root / "Identity/Operator.md"
+    if fallback.exists():
+        return fallback.read_text(encoding="utf-8")
+    return (
+        f"[vault://identity/hub] not found at `Identity/{NAME}.md` or `Identity/Operator.md`. "
+        "Create the identity hub at one of those paths."
+    )
 
 
 async def res_vault_identity_methodology() -> str:
@@ -152,7 +177,7 @@ def register(mcp):
     mcp.resource("vault://manual")(res_vault_manual)
     mcp.resource("vault://index")(res_vault_index)
     mcp.resource("vault://log")(res_vault_log)
-    mcp.resource("vault://identity/tom")(res_vault_identity_tom)
+    mcp.resource("vault://identity/hub")(res_vault_identity_hub)
     mcp.resource("vault://identity/methodology")(res_vault_identity_methodology)
     mcp.resource("vault://identity/values")(res_vault_identity_values)
     mcp.resource("vault://identity/soul")(res_vault_identity_soul)

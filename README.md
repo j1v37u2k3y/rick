@@ -1,14 +1,16 @@
-# Rick MCP Server v3.6
+# Rick MCP Server <!-- counts:version -->v3.12<!-- /counts:version -->
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-552%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-721%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-45 tools. 24 resources. Fork it, fill it, make it yours.
+<!-- counts:tools -->46<!-- /counts:tools --> tools. <!-- counts:resources -->36<!-- /counts:resources --> resources. <!-- counts:skills -->9<!-- /counts:skills --> Claude Code skills. Fork it, fill it, make it yours.
+
+<!-- Counts and version above are auto-synced by `scripts/refresh_counts.py`. Run `make refresh-counts` after adding tools / resources / skills, or `make check-counts` in CI. -->
 
 ## Why an MCP Server
 
@@ -16,7 +18,8 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
 who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
-structured resources an AI can reason over. And there are 45 functional tools that *do things* — generate ROE docs,
+structured resources an AI can reason over. And there are <!-- counts:tools -->46<!-- /counts:tools --> functional tools
+that *do things* — generate ROE docs,
 model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
 IR playbooks, compare C2 frameworks, and scope entire engagements.
 
@@ -58,21 +61,25 @@ See `soul-example/` for a fully worked example using a fictional operator (sh4d0
 cp soul-example/identity.yaml ~/.rick_mcp/
 cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/
 
+# Optional: copy the vault skeleton too (enables vault:// resources + engagement → vault projection)
+cp -r soul-example/vault ~/.rick_mcp/
+
 # Edit your identity — this is the core config
 $EDITOR ~/.rick_mcp/identity.yaml
 ```
 
 **What lives where:**
 
-| Path                           | Purpose                                                      |
-|--------------------------------|--------------------------------------------------------------|
-| `~/.rick_mcp/identity.yaml`    | Name, callsign, certs, tools, tagline — powers all output    |
-| `~/.rick_mcp/soul/SOUL.md`     | Core principles and values — feeds `be_rick` and `dick_mode` |
-| `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode`           |
-| `~/.rick_mcp/soul/PROFILE.md`  | Current state, what's on the horizon                         |
-| `~/.rick_mcp/profiles/`        | 11 identity resources (stack, methodology, timeline, etc.)   |
-| `~/.rick_mcp/resume/`          | 4 resume resources (overview, evidence, portfolio, contact)  |
-| `~/.rick_mcp/docs/`            | War stories and additional content                           |
+| Path                           | Purpose                                                                            |
+|--------------------------------|------------------------------------------------------------------------------------|
+| `~/.rick_mcp/identity.yaml`    | Name, callsign, certs, tools, tagline — powers all output                          |
+| `~/.rick_mcp/soul/SOUL.md`     | Core principles and values — feeds `be_rick` and `dick_mode`                       |
+| `~/.rick_mcp/soul/my book.txt` | Your writing, memoirs, voice — feeds `mentor_mode`                                 |
+| `~/.rick_mcp/soul/PROFILE.md`  | Current state, what's on the horizon                                               |
+| `~/.rick_mcp/profiles/`        | 11 identity resources (stack, methodology, timeline, etc.)                         |
+| `~/.rick_mcp/resume/`          | 4 resume resources (overview, evidence, portfolio, contact)                        |
+| `~/.rick_mcp/docs/`            | War stories and additional content                                                 |
+| `~/.rick_mcp/vault/`           | Optional Obsidian Second Brain — engagement projection, identity hub, bridge stubs |
 
 Rick's prompts pull live from these files at call time. Update the soul, update Rick's voice. Without these files, Rick
 falls back to generic defaults.
@@ -81,7 +88,8 @@ falls back to generic defaults.
 
 1. **Clone** — `git clone https://github.com/j1v37u2k3y/rick.git && cd rick`
 2. **Setup** — `make setup`
-3. **Copy examples** — `cp soul-example/identity.yaml ~/.rick_mcp/ && cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs ~/.rick_mcp/`
+3. **Copy examples** —
+   `cp soul-example/identity.yaml ~/.rick_mcp/ && cp -r soul-example/soul soul-example/profiles soul-example/resume soul-example/docs soul-example/vault ~/.rick_mcp/`
 4. **Edit identity** — `$EDITOR ~/.rick_mcp/identity.yaml`
 5. **Add your soul** — Edit `~/.rick_mcp/soul/` with your values, your story, your profile
 6. **Done** — Rick now speaks for you
@@ -99,6 +107,25 @@ claude
 ```
 
 Then run `/mcp` to verify the connection. Try `rick_capabilities` to see everything Rick can do.
+
+### Claude Code Skills (auto-discover)
+
+The repo ships <!-- counts:skills -->9<!-- /counts:skills --> project-local Claude Code skills at `.claude/skills/`.
+They auto-discover when Claude Code launches
+from the repo root — no extra install. Skills are pure orchestration: they chain `rick_mcp` MCP tools into higher-level
+workflows (engagement kickoff, kill-chain walks, writeup publishing, resume tailoring) and return content to chat.
+
+- **Engagement lifecycle** — `/engagement-kickoff`, `/htb-day`, `/kill-chain-walk`, `/debrief-then-publish`
+- **Content production** — `/writeup-publish`, `/voice-check`
+- **Operations support** — `/arsenal-report`, `/cheatsheet-build`
+- **Career** — `/resume-tailor`
+
+Voice / persona register shifts live server-side (`rick_mcp/prompts.py`), invoked via `rick_mode(persona=...)` — one
+source of truth for voice, no skill-vs-server drift.
+
+Full catalog with trigger phrases and composition patterns: [`.claude/skills/SKILLS.md`](.claude/skills/SKILLS.md).
+Authoring conventions live in [`CLAUDE.md`](CLAUDE.md) § Claude Code Skills; new skills start from [
+`.claude/skills/SKILL_TEMPLATE.md`](.claude/skills/SKILL_TEMPLATE.md).
 
 ### Run the Server Standalone
 
@@ -136,17 +163,17 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — 46 Functional Tools
+## Tools — <!-- counts:tools -->46<!-- /counts:tools --> Functional Tools
 
 ### Offensive — Recon & Assessment
 
-| Tool                  | What It Does                                                                                  |
-|-----------------------|-----------------------------------------------------------------------------------------------|
-| `rick_recon`          | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)          |
-| `rick_recon_handle`   | OSINT against a hacker handle — GitHub profile/repos/activity + pivot URLs to HTB, H1, etc.   |
-| `rick_vuln_assess`    | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, etc.)                   |
-| `rick_tool_recommend` | Scenario-aware security tool recommendations                                                  |
-| `rick_threat_model`   | STRIDE threat modeling for 8 system types                                                     |
+| Tool                  | What It Does                                                                                |
+|-----------------------|---------------------------------------------------------------------------------------------|
+| `rick_recon`          | Recon playbooks for 8 target types (web, network, cloud, AD, API, container, mobile)        |
+| `rick_recon_handle`   | OSINT against a hacker handle — GitHub profile/repos/activity + pivot URLs to HTB, H1, etc. |
+| `rick_vuln_assess`    | Vuln assessment methodology for 10 categories (SQLi, XSS, SSRF, IDOR, etc.)                 |
+| `rick_tool_recommend` | Scenario-aware security tool recommendations                                                |
+| `rick_threat_model`   | STRIDE threat modeling for 8 system types                                                   |
 
 ### Offensive — Attack Methodology
 
@@ -209,7 +236,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | `rick_scope_check` | Safety rail — check targets/actions against stored scope and ROE.                                 |
 | `rick_export`      | Export engagement to markdown, JSON, or CSV. Report-ready.                                        |
 | `rick_checklist`   | Phase-specific checklists by target type. Generate, check, track.                                 |
-| `rick_tag`         | Tag findings — severity, category, MITRE ATT&CK technique IDs.                                   |
+| `rick_tag`         | Tag findings — severity, category, MITRE ATT&CK technique IDs.                                    |
 | `rick_rollback`    | Undo last kill chain state change. Automatic state snapshots.                                     |
 
 ### Meta
@@ -267,7 +294,7 @@ Once connected, try asking:
 **Check job fit:**
 > "Run rick_compatibility_check against this job posting: [paste job description]"
 
-## Resources — 24 Identity Resources
+## Resources — <!-- counts:resources -->36<!-- /counts:resources --> Identity Resources
 
 Access these via MCP resource URIs. Content is loaded from your private `~/.rick_mcp/` directory.
 
@@ -304,17 +331,19 @@ Access these via MCP resource URIs. Content is loaded from your private `~/.rick
 - `resume://portfolio` — External portfolio links
 - `resume://contact` — How to engage, next steps
 
-### Vault (11) — Optional, requires Obsidian Second Brain
+### Vault (12) — Optional, requires Obsidian Second Brain
 
 - `vault://manual` — Vault `_CLAUDE.md` (operating manual)
 - `vault://index` — Vault catalog (all notes by folder)
 - `vault://log` — Chronological vault activity log
-- `vault://identity/tom` — Identity hub (aggregates soul, profiles, certs, tools)
+- `vault://identity/hub` — Identity hub (aggregates soul, profiles, certs, tools); resolves `Identity/<your-NAME>.md`
+  with fallback to `Identity/Operator.md`
 - `vault://identity/methodology` — Bridge to Rick's 7-phase methodology
 - `vault://identity/values` — Bridge to the four core values
 - `vault://identity/soul` — Bridge to `~/.rick_mcp/soul/SOUL.md`
 - `vault://identity/rick` — Father-son frame
 - `vault://engagements` — JSON list of all engagement notes
+- `vault://engagements/{codename}` — Single engagement note by codename (parameterized, v3.11+)
 - `vault://templates/engagement` — Templater-based engagement template
 - `vault://status` — Vault health (JSON)
 
@@ -350,7 +379,7 @@ and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at the
 ### Run Tests
 
 ```bash
-make test        # 552 tests across 7 test files
+make test        # <!-- counts:tests -->790<!-- /counts:tests --> tests
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -373,7 +402,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run 552 tests                                               |
+| `make test`        | Run <!-- counts:tests -->790<!-- /counts:tests --> tests    |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |

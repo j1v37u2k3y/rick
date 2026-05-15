@@ -461,19 +461,31 @@ class TestVaultResources:
         assert "Activity Log" in result
 
     @pytest.mark.asyncio
-    async def test_identity_tom_returns_stub_when_missing(self, configured_vault):
-        from rick_mcp.resources.vault import res_vault_identity_tom
+    async def test_identity_hub_returns_stub_when_missing(self, configured_vault):
+        from rick_mcp.resources.vault import res_vault_identity_hub
 
-        result = await res_vault_identity_tom()
+        result = await res_vault_identity_hub()
         assert "not found" in result.lower()
 
     @pytest.mark.asyncio
-    async def test_identity_tom_reads_when_present(self, configured_vault):
-        from rick_mcp.resources.vault import res_vault_identity_tom
+    async def test_identity_hub_reads_name_derived_file(self, configured_vault):
+        """Handler resolves `Identity/<NAME>.md` from the operator's display name."""
+        from rick_mcp.identity import NAME
+        from rick_mcp.resources.vault import res_vault_identity_hub
 
-        (configured_vault / "Identity" / "Tom.md").write_text("# Tom hub\n", encoding="utf-8")
-        result = await res_vault_identity_tom()
-        assert "Tom hub" in result
+        (configured_vault / "Identity" / f"{NAME}.md").write_text(f"# {NAME} hub\n", encoding="utf-8")
+        result = await res_vault_identity_hub()
+        assert f"{NAME} hub" in result
+
+    @pytest.mark.asyncio
+    async def test_identity_hub_falls_back_to_operator_md(self, configured_vault):
+        """When `Identity/<NAME>.md` is missing, falls back to the generic Operator.md
+        (what soul-example/vault/ ships)."""
+        from rick_mcp.resources.vault import res_vault_identity_hub
+
+        (configured_vault / "Identity" / "Operator.md").write_text("# Generic operator hub\n", encoding="utf-8")
+        result = await res_vault_identity_hub()
+        assert "Generic operator hub" in result
 
     @pytest.mark.asyncio
     async def test_engagements_lists_when_present(self, configured_vault):

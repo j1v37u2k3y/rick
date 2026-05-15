@@ -567,7 +567,7 @@ async def rick_capabilities() -> str:
                 "rick_tracker — projects engagement state to vault/Engagements/<eng_id>.md (refreshed on every write)",
             ],
             "vault_resources": (
-                "vault://identity/tom, vault://identity/methodology, vault://identity/values, "
+                "vault://identity/hub, vault://identity/methodology, vault://identity/values, "
                 "vault://engagements/{codename}, vault://templates/engagement"
                 if vault_status["configured"]
                 else "(unavailable — bootstrap vault to enable)"

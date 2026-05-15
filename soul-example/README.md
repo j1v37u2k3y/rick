@@ -1,7 +1,7 @@
 # Soul Example — Make Rick Yours
 
-This directory contains fully worked examples for configuring your Rick MCP identity, using a fictional operator *
-*sh4d0wf0x** (Alex Chen). Copy the files to `~/.rick_mcp/` and replace the content with your own.
+This directory contains fully worked examples for configuring your Rick MCP identity, using a fictional operator
+*sh4d0wf0x* (Alex Chen). Copy the files to `~/.rick_mcp/` and replace the content with your own.
 
 ## Quick Setup
 
