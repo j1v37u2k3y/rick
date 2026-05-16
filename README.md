@@ -12,6 +12,20 @@ A forkable security MCP platform. Load your identity, own your craft.
 
 <!-- Counts and version above are auto-synced by `scripts/refresh_counts.py`. Run `make refresh-counts` after adding tools / resources / skills, or `make check-counts` in CI. -->
 
+## Install
+
+```bash
+git clone https://github.com/j1v37u2k3y/rick.git
+cd rick
+make setup
+```
+
+`make setup` installs deps, sets up pre-commit hooks, and creates `~/.rick_mcp/`. Verify with `claude` then
+`/mcp`. Soul, vault, Docker, and Claude Desktop config in [Quick Start](#quick-start) below.
+
+Running Kali in VMware? [`scripts/setup_kali_mount.sh`](scripts/setup_kali_mount.sh) mirrors host
+`~/.rick_mcp/` into the guest at the same logical path. Idempotent.
+
 ## Why an MCP Server
 
 A webpage sits there and waits to be read. Rick **responds**.
