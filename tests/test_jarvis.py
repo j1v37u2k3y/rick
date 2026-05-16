@@ -429,6 +429,55 @@ class TestRickSitrep:
             result = await rick_sitrep(SitrepInput(engagement_id="old-eng"))
         assert "legacy.com" in result
 
+    @pytest.mark.asyncio
+    async def test_sitrep_enriches_target_from_tracker(self, tmp_path):
+        """When kill-chain state lacks `target` (engagement created via
+        `rick_tracker create` rather than `rick_full_auto`), sitrep should fall
+        back to the tracker JSON at `~/.rick_mcp/engagements/<id>.json` and
+        surface `target` + `client` from there."""
+        import json as _json
+
+        from rick_mcp.models import SitrepInput
+        from rick_mcp.tools.jarvis import rick_sitrep
+        from rick_mcp.tools.jarvis_state import KILL_CHAIN_PHASES, _save_state
+
+        with patch("pathlib.Path.home", return_value=tmp_path), patch(_PATCH_TARGET, tmp_path / ".rick_mcp" / "dick"):
+            _save_state(
+                "enrich-eng",
+                {
+                    "id": "enrich-eng",
+                    "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+                },
+            )
+            tracker_dir = tmp_path / ".rick_mcp" / "engagements"
+            tracker_dir.mkdir(parents=True, exist_ok=True)
+            (tracker_dir / "enrich-eng.json").write_text(
+                _json.dumps({"id": "enrich-eng", "client": "Acme Corp", "target": "10.10.10.3"})
+            )
+            result = await rick_sitrep(SitrepInput(engagement_id="enrich-eng"))
+        assert "10.10.10.3" in result
+        assert "Acme Corp" in result
+
+    @pytest.mark.asyncio
+    async def test_sitrep_no_tracker_falls_back_gracefully(self, tmp_path):
+        """When neither kill-chain state nor tracker JSON has target, sitrep
+        produces the canonical `Not yet specified` placeholder rather than
+        empty / undefined output."""
+        from rick_mcp.models import SitrepInput
+        from rick_mcp.tools.jarvis import rick_sitrep
+        from rick_mcp.tools.jarvis_state import KILL_CHAIN_PHASES, _save_state
+
+        with patch("pathlib.Path.home", return_value=tmp_path), patch(_PATCH_TARGET, tmp_path / ".rick_mcp" / "dick"):
+            _save_state(
+                "bare-eng",
+                {
+                    "id": "bare-eng",
+                    "kill_chain": [dict(p) for p in KILL_CHAIN_PHASES],
+                },
+            )
+            result = await rick_sitrep(SitrepInput(engagement_id="bare-eng"))
+        assert "Not yet specified" in result
+
 
 class TestDickHelpers:
     def test_phase_advice_all_phases(self):

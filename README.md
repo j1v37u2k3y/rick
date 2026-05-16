@@ -379,7 +379,7 @@ and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at the
 ### Run Tests
 
 ```bash
-make test        # <!-- counts:tests -->790<!-- /counts:tests --> tests
+make test        # <!-- counts:tests -->794<!-- /counts:tests --> tests
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -402,7 +402,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run <!-- counts:tests -->790<!-- /counts:tests --> tests    |
+| `make test`        | Run <!-- counts:tests -->794<!-- /counts:tests --> tests    |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |

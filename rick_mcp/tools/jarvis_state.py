@@ -46,6 +46,26 @@ def _load_state(engagement_id: str) -> dict[str, Any]:
     return {}
 
 
+def _load_tracker_state(engagement_id: str) -> dict[str, Any]:
+    """Load tracker-side engagement record from `~/.rick_mcp/engagements/<id>.json`.
+
+    Kill-chain state (this module's primary domain, stored under `~/.rick_mcp/dick/`)
+    and tracker state (stored under `~/.rick_mcp/engagements/` by `rick_tracker`) are
+    two separate JSON stores. Some tools (e.g. `rick_sitrep`) want to surface
+    tracker-side metadata (client, target) when the kill-chain side lacks it.
+    Returns an empty dict if the tracker record doesn't exist.
+    """
+    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
+    path = Path.home() / ".rick_mcp" / "engagements" / f"{safe_id}.json"
+    if path.exists():
+        try:
+            result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+            return result
+        except (json.JSONDecodeError, OSError):
+            return {}
+    return {}
+
+
 def _save_state(engagement_id: str, state: dict[str, Any], *, snapshot: bool = False) -> None:
     """Save engagement state to disk. Optionally snapshot current state before overwrite."""
     _STATE_DIR.mkdir(parents=True, exist_ok=True)
