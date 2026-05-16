@@ -414,21 +414,37 @@ def _onboarding_vault_section(client: str, engagement_type: str) -> str:
 
 
 def _find_matching_engagement(client: str, engagement_type: str) -> str | None:
-    """Best-effort lookup: find an existing vault engagement codename matching client+type prefix.
+    """Best-effort lookup: find an existing vault engagement codename for this client.
 
-    Returns the codename (filename stem) of the most recent match, or None if no vault / no match.
-    Pattern: '<Client> - <Type Title> (<Date>).md'
+    Two-stage match:
+
+    1. **Strict**: `<Client> - <Type Title> (<Date>).md`. Wins when the caller's
+       vocabulary matches the vocabulary the proposal used to create the file.
+    2. **Client-only fallback**: `<Client> - ...` (any type). Returns the most
+       recent by mtime. Wins when the caller's engagement-type vocab differs from
+       the proposal's — e.g. proposal used `web_app_pentest` (→ "Web App Pentest"),
+       ROE uses `app_security` (→ "App Security"). In a sequential kickoff workflow,
+       the most-recent engagement note for the client is almost certainly the
+       proposal we just created.
+
+    Returns the codename (filename stem) of the chosen match, or None when no vault
+    or no engagement for this client exists.
     """
     if not vault._is_configured():
         return None
-    type_title = engagement_type.replace("_", " ").title()
-    prefix = f"{client} - {type_title}"
-    candidates = [p for p in vault.list_engagements() if p.stem.startswith(prefix)]
-    if not candidates:
+    all_for_client = [p for p in vault.list_engagements() if p.stem.startswith(f"{client} - ")]
+    if not all_for_client:
         return None
     # Sort by mtime desc — most recent first
-    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return candidates[0].stem
+    all_for_client.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    # Stage 1: prefer an exact type match (still mtime-ordered within matches)
+    type_title = engagement_type.replace("_", " ").title()
+    strict_prefix = f"{client} - {type_title}"
+    for p in all_for_client:
+        if p.stem.startswith(strict_prefix):
+            return p.stem
+    # Stage 2: fall back to most-recent for this client
+    return all_for_client[0].stem
 
 
 async def rick_roe(params: ROEInput) -> str:
@@ -881,6 +897,7 @@ async def rick_tracker(params: TrackerInput) -> str:
             "id": eng_id,
             "client": _sanitize(eng_data.get("client", "[CLIENT]")),
             "type": eng_data.get("type", "pentest"),
+            "target": _sanitize(eng_data.get("target", "")) or "",
             "start_date": eng_data.get("start_date", datetime.now().strftime("%Y-%m-%d")),
             "end_date": eng_data.get("end_date", "TBD"),
             "status": "active",

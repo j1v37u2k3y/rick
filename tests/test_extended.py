@@ -1015,6 +1015,33 @@ class TestEngagementVaultIntegration:
         assert "Authorization checklist" in content
 
     @pytest.mark.asyncio
+    async def test_roe_appends_when_vocab_differs_from_proposal(self, configured_vault):
+        """Vault-projection vocab seam: proposal creates `Acme - Web App Pentest...`;
+        ROE uses `app_security` vocab. The client-only fallback in
+        `_find_matching_engagement` should still locate the proposal note."""
+        await rick_engagement_proposal(
+            ProposalInput(engagement_type="web_app_pentest", client_name="Acme", estimated_days=10)
+        )
+        await rick_roe(ROEInput(engagement_type="app_security", client_name="Acme", duration_days=10))
+        eng_file = next((configured_vault / "Engagements").glob("Acme - Web App Pentest*.md"))
+        content = eng_file.read_text(encoding="utf-8")
+        assert "## Rules of Engagement" in content
+
+    @pytest.mark.asyncio
+    async def test_debrief_appends_when_vocab_differs_from_proposal(self, configured_vault):
+        """Same vocab-mismatch path for `rick_debrief`."""
+        from rick_mcp import rick_debrief
+        from rick_mcp.models import DebriefInput
+
+        await rick_engagement_proposal(
+            ProposalInput(engagement_type="web_app_pentest", client_name="Acme", estimated_days=10)
+        )
+        await rick_debrief(DebriefInput(engagement_type="app_security", client_name="Acme"))
+        eng_file = next((configured_vault / "Engagements").glob("Acme - Web App Pentest*.md"))
+        content = eng_file.read_text(encoding="utf-8")
+        assert "## Debrief" in content
+
+    @pytest.mark.asyncio
     async def test_scoping_logs_to_vault(self, configured_vault):
         await rick_scoping(ScopingInput(engagement_type="red_team", target_count=2, complexity="high"))
         log_content = (configured_vault / "log.md").read_text(encoding="utf-8")

@@ -135,6 +135,43 @@ father-son lineage), not operator identity. The `REF_HANDLE` constant in
 `vault://identity/hub`. Internal-only break — the URI was new in v3.10.0 and has no
 external consumers known.
 
+### Engagement vault-projection vocab seam + sitrep target enrichment
+
+End-to-end smoke testing of the engagement lifecycle skills surfaced two tool-level seams
+worth closing.
+
+- **Vault-projection vocab seam (`engagement.py`).** `rick_engagement_proposal` writes
+  the vault note under `<Client> - <Title-Case-Type>.md` using its own type vocabulary
+  (e.g. `web_app_pentest` → "Web App Pentest"). `rick_roe`, `rick_client_onboarding`, and
+  `rick_debrief` use a different, more-general vocabulary (e.g. `app_security`). When the
+  vocabularies differ, the lookup in `_find_matching_engagement()` missed the proposal
+  note and silently no-op'd the append — the tool returned `"no matching engagement
+  note found — text-only output"`. Fixed by extending the lookup with a client-only
+  fallback (most recent by mtime) when the strict `<Client> - <Type Title>` prefix
+  fails. The kickoff workflow is sequential and minutes apart, so most-recent-for-this-
+  client is the right note. Two new tests cover the vocab-mismatch path for ROE and
+  debrief.
+- **`rick_sitrep` target enrichment.** Kill-chain state (`~/.rick_mcp/dick/<id>.json`)
+  and tracker state (`~/.rick_mcp/engagements/<id>.json`) are two separate JSON stores.
+  When an engagement was created via `rick_tracker create` (which is what
+  `/engagement-kickoff` and `/htb-day` do) rather than `rick_full_auto`, the kill-chain
+  state lacked the target field and sitrep printed `"Target: Not yet specified"` even
+  though the tracker had the data. `rick_sitrep` now reads tracker JSON via the new
+  `_load_tracker_state()` helper in `jarvis_state.py` and surfaces both `target` and
+  `client` when the kill-chain side doesn't have them. `rick_tracker create` also now
+  preserves a `target` field if provided in the create data (previously dropped). Two
+  new tests cover tracker-present and tracker-absent paths.
+
+**Intentionally not fixed:** the engagement tools' methodology output (7 operator phases:
+Recon → Vuln Assess → Exploit → PrivEsc → Lateral → Docs → Remediation) and
+`rick_kill_chain`'s phase model (Lockheed Martin 7-step: Recon → Weaponization →
+Delivery → Exploit → Installation → C2 → Actions) are two different frameworks living
+in the same toolchain. Methodology describes operator workflow; kill chain describes
+attack lifecycle. Different concepts, different uses. Conflating would lose
+information. Document here so future-readers know this is deliberate.
+
+Test count: 790 → 794. Pipeline still passes clean under `make check`.
+
 ## [3.11.1] - 2026-05-14
 
 ### Fix: percent-decoding + path containment for `vault://engagements/{codename}`

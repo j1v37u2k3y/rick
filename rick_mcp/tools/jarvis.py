@@ -27,6 +27,7 @@ from rick_mcp.tools.jarvis_state import (
     KILL_CHAIN_PHASES,
     _add_mission_log,
     _load_state,
+    _load_tracker_state,
     _phase_advice,
     _save_state,
     _validate_image_path,
@@ -559,11 +560,24 @@ async def rick_sitrep(params: SitrepInput) -> str:
             title=f"{CALLSIGN} SITREP",
         )
 
-    # Engagement identity
-    target = state.get("target", "Unknown")
+    # Engagement identity — enrich from tracker JSON when kill-chain state lacks it.
+    # Kill-chain state lives at ~/.rick_mcp/dick/<id>.json; tracker state at
+    # ~/.rick_mcp/engagements/<id>.json. Both can exist for the same engagement when
+    # the operator used `rick_tracker create` for setup rather than `rick_full_auto`.
+    target = state.get("target", "")
     target_type = state.get("target_type", "Unknown")
     created = state.get("created", "Unknown")
     objective = state.get("objective", "Not specified")
+    client = ""
+    if not target or target in ("Unknown", "Not yet specified"):
+        tracker = _load_tracker_state(eng_id)
+        if tracker:
+            target = tracker.get("target") or target or "Not yet specified"
+            client = tracker.get("client") or ""
+            if created == "Unknown":
+                created = tracker.get("created_at") or created
+    if not target:
+        target = "Not yet specified"
 
     # Kill chain analysis
     kill_chain = state.get("kill_chain", [])
@@ -654,6 +668,8 @@ async def rick_sitrep(params: SitrepInput) -> str:
         "kill_chain": phase_summary,
         "total_findings": len(all_findings),
     }
+    if client:
+        result["client"] = client
     if recent_formatted:
         result["recent_findings"] = recent_formatted
     if log_formatted:
