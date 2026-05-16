@@ -64,10 +64,16 @@ def count_skills() -> int:
 
 
 def count_tests() -> int:
-    """Run `pytest --collect-only -q` and parse the trailing summary line."""
-    pytest_bin = ROOT / "venv" / "bin" / "pytest"
-    cmd = [str(pytest_bin) if pytest_bin.exists() else "pytest", "--collect-only", "-q"]
-    result = subprocess.run(  # noqa: S603 — cmd is a static list pointing at a known pytest binary
+    """Run `pytest --collect-only -q` via the current Python interpreter and parse the
+    trailing summary line.
+
+    Uses `sys.executable -m pytest` rather than resolving a `pytest` binary via PATH or
+    a venv-relative path — sys.executable is always absolute (no PATH-hijack surface),
+    runs pytest as a module (no reliance on console-script entry points), and uses the
+    same Python that invoked this script (no interpreter mismatch).
+    """
+    cmd = [sys.executable, "-m", "pytest", "--collect-only", "-q"]
+    result = subprocess.run(  # noqa: S603 — sys.executable (absolute) + literal flags, no untrusted input
         cmd, cwd=ROOT, capture_output=True, text=True, check=False
     )
     if result.returncode != 0:
