@@ -15,7 +15,7 @@ orchestrate MCP tools and return content to chat; they do NOT write to the opera
 filesystem. State persistence happens inside the MCP server (`rick_kill_chain`,
 `rick_notes`, `rick_tracker`) where it's already wired.
 
-## The <!-- counts:skills -->9<!-- /counts:skills --> skills
+## The <!-- counts:skills -->10<!-- /counts:skills --> skills
 
 ### Engagement lifecycle
 
@@ -24,6 +24,7 @@ filesystem. State persistence happens inside the MCP server (`rick_kill_chain`,
 | `/engagement-kickoff`   | Stand up a new client engagement: SOW → ROE → onboarding → tracker | "kickoff", "new engagement", "spin up <client>"         |
 | `/htb-day`              | CTF / HTB kickoff variant (no SOW, just kill-chain)                | "start <boxname>", "htb day", "ctf kickoff"             |
 | `/kill-chain-walk`      | Phase-by-phase guided op with state tracking — the daily driver    | "advance the kill chain", "what's next on <engagement>" |
+| `/engagement-checkin`   | Periodic status heartbeat — refresh vault note's Status block      | "checkin <id>", "engagement status update"              |
 | `/debrief-then-publish` | Close-out: debrief + report scaffolds + timeline + export          | "close out <engagement>", "wrap the engagement"         |
 
 ### Content production
@@ -59,13 +60,18 @@ Skills are designed to chain. Common workflows:
 
 ```
 /engagement-kickoff → /kill-chain-walk → /debrief-then-publish
-                                       └→ /writeup-publish (if public-facing)
+                          ↕                └→ /writeup-publish (if public-facing)
+                   /engagement-checkin
+                   (heartbeat via /loop or /schedule)
 ```
 
 **CTF lifecycle:**
 
 ```
 /htb-day → /kill-chain-walk → /writeup-publish
+              ↕
+       /engagement-checkin
+       (heartbeat via /loop)
 ```
 
 **Pre-engagement planning:**

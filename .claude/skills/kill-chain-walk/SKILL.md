@@ -297,9 +297,26 @@ No padding to look busy. For character, route through `/be_rick`.
 
 ---
 
+## Heartbeat checkpointing (optional)
+
+For long-running engagements, pair this skill with `/engagement-checkin` to keep the engagement
+note's Status block current without manual sync:
+
+```bash
+/loop 10m /engagement-checkin <engagement_id>             # in-session, fires every 10 min
+/schedule create "*/15 * * * *" /engagement-checkin <id>  # cross-session via remote agent
+```
+
+The checkin reads state via `rick_sitrep` + `rick_kill_chain` and refreshes the vault note's
+`## Status (auto-updated …)` block. See `/engagement-checkin` for full invocation patterns
+and cadence guidance (5m for active exploit, 10m typical, 30m+ for slow phases).
+
+---
+
 ## Related skills
 
 - `/engagement-kickoff`, `/htb-day` — engagement startup
+- `/engagement-checkin` — periodic status heartbeat (pair via `/loop` or `/schedule`)
 - `/debrief-then-publish` — close-out at engagement end
 - `/cheatsheet-build` — pocket references during active op
 - `/arsenal-report` — pre-walk tool selection
