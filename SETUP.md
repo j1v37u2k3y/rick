@@ -46,14 +46,18 @@ cd rick
 make setup
 ```
 
-`make setup` does four things:
+`make setup` does five things:
 
 1. Creates a local venv at `./venv/` if it doesn't already exist
 2. Installs Python deps into that venv via `venv/bin/pip`
 3. Installs pre-commit hooks (so commits get auto-linted)
 4. Creates `~/.rick_mcp/` — the private content directory on your host
+5. **Runs the smoke test** — fires every Rick tool once to verify the server loads cleanly
 
-**Verify:**
+If the smoke test fails, `make setup` exits non-zero. You'll see "ALL TOOLS OPERATIONAL" when it
+passes — that's your green light that Rick is actually working, not just installed.
+
+**Filesystem-level verify (belt and suspenders):**
 
 ```bash
 test -d venv && echo "venv: OK"
@@ -85,6 +89,20 @@ The repo ships `.mcp.json` at the root. Claude Code auto-discovers it when launc
 cd rick           # if not already here
 claude
 ```
+
+**First-time launch:** `make setup` already copies `.claude/settings.example.json` into
+`.claude/settings.local.json` on fresh clones, which auto-trusts `rick_mcp` and skips the trust prompt.
+If `.claude/settings.local.json` already existed, setup leaves it alone — your local trust posture is
+preserved.
+
+To re-create it manually (e.g. after deleting it):
+
+```bash
+cp .claude/settings.example.json .claude/settings.local.json
+```
+
+`settings.local.json` is gitignored — each clone manages its own trust posture. The example file mirrors
+the [`soul-example/`](soul-example/) pattern used elsewhere in the repo.
 
 **Verify:** inside Claude Code, run:
 

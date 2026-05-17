@@ -87,6 +87,12 @@ setup:
 	$(VENV_PIP) install -r requirements-dev.txt
 	$(PRE_COMMIT) install
 	@mkdir -p ~/.rick_mcp/soul
+	@if [ ! -f .claude/settings.local.json ] && [ -f .claude/settings.example.json ]; then \
+		cp .claude/settings.example.json .claude/settings.local.json; \
+		echo " Created .claude/settings.local.json (auto-trusts rick_mcp on Claude Code launch)"; \
+	elif [ -f .claude/settings.local.json ]; then \
+		echo " .claude/settings.local.json already exists — leaving it alone"; \
+	fi
 	@echo ""
 	@echo " venv:                ./$(VENV)/"
 	@echo " Dependencies:        installed"
@@ -113,8 +119,11 @@ setup:
 	@echo " Without identity files, Rick works with generic defaults."
 	@echo " With them, Rick becomes yours."
 	@echo ""
+	@$(MAKE) -s smoke
+	@echo ""
 	@echo "═══════════════════════════════════════════════"
-	@echo " Setup complete. Run 'make check' to verify."
+	@echo " Setup + smoke verified. Rick loads cleanly."
+	@echo " Run 'make check' for the full pipeline (lint + tests)."
 	@echo "═══════════════════════════════════════════════"
 
 # Sync count placeholders (tools / resources / skills / tests / version) into README + SKILLS.md
