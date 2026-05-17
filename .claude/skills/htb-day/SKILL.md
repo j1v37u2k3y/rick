@@ -186,9 +186,27 @@ Easy). For character, route through `/be_rick`.
 
 ---
 
+## Heartbeat checkpointing (optional)
+
+CTF boxes can take hours — keep the engagement note's Status block fresh while you work without
+manual sync. Pair this kickoff with `/engagement-checkin`:
+
+```bash
+/loop 10m /engagement-checkin <engagement_id>             # in-session, fires every 10 min
+/schedule create "*/15 * * * *" /engagement-checkin <id>  # cross-session via remote agent
+```
+
+The checkin reads state via `rick_sitrep` + `rick_kill_chain` and refreshes the vault note's
+`## Status (auto-updated …)` block. Useful when stepping away mid-box — come back, glance at the
+note, see where you left off. Adjust cadence per box intensity (`5m` for active exploit phase,
+`30m` for methodology reading). See `/engagement-checkin` for full invocation patterns.
+
+---
+
 ## Related skills
 
 - `/kill-chain-walk` — next step after this skill
+- `/engagement-checkin` — periodic status heartbeat (pair via `/loop` or `/schedule`)
 - `/engagement-kickoff` — paid client variant (formal SOW + ROE)
 - `/cheatsheet-build` — pocket references during the op
 - `/writeup-publish` — close the loop with a public writeup after the box is rooted

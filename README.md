@@ -8,7 +8,7 @@
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-<!-- counts:tools -->46<!-- /counts:tools --> tools. <!-- counts:resources -->36<!-- /counts:resources --> resources. <!-- counts:skills -->9<!-- /counts:skills --> Claude Code skills. Fork it, fill it, make it yours.
+<!-- counts:tools -->46<!-- /counts:tools --> tools. <!-- counts:resources -->36<!-- /counts:resources --> resources. <!-- counts:skills -->10<!-- /counts:skills --> Claude Code skills. Fork it, fill it, make it yours.
 
 <!-- Counts and version above are auto-synced by `scripts/refresh_counts.py`. Run `make refresh-counts` after adding tools / resources / skills, or `make check-counts` in CI. -->
 
@@ -130,12 +130,12 @@ Then run `/mcp` to verify the connection. Try `rick_capabilities` to see everyth
 
 ### Claude Code Skills (auto-discover)
 
-The repo ships <!-- counts:skills -->9<!-- /counts:skills --> project-local Claude Code skills at `.claude/skills/`.
+The repo ships <!-- counts:skills -->10<!-- /counts:skills --> project-local Claude Code skills at `.claude/skills/`.
 They auto-discover when Claude Code launches
 from the repo root — no extra install. Skills are pure orchestration: they chain `rick_mcp` MCP tools into higher-level
 workflows (engagement kickoff, kill-chain walks, writeup publishing, resume tailoring) and return content to chat.
 
-- **Engagement lifecycle** — `/engagement-kickoff`, `/htb-day`, `/kill-chain-walk`, `/debrief-then-publish`
+- **Engagement lifecycle** — `/engagement-kickoff`, `/htb-day`, `/kill-chain-walk`, `/engagement-checkin`, `/debrief-then-publish`
 - **Content production** — `/writeup-publish`, `/voice-check`
 - **Operations support** — `/arsenal-report`, `/cheatsheet-build`
 - **Career** — `/resume-tailor`
@@ -399,7 +399,7 @@ and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at the
 ### Run Tests
 
 ```bash
-make test        # <!-- counts:tests -->794<!-- /counts:tests --> tests
+make test        # <!-- counts:tests -->801<!-- /counts:tests --> tests
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -422,7 +422,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run <!-- counts:tests -->794<!-- /counts:tests --> tests    |
+| `make test`        | Run <!-- counts:tests -->801<!-- /counts:tests --> tests    |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |
