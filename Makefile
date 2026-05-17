@@ -1,5 +1,15 @@
 .PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts
 
+# Local venv — all targets use this so the dev experience is self-contained.
+# After `make setup`, every other make target works without manual activation.
+VENV        := venv
+VENV_PYTHON := $(VENV)/bin/python
+VENV_PIP    := $(VENV)/bin/pip
+PYTEST      := $(VENV)/bin/pytest
+RUFF        := $(VENV)/bin/ruff
+MYPY        := $(VENV)/bin/mypy
+PRE_COMMIT  := $(VENV)/bin/pre-commit
+
 MAX_FILE_LINES := 1500
 
 # Run everything — the full inspection
@@ -11,31 +21,31 @@ check: lint format-check typecheck file-length test
 
 # Auto-fix what can be fixed
 fix:
-	ruff check rick_mcp.py rick_mcp/ tests/ smoke_test.py --fix
-	ruff format rick_mcp.py rick_mcp/ tests/ smoke_test.py
+	$(RUFF) check rick_mcp.py rick_mcp/ tests/ smoke_test.py --fix
+	$(RUFF) format rick_mcp.py rick_mcp/ tests/ smoke_test.py
 	@echo "Fixed. Run 'make check' to verify."
 
 # Tests only
 test:
-	pytest tests/ -v
+	$(PYTEST) tests/ -v
 
 # Tests with coverage
 coverage:
-	pytest tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=80
+	$(PYTEST) tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=80
 	@echo ""
 	@echo "Coverage report above. 80% minimum enforced."
 
 # Lint only
 lint:
-	ruff check rick_mcp.py rick_mcp/ tests/ smoke_test.py
+	$(RUFF) check rick_mcp.py rick_mcp/ tests/ smoke_test.py
 
 # Format check (no modifications)
 format-check:
-	ruff format --check rick_mcp.py rick_mcp/ tests/ smoke_test.py
+	$(RUFF) format --check rick_mcp.py rick_mcp/ tests/ smoke_test.py
 
 # Type check
 typecheck:
-	mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
+	$(MYPY) rick_mcp.py --ignore-missing-imports --no-strict-optional
 
 # File length check — no Python file should exceed MAX_FILE_LINES
 file-length:
@@ -55,24 +65,40 @@ smoke:
 	@echo "═══════════════════════════════════════════════"
 	@echo " SMOKE TEST — Firing all tools"
 	@echo "═══════════════════════════════════════════════"
-	@python smoke_test.py
+	@$(VENV_PYTHON) smoke_test.py
 	@echo ""
 	@echo "═══════════════════════════════════════════════"
 	@echo " ALL TOOLS OPERATIONAL"
 	@echo "═══════════════════════════════════════════════"
 
-# Full dev environment setup
+# Full dev environment setup — creates venv, installs deps, hooks, and private content dir.
+# Idempotent: safe to re-run.
 setup:
 	@echo "═══════════════════════════════════════════════"
 	@echo " RICK MCP — Dev Environment Setup"
 	@echo "═══════════════════════════════════════════════"
-	pip install -r requirements-dev.txt
-	pre-commit install
+	@if [ ! -d $(VENV) ]; then \
+		echo " Creating venv at ./$(VENV) ..."; \
+		python3 -m venv $(VENV); \
+	else \
+		echo " venv already exists at ./$(VENV)"; \
+	fi
+	$(VENV_PIP) install --upgrade pip
+	$(VENV_PIP) install -r requirements-dev.txt
+	$(PRE_COMMIT) install
 	@mkdir -p ~/.rick_mcp/soul
 	@echo ""
-	@echo " Dependencies installed."
-	@echo " Pre-commit hooks installed."
-	@echo " Private content directory: ~/.rick_mcp/soul/"
+	@echo " venv:                ./$(VENV)/"
+	@echo " Dependencies:        installed"
+	@echo " Pre-commit hooks:    installed"
+	@echo " Private content dir: ~/.rick_mcp/soul/"
+	@echo ""
+	@echo " Make targets use the venv automatically — no activation needed:"
+	@echo "   make test     — run the test suite"
+	@echo "   make check    — full pipeline (lint + format + typecheck + tests)"
+	@echo ""
+	@echo " To activate the venv in your shell (for ad-hoc python/pip work):"
+	@echo "   source $(VENV)/bin/activate"
 	@echo ""
 	@echo " To configure your identity:"
 	@echo "   cp soul-example/identity.yaml.example ~/.rick_mcp/identity.yaml"
@@ -93,11 +119,11 @@ setup:
 
 # Sync count placeholders (tools / resources / skills / tests / version) into README + SKILLS.md
 refresh-counts:
-	python scripts/refresh_counts.py
+	$(VENV_PYTHON) scripts/refresh_counts.py
 
 # CI-friendly: fail if any tagged count region is stale
 check-counts:
-	python scripts/refresh_counts.py --check
+	$(VENV_PYTHON) scripts/refresh_counts.py --check
 
 # Clean build/test artifacts
 clean:

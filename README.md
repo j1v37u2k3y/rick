@@ -23,8 +23,14 @@ make setup
 `make setup` installs deps, sets up pre-commit hooks, and creates `~/.rick_mcp/`. Verify with `claude` then
 `/mcp`. Soul, vault, Docker, and Claude Desktop config in [Quick Start](#quick-start) below.
 
+**Full walkthrough (clone → working Rick + identity + Kali + troubleshooting):** [SETUP.md](SETUP.md).
+
 Running Kali in VMware? [`scripts/setup_kali_mount.sh`](scripts/setup_kali_mount.sh) mirrors host
 `~/.rick_mcp/` into the guest at the same logical path. Idempotent.
+
+**Prereq:** on the host, VM Settings → Sharing → enable Shared Folders, add `~/.rick_mcp`, name the share
+`rick_mcp`. The script assumes that share exists — verify in the guest with `vmware-hgfsclient` before
+running.
 
 ## Why an MCP Server
 
