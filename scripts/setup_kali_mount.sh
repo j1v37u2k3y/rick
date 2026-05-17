@@ -46,7 +46,22 @@ else
     log "ok" "vmhgfs-fuse already installed"
 fi
 
-# 2. Create mount point
+# 2. Preflight — verify the host-side share is actually visible from the guest.
+# Without this check, mount can "succeed" (fstab parses) while the FUSE source
+# is unreachable, leaving a broken mount where ls returns "No such file or directory".
+if ! vmware-hgfsclient | grep -qx "${SHARE_NAME}"; then
+    log "!" "Share '${SHARE_NAME}' not visible from the guest."
+    log " " "  Run 'vmware-hgfsclient' to see what shares the host is currently exposing."
+    log " " ""
+    log " " "  Fix on the macOS host:"
+    log " " "    VMware Fusion → Virtual Machine → Settings → Sharing"
+    log " " "    Enable Shared Folders, add ~/.rick_mcp, name the share '${SHARE_NAME}'"
+    log " " "    Restart the VM if the share was added while it was running."
+    exit 1
+fi
+log "ok" "host share '${SHARE_NAME}' is visible"
+
+# 3. Create mount point
 if [ ! -d "${MOUNT_POINT}" ]; then
     sudo mkdir -p "${MOUNT_POINT}"
     sudo chown "${TARGET_UID}:${TARGET_GID}" "${MOUNT_POINT}"
@@ -55,7 +70,7 @@ else
     log "ok" "mount point exists: ${MOUNT_POINT}"
 fi
 
-# 3. Add fstab entry (idempotent — match by mount point, not full line)
+# 4. Add fstab entry (idempotent — match by mount point, not full line)
 if grep -qE "[[:space:]]${MOUNT_POINT}[[:space:]]" /etc/fstab; then
     log "ok" "/etc/fstab already has an entry for ${MOUNT_POINT}"
 else
@@ -63,7 +78,7 @@ else
     log "+" "added fstab entry"
 fi
 
-# 4. Mount
+# 5. Mount
 if mountpoint -q "${MOUNT_POINT}"; then
     log "ok" "already mounted"
 else
@@ -71,7 +86,7 @@ else
     log "+" "mounted"
 fi
 
-# 5. Verify
+# 6. Verify
 echo
 log "*" "Verification:"
 ls -la "${MOUNT_POINT}" | head -8
