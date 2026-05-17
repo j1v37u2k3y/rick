@@ -1,4 +1,4 @@
-.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts
+.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts install-user-mcp install-user-skills uninstall-user-skills
 
 # Local venv — all targets use this so the dev experience is self-contained.
 # After `make setup`, every other make target works without manual activation.
@@ -100,8 +100,10 @@ setup:
 	@echo " Private content dir: ~/.rick_mcp/soul/"
 	@echo ""
 	@echo " Make targets use the venv automatically — no activation needed:"
-	@echo "   make test     — run the test suite"
-	@echo "   make check    — full pipeline (lint + format + typecheck + tests)"
+	@echo "   make test                  — run the test suite"
+	@echo "   make check                 — full pipeline (lint + format + typecheck + tests)"
+	@echo "   make install-user-mcp      — register rick_mcp at user scope (use Rick from any dir)"
+	@echo "   make install-user-skills   — symlink the 11 skills into ~/.claude/skills/ (use anywhere)"
 	@echo ""
 	@echo " To activate the venv in your shell (for ad-hoc python/pip work):"
 	@echo "   source $(VENV)/bin/activate"
@@ -125,6 +127,78 @@ setup:
 	@echo " Setup + smoke verified. Rick loads cleanly."
 	@echo " Run 'make check' for the full pipeline (lint + tests)."
 	@echo "═══════════════════════════════════════════════"
+
+# Symlink every skill in .claude/skills/<name>/ into ~/.claude/skills/<name> so the
+# skills are auto-discovered from any directory (not just when Claude Code launches
+# from this repo). Opt-in — run manually. Idempotent: already-linked + conflicts handled.
+install-user-skills:
+	@echo "═══════════════════════════════════════════════"
+	@echo " Installing skills at USER scope (~/.claude/skills/)"
+	@echo "═══════════════════════════════════════════════"
+	@mkdir -p $$HOME/.claude/skills
+	@count_new=0; count_have=0; count_skip=0; \
+	for skill_dir in $$(find $(CURDIR)/.claude/skills -maxdepth 1 -mindepth 1 -type d | sort); do \
+		skill_name=$$(basename "$$skill_dir"); \
+		target="$$HOME/.claude/skills/$$skill_name"; \
+		if [ ! -e "$$target" ] && [ ! -L "$$target" ]; then \
+			ln -s "$$skill_dir" "$$target"; \
+			echo " + $$skill_name  (symlinked)"; \
+			count_new=$$((count_new + 1)); \
+		elif [ -L "$$target" ] && [ "$$(readlink "$$target")" = "$$skill_dir" ]; then \
+			echo " = $$skill_name  (already linked to this repo)"; \
+			count_have=$$((count_have + 1)); \
+		else \
+			echo " ! $$skill_name  (exists, not from this repo — skipping; remove manually if you want to replace)"; \
+			count_skip=$$((count_skip + 1)); \
+		fi; \
+	done; \
+	echo ""; \
+	echo " Summary: $$count_new newly linked, $$count_have already linked, $$count_skip skipped (conflict)"
+	@echo ""
+	@echo " Verify: 'ls -la ~/.claude/skills/' should show symlinks pointing to $(CURDIR)/.claude/skills/"
+	@echo " Remove: 'make uninstall-user-skills'"
+
+# Remove the symlinks created by install-user-skills (only those pointing to THIS clone).
+uninstall-user-skills:
+	@echo "Removing skill symlinks in ~/.claude/skills/ that point to $(CURDIR)..."
+	@count=0; \
+	for link in $$(find $$HOME/.claude/skills -maxdepth 1 -type l 2>/dev/null); do \
+		target=$$(readlink "$$link"); \
+		case "$$target" in \
+			$(CURDIR)/*) \
+				rm "$$link"; \
+				echo " - $$(basename $$link)"; \
+				count=$$((count + 1)); \
+				;; \
+		esac; \
+	done; \
+	echo ""; \
+	echo " Removed $$count symlink(s)."
+
+# Register rick_mcp at user scope in Claude Code so it's available from any directory
+# (not just when launching Claude Code from this repo). Opt-in — run this manually.
+# Uses absolute paths derived from $(CURDIR) so no path-typing required.
+install-user-mcp:
+	@echo "═══════════════════════════════════════════════"
+	@echo " Installing rick_mcp at USER scope (Claude Code)"
+	@echo "═══════════════════════════════════════════════"
+	@if ! command -v claude >/dev/null 2>&1; then \
+		echo " ERROR: claude CLI not found in PATH."; \
+		echo " Install Claude Code first, then re-run."; \
+		exit 1; \
+	fi
+	@if [ ! -x $(VENV_PYTHON) ]; then \
+		echo " ERROR: $(VENV_PYTHON) not found. Run 'make setup' first."; \
+		exit 1; \
+	fi
+	claude mcp add --scope user rick_mcp $(CURDIR)/$(VENV_PYTHON) $(CURDIR)/rick_mcp.py
+	@echo ""
+	@echo " ✓ rick_mcp registered at user scope."
+	@echo "   Python:  $(CURDIR)/$(VENV_PYTHON)"
+	@echo "   Entry:   $(CURDIR)/rick_mcp.py"
+	@echo ""
+	@echo " Verify: run 'claude' from any directory, then '/mcp'."
+	@echo " Remove: 'claude mcp remove rick_mcp'."
 
 # Sync count placeholders (tools / resources / skills / tests / version) into README + SKILLS.md
 refresh-counts:

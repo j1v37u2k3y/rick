@@ -104,6 +104,32 @@ cp .claude/settings.example.json .claude/settings.local.json
 `settings.local.json` is gitignored — each clone manages its own trust posture. The example file mirrors
 the [`soul-example/`](soul-example/) pattern used elsewhere in the repo.
 
+**Use Rick from any directory (optional):** by default Rick loads only when Claude Code launches from
+this repo (project scope). To register Rick at user scope so it's available from any directory:
+
+```bash
+make install-user-mcp
+```
+
+That target runs `claude mcp add --scope user rick_mcp <venv-python> <entry>` with absolute paths
+derived from this clone. Useful for Kali workflows or any project where you want Rick available
+without `cd`-ing into the repo. Remove anytime with `claude mcp remove rick_mcp`.
+
+**Use the skills from any directory (optional):** the 11 Claude Code skills under `.claude/skills/`
+are project-scoped by default (only auto-discovered when Claude Code launches from this repo). To
+symlink them into your user-scope skill directory:
+
+```bash
+make install-user-skills
+```
+
+That target symlinks each skill dir from `<repo>/.claude/skills/<name>/` into
+`~/.claude/skills/<name>`. Symlinks (not copies) so pulling rick auto-updates your global skills —
+single source of truth. Idempotent: already-linked skills are skipped; user-installed skills with
+the same name are detected and left alone (no clobber).
+
+Remove anytime with `make uninstall-user-skills` (only removes symlinks pointing at this clone).
+
 **Verify:** inside Claude Code, run:
 
 ```
