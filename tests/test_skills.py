@@ -37,15 +37,17 @@ REQUIRED_SECTION_PREFIXES = [
 
 # Claude Code ships built-in skills (slash commands) that are NOT project skills under
 # .claude/skills/. Referencing them in a SKILL.md is legitimate, so allowlist them — otherwise
-# the sibling-reference checks flag real built-ins as missing. Keep this SCOPED to built-ins a
-# skill actually references: a broad speculative list (e.g. /review, /run) would silently mask a
-# typo'd or deleted project-skill reference that happens to collide with a common name.
+# the sibling-reference checks flag real built-ins as missing. Keep this SCOPED: only loop/schedule
+# are referenced in `/slash` form today (the only entries load-bearing for the subtraction).
+# code-review/security-review are composed by rick-review via the Skill tool (not `/slash`-referenced)
+# and are allowlisted forward-looking, so the natural `/code-review` form won't trip the check later.
+# A broad speculative list (e.g. /review, /run) would silently mask a typo'd or deleted sibling ref.
 BUILTIN_SKILLS = frozenset(
     {
-        "loop",  # referenced by engagement-checkin, htb-day, kill-chain-walk
-        "schedule",  # referenced by engagement-checkin, htb-day, kill-chain-walk
-        "code-review",  # composed by rick-review
-        "security-review",  # composed by rick-review
+        "loop",  # referenced as `/loop` by engagement-checkin, htb-day, kill-chain-walk
+        "schedule",  # referenced as `/schedule` by engagement-checkin, htb-day, kill-chain-walk
+        "code-review",  # composed by rick-review (forward-looking; not `/slash`-referenced today)
+        "security-review",  # composed by rick-review (forward-looking; not `/slash`-referenced today)
     }
 )
 

@@ -25,9 +25,11 @@ tool exposes the standard, a skill does the agentic work.
 - **Tests** — new `tests/test_code_review.py`: validation, every focus lens, both output formats,
   narrow-lens filtering, the `None`-focus path, clean markdown rendering, and the `_safe_tool`
   wrapper. Shared-formatter coverage extended in `tests/test_rick_mcp.py`.
-- **`_fmt` rendering** — taught the shared markdown formatter (`rick_mcp/formatting.py`) to render a
-  third dict-nesting level as indented bullets instead of a raw Python dict repr. Fixes the
-  `rick_code_review` dimensions output and, as a bonus, `rick_capabilities`' per-category tool lists.
+- **`_fmt` rendering** — the shared markdown formatter (`rick_mcp/formatting.py`) now renders nested
+  dicts recursively at **arbitrary depth** (depth-aware indentation) via a single helper, instead of
+  leaking a raw Python dict repr past two levels. Fixes `rick_code_review`'s dimensions and, as a
+  bonus, the nested sections of `rick_capabilities` and `rick_threat_model`; collapses three
+  duplicated render branches into one.
 
 ## [3.12.0] - 2026-05-15
 

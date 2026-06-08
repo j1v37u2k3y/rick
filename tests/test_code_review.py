@@ -54,12 +54,13 @@ class TestRickCodeReview:
         assert len(result) > 100
 
     async def test_markdown_renders_cleanly(self):
-        # The dimensions section must render as real markdown, not a dumped Python dict repr.
+        # The dimensions section must render as real markdown, not a dumped dict/list repr.
         result = await rick_code_review(CodeReviewInput(focus="full", response_format=ResponseFormat.MARKDOWN))
-        assert "# " in result
         assert "## Dimensions" in result
-        assert "Inspect" in result  # checklist header rendered, not buried in a dict literal
-        assert "{'" not in result  # no raw dict repr leaked into markdown
+        assert "- **Inspect:**" in result  # the checklist sub-header rendered as a bullet
+        assert "File/module size" in result  # an actual checklist item, not buried in a literal
+        assert "{'" not in result  # no dict repr leaked
+        assert "['" not in result  # no list repr leaked
 
     async def test_json_format_carries_contract(self):
         result = await rick_code_review(CodeReviewInput(focus="full", response_format=ResponseFormat.JSON))
@@ -106,6 +107,19 @@ class TestRickCodeReview:
         # Language notes are craftsmanship-flavored — not attached to architecture/security lenses.
         result = await rick_code_review(
             CodeReviewInput(focus="architecture", language="python", response_format=ResponseFormat.JSON)
+        )
+        assert "language_notes" not in json.loads(result)
+
+    async def test_language_notes_present_on_full_lens(self):
+        # The default + most common path: full lens with a known language attaches notes.
+        result = await rick_code_review(
+            CodeReviewInput(focus="full", language="python", response_format=ResponseFormat.JSON)
+        )
+        assert "python" in json.loads(result)["language_notes"]
+
+    async def test_language_notes_absent_on_security_lens(self):
+        result = await rick_code_review(
+            CodeReviewInput(focus="security", language="python", response_format=ResponseFormat.JSON)
         )
         assert "language_notes" not in json.loads(result)
 
