@@ -29,6 +29,19 @@ class VulnInput(BaseModel):
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
+class CodeReviewInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    focus: str | None = Field(
+        default="full",
+        description="Lens: 'full', 'security', 'craftsmanship', 'architecture'",
+        max_length=20,
+    )
+    language: str | None = Field(
+        default=None, description="Language hint: python, javascript, typescript, go, etc.", max_length=50
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
 class ROEInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     engagement_type: str = Field(

@@ -36,6 +36,17 @@ def _fmt(data: dict[str, Any], fmt: ResponseFormat, title: str = "") -> str:
                     lines.append(f"**{k.replace('_', ' ').title()}:**")
                     for i in v:
                         lines.append(f"- {i}")
+                elif isinstance(v, dict):
+                    # Render a third nesting level (dict-in-dict) as an indented sub-block
+                    # instead of dumping a raw Python dict repr.
+                    lines.append(f"**{k.replace('_', ' ').title()}:**")
+                    for kk, vv in v.items():
+                        if isinstance(vv, list):
+                            lines.append(f"- **{kk.replace('_', ' ').title()}:**")
+                            for i in vv:
+                                lines.append(f"  - {i}")
+                        else:
+                            lines.append(f"- **{kk.replace('_', ' ').title()}**: {vv}")
                 else:
                     lines.append(f"- **{k.replace('_', ' ').title()}**: {v}")
             lines.append("")

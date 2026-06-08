@@ -15,7 +15,7 @@ orchestrate MCP tools and return content to chat; they do NOT write to the opera
 filesystem. State persistence happens inside the MCP server (`rick_kill_chain`,
 `rick_notes`, `rick_tracker`) where it's already wired.
 
-## The <!-- counts:skills -->10<!-- /counts:skills --> skills
+## The <!-- counts:skills -->11<!-- /counts:skills --> skills
 
 ### Engagement lifecycle
 
@@ -40,6 +40,7 @@ filesystem. State persistence happens inside the MCP server (`rick_kill_chain`,
 |---------------------|---------------------------------------------------------------|---------------------------------------------------------|
 | `/arsenal-report`   | Target description → ordered tool plan by 7-phase methodology | "what should I run against X", "arsenal for <scenario>" |
 | `/cheatsheet-build` | Vuln class / attack stage → one-page pocket reference         | "cheatsheet for <topic>", "one-pager on <vuln class>"   |
+| `/rick-review`      | Codebase → Rick's honest builder's-eye verdict; delegates to built-in code-review + security-review when there's a diff | "scan this codebase", "rick's opinion on this repo", "review this code like rick" |
 
 ### Career
 
