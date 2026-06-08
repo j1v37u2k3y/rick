@@ -2,6 +2,33 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.13.0] - 2026-06-07
+
+### `rick_code_review` tool + `/rick-review` skill — point Rick at a codebase
+
+Rick can now give an honest, builder's-eye verdict on a codebase — craftsmanship, security, and
+architecture — in his own voice. Split the way every other capability here is split: a pure-function
+tool exposes the standard, a skill does the agentic work.
+
+- **`rick_code_review`** — the builder's-eye **scoring & verdict rubric**. Three dimensions
+  (craftsmanship / security / architecture), a severity scale (🔴/🟡/🟢), a verdict scale
+  (Ship it → Redesign the foundation), the builder-to-breaker inspection method, and language-specific
+  notes. A pure function: it emits the standard, it does not read files. `focus` lens + optional
+  `language` hint; markdown / JSON output. New `code_review` category in `rick_capabilities`.
+- **`/rick-review`** skill — a **hybrid orchestrator + voice layer**, not a from-scratch analyzer.
+  If there's a diff or PR, it delegates the heavy analysis to Claude Code's built-in `code-review`
+  (bugs + reuse/simplification/efficiency) and `security-review`, then re-prioritizes and re-voices
+  the findings through the rubric. If it's a cold repo, Rick walks the load-bearing files himself.
+  Security depth via `rick_vuln_assess` / `rick_threat_model`; voice via
+  `rick_mode(persona="be_rick")`. Advisory only — recommends fixes, never auto-applies; never
+  auto-runs the billed `ultra` pass.
+- **Tests** — new `tests/test_code_review.py`: validation, every focus lens, both output formats,
+  narrow-lens filtering, the `None`-focus path, clean markdown rendering, and the `_safe_tool`
+  wrapper. Shared-formatter coverage extended in `tests/test_rick_mcp.py`.
+- **`_fmt` rendering** — taught the shared markdown formatter (`rick_mcp/formatting.py`) to render a
+  third dict-nesting level as indented bullets instead of a raw Python dict repr. Fixes the
+  `rick_code_review` dimensions output and, as a bonus, `rick_capabilities`' per-category tool lists.
+
 ## [3.12.0] - 2026-05-15
 
 ### Claude Code skills landed — 9 forkable orchestration playbooks + catalog + template

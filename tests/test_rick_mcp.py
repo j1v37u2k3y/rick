@@ -146,6 +146,15 @@ class TestFmt:
         result = _fmt(data, ResponseFormat.MARKDOWN)
         assert "- x" in result
 
+    def test_markdown_three_level_dict(self):
+        # dict-in-dict-in-dict must render as nested bullets, not a raw Python dict repr.
+        data = {"section": {"sub": {"metaphor": "m", "items": ["a", "b"]}}}
+        result = _fmt(data, ResponseFormat.MARKDOWN)
+        assert "## Section" in result
+        assert "**Metaphor**: m" in result
+        assert "- a" in result
+        assert "{'" not in result  # no dict literal leaked
+
 
 # ═══════════════════════════════════════════════════════════════
 #  RESOURCES — 15 identity resources
