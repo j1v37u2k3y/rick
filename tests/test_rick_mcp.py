@@ -151,9 +151,20 @@ class TestFmt:
         data = {"section": {"sub": {"metaphor": "m", "items": ["a", "b"]}}}
         result = _fmt(data, ResponseFormat.MARKDOWN)
         assert "## Section" in result
+        assert "**Sub:**" in result  # nested dict header
         assert "**Metaphor**: m" in result
         assert "- a" in result
         assert "{'" not in result  # no dict literal leaked
+
+    def test_markdown_four_level_dict(self):
+        # Recursion must handle arbitrary depth — no raw dict/list repr at any level.
+        data = {"a": {"b": {"c": {"d": "deep"}}}}
+        result = _fmt(data, ResponseFormat.MARKDOWN)
+        assert "## A" in result
+        assert "**B:**" in result
+        assert "**C:**" in result
+        assert "- **D**: deep" in result
+        assert "{'" not in result and "['" not in result
 
 
 # ═══════════════════════════════════════════════════════════════

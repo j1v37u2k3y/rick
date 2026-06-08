@@ -124,6 +124,8 @@ _LANGUAGE_NOTES = {
     ],
 }
 
+_VALID_FOCUS = frozenset({"full", *_DIMENSIONS})
+
 
 async def rick_code_review(params: CodeReviewInput) -> str:
     """Rick's builder's-eye review rubric — the scoring + verdict standard for a codebase.
@@ -131,9 +133,8 @@ async def rick_code_review(params: CodeReviewInput) -> str:
     Pure rubric, not an analyzer. The /rick-review skill applies this to real findings.
     """
     focus = (params.focus or "full").lower().strip()
-    valid = {"full", *_DIMENSIONS}
-    if focus not in valid:
-        return f"Error: Unknown focus '{focus}'. Available: {', '.join(sorted(valid))}"
+    if focus not in _VALID_FOCUS:
+        return f"Error: Unknown focus '{focus}'. Available: {', '.join(sorted(_VALID_FOCUS))}"
 
     dims = _DIMENSIONS if focus == "full" else {focus: _DIMENSIONS[focus]}
 
