@@ -11,6 +11,29 @@ from rick_mcp.constants import ResponseFormat
 logger = logging.getLogger("rick_mcp")
 
 
+def _md_dict(d: dict[str, Any], lines: list[str], depth: int = 1) -> None:
+    """Render a dict's children as markdown, recursing into nested dicts to any depth.
+
+    Depth-aware so nesting stays visible: direct children of a ``## section`` (depth 1)
+    use flush headers; deeper dict/list headers are bulleted and their list items indent
+    with depth. Scalars are always flush bold-key bullets. This reproduces the existing
+    rendering for every current shape and extends cleanly to arbitrary depth (no raw repr).
+    """
+    head = "" if depth == 1 else "- "
+    item_indent = "  " * (depth - 1)
+    for k, v in d.items():
+        kt = k.replace("_", " ").title()
+        if isinstance(v, dict):
+            lines.append(f"{head}**{kt}:**")
+            _md_dict(v, lines, depth + 1)
+        elif isinstance(v, list):
+            lines.append(f"{head}**{kt}:**")
+            for i in v:
+                lines.append(f"{item_indent}- {i}")
+        else:
+            lines.append(f"- **{kt}**: {v}")
+
+
 def _fmt(data: dict[str, Any], fmt: ResponseFormat, title: str = "") -> str:
     """Format tool output as markdown or JSON."""
     if fmt == ResponseFormat.JSON:
@@ -31,13 +54,7 @@ def _fmt(data: dict[str, Any], fmt: ResponseFormat, title: str = "") -> str:
             lines.append("")
         elif isinstance(value, dict):
             lines.append(f"## {key.replace('_', ' ').title()}")
-            for k, v in value.items():
-                if isinstance(v, list):
-                    lines.append(f"**{k.replace('_', ' ').title()}:**")
-                    for i in v:
-                        lines.append(f"- {i}")
-                else:
-                    lines.append(f"- **{k.replace('_', ' ').title()}**: {v}")
+            _md_dict(value, lines)
             lines.append("")
         else:
             lines += [f"**{key.replace('_', ' ').title()}**: {value}", ""]

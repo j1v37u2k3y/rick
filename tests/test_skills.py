@@ -35,6 +35,22 @@ REQUIRED_SECTION_PREFIXES = [
     "## Acceptance criteria",
 ]
 
+# Claude Code ships built-in skills (slash commands) that are NOT project skills under
+# .claude/skills/. Referencing them in a SKILL.md is legitimate, so allowlist them — otherwise
+# the sibling-reference checks flag real built-ins as missing. Keep this SCOPED: only loop/schedule
+# are referenced in `/slash` form today (the only entries load-bearing for the subtraction).
+# code-review/security-review are composed by rick-review via the Skill tool (not `/slash`-referenced)
+# and are allowlisted forward-looking, so the natural `/code-review` form won't trip the check later.
+# A broad speculative list (e.g. /review, /run) would silently mask a typo'd or deleted sibling ref.
+BUILTIN_SKILLS = frozenset(
+    {
+        "loop",  # referenced as `/loop` by engagement-checkin, htb-day, kill-chain-walk
+        "schedule",  # referenced as `/schedule` by engagement-checkin, htb-day, kill-chain-walk
+        "code-review",  # composed by rick-review (forward-looking; not `/slash`-referenced today)
+        "security-review",  # composed by rick-review (forward-looking; not `/slash`-referenced today)
+    }
+)
+
 
 def _skill_dirs() -> list[Path]:
     """All subdirectories under .claude/skills/ — one per skill."""
@@ -180,7 +196,7 @@ def test_referenced_sibling_skills_exist():
     for d in _skill_dirs():
         text = (d / "SKILL.md").read_text(encoding="utf-8")
         refs = _referenced_skills(text)
-        missing = refs - skill_names
+        missing = refs - skill_names - BUILTIN_SKILLS
         missing.discard(d.name)
         if missing:
             failures.append(f"{d.name}: {sorted(missing)}")
@@ -199,5 +215,5 @@ def test_every_catalog_entry_is_a_real_skill():
     catalog = SKILLS_CATALOG.read_text(encoding="utf-8")
     refs = {m for m in re.findall(r"`/([a-z][a-z0-9-]+)`", catalog) if "_" not in m}
     skill_names = {d.name for d in _skill_dirs()}
-    ghosts = refs - skill_names
+    ghosts = refs - skill_names - BUILTIN_SKILLS
     assert not ghosts, f"SKILLS.md references nonexistent skills: {sorted(ghosts)}"
