@@ -480,6 +480,12 @@ async def rick_capabilities() -> str:
                 "rick_log_analysis": "Log review methodology for 6 log sources (Windows, syslog, cloud, web, firewall, DNS)",
             },
         },
+        "code_review": {
+            "description": "Point Rick at a codebase — honest builder's-eye verdict",
+            "tools": {
+                "rick_code_review": "Builder's-eye scoring & verdict rubric (craftsmanship + security + architecture) — the standard the /rick-review skill applies to normalize findings into severity + verdict. The skill delegates to /code-review + /security-review when there's a diff.",
+            },
+        },
         "engagement_lifecycle": {
             "description": "The business side — from scoping to debrief",
             "tools": {
