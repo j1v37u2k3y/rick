@@ -1,77 +1,88 @@
 # Contributing to Rick MCP
 
-Thanks for your interest. Here's how to contribute.
+Rick is forkable by design — clone it, fill it, make it yours. If you're sending changes
+back upstream, build like your name's on it, because once someone forks it, it is. The bar
+is the one in [`CLAUDE.md`](CLAUDE.md): honest work, tested, no padding.
 
-## Getting Started
+## Getting started
 
 ```bash
 git clone https://github.com/j1v37u2k3y/rick.git
 cd rick
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements-dev.txt
-pre-commit install
+make setup
 ```
 
-## Development Workflow
+`make setup` builds the venv, installs `requirements-dev.txt`, wires the pre-commit hooks,
+and creates `~/.rick_mcp/soul/`. Every `make` target uses the venv — no manual activation.
 
-1. Create a branch from `main`
-2. Make your changes
-3. Run `make check` — all checks must pass
-4. Commit (pre-commit hooks will verify)
-5. Open a PR against `main`
+Dev/test dependencies live in **one** place: `requirements-dev.txt` (Dependabot keeps it
+current). The project isn't packaged for distribution — don't reach for `pip install -e .`,
+it won't build.
 
-## Code Standards
+## The loop
 
-- **Lint**: `ruff check rick_mcp.py tests/`
-- **Format**: `ruff format rick_mcp.py tests/`
-- **Types**: `mypy rick_mcp.py --ignore-missing-imports --no-strict-optional`
-- **Tests**: `pytest tests/ -v` — 195+ tests must pass
-- **Coverage**: 80% minimum enforced
+1. Branch from `main`.
+2. Make the change.
+3. `make check` — lint, format, type-check, file-length, tests. All green, or it doesn't ship.
+4. Commit. Pre-commit runs the same gates; if a hook fixes a file mid-commit, the commit
+   didn't happen — re-stage and commit fresh. Never amend over a hook.
+5. Open a PR against `main`.
 
-Run `make check` to verify everything at once.
+`make fix` auto-fixes lint + format. `make check` is the whole pipeline in one shot — run it
+before you push, because CI runs the exact same gates and won't be more forgiving than you.
 
-## Adding a Tool
+## The rules that bite
 
-1. Create a Pydantic input model with `ConfigDict(str_strip_whitespace=True, extra="forbid")`
-2. Add the `@mcp.tool()` decorated async function
-3. Add tests covering all valid inputs, error cases, and both output formats
-4. Update `rick_status` tool count
-5. Update `README.md` tool table
-6. Update `CHANGELOG.md`
+Enforced by pre-commit and CI. Full detail in [`CLAUDE.md`](CLAUDE.md) — this is the short list:
 
-## Adding a Resource
+- **Tests for everything.** Every tool needs tests: valid inputs, error cases, both output
+  formats. 80% coverage minimum, enforced.
+- **1500 lines per Python file, max.** Split before you hit the cap.
+- **Counts aren't hand-edited.** Tool / resource / test counts live in `rick_capabilities`
+  and the README headline, auto-synced by `scripts/refresh_counts.py`. Don't hardcode them
+  anywhere else — including here.
+- **Fresh version bump per feature** in `__version__.py` — a new entry, not an amend to a
+  shipped release.
+- **No identity in source.** Personal data loads from `~/.rick_mcp/`; the Python stays generic.
 
-1. Add the `@mcp.resource()` decorated async function
-2. Return JSON (via `json.dumps`) or plain text
-3. Add a test verifying the resource returns expected content
-4. Update `rick_status` resource count
-5. Update `README.md` resource list
+## Adding a tool
 
-## Commit Messages
+The full checklist — input model → async function → `register()` with annotations → wire
+into `tools/__init__.py` → tests → `rick_capabilities` → README table → `CHANGELOG.md` →
+version bump — lives in [`CLAUDE.md`](CLAUDE.md) § Adding a Tool. Follow it there. One source
+of truth, no drift.
 
-Keep them concise. Lead with what changed, not why.
+Resources follow the same `register(mcp)` pattern (see `CLAUDE.md` § Architecture); skills
+live at `.claude/skills/` with their own authoring rules in
+[`.claude/skills/SKILLS.md`](.claude/skills/SKILLS.md).
+
+## Commits
+
+Conventional commits, scoped to where the change lands:
 
 ```
-Add rick_new_tool — description of what it does
-Fix rick_recon error handling for edge case
-Update README with new tool documentation
+feat(tools): rick_new_tool — what it does
+fix(recon): handle empty-response edge case
+docs(readme): document the new tool
+ci: add pip-audit gate
 ```
 
-## Pull Requests
+**No `Co-Authored-By` trailers, no "Generated with …" footers.** Commits are attributed to
+you, clean. (See [`CLAUDE.md`](CLAUDE.md) § Git / Commit Conventions.)
 
-- Keep PRs focused — one feature or fix per PR
-- All checks must pass
-- Include tests for new functionality
-- Update docs if user-facing behavior changes
+## Pull requests
+
+- One feature or fix per PR. Keep it focused.
+- `make check` green, tests included, docs updated if behavior changed.
+- In the description, say what it does and why — the honest version, not the sales pitch.
 
 ## Principles
 
 - No harm. Ever. Point blank. Full stop.
-- Facts not opinions
-- Thorough > fast
-- Honest findings, no padded reports
-- The craft demands quality
+- Facts, not opinions.
+- Thorough > fast.
+- Honest findings, no padded reports.
+- The craft demands quality.
 
 ## Security
 
