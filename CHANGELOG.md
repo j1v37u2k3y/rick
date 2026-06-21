@@ -4,35 +4,47 @@ All notable changes to rick_mcp will be documented in this file.
 
 ## [3.14.0] - 2026-06-21
 
-### `rick_cognitive_appraisal` tool — defense-first cognitive-appraisal lens
+### `rick_cognitive_appraisal` tool — defense-first cognitive-appraisal scaffold
 
-A clean-room, defense-first cognitive-appraisal reasoning tool. For an authorized
-`(subject, situation)` pair it emits a structured, falsifiable appraisal scaffold built
-entirely from public-domain appraisal theory — owing nothing to any copyleft source.
+A clean-room, defense-first cognitive-appraisal **reasoning scaffold** built entirely from
+public-domain appraisal theory — owing nothing to any copyleft source. Be clear on what it
+is: like `rick_code_review`, it does not analyze on its own. It echoes the in-scope input,
+lays out the framework, and imposes a structure the caller (a person or the model) fills in.
+The tool's deterministic work is the structure, the mode gate, and an input short-circuit;
+the reasoning quality is the filler's.
 
-- **`rick_cognitive_appraisal`** — per salient concern, the published appraisal checks
-  (relevance · congruence · agency/blame · certainty · coping potential) → a predicted
-  response tendency, each **evidence-cited**, **confidence-marked**
-  (`stated / high / medium / speculation`), and carrying a **refutation condition**. Like
-  `rick_code_review`, it's a deterministic reasoning scaffold, not an analyzer: it echoes
-  the in-scope evidence and lays out the framework + guards the caller fills in.
-- **Defense-first, red-team gated.** `mode="defense"` (default) emits the defensive brief
-  (lever exposed + detection / hardening). `mode="redteam"` emits a pretext-design contract
-  **only** under an active, scoped engagement — it composes with the existing
-  `rick_scope_check` authorization signal (engagement state with a non-empty scope). No
-  authorization → it refuses the offensive output and returns defense-only with a one-line
-  reason. A secondary tripwire blocks any pretext touching coercion/harm or vulnerable
-  populations, even inside an authorized engagement.
-- **Guards welded on:** fabrication guard (no in-scope evidence → "insufficient evidence",
-  never an invented backstory), mandatory confidence + refutation on every prediction,
-  hard-refusal policy, and statelessness (nothing stored or profiled). Makes **no**
-  benchmark / SOTA claim anywhere. New `cognitive_appraisal` category in `rick_capabilities`.
+- **`rick_cognitive_appraisal`** — for a `(subject, situation)` pair it emits a per-concern
+  scaffold: the published appraisal checks (relevance · congruence · agency/blame ·
+  certainty · coping potential) → a predicted response tendency. The output **contract**
+  requires every concern to cite its evidence span, every line to carry a confidence level
+  (`stated / high / medium / speculation`), and every prediction to carry a refutation
+  condition — requirements the scaffold imposes on the filler, not properties the tool can
+  verify after the fact.
+- **Defense-first, with an operator-set red-team gate.** `mode="defense"` (default) emits
+  the defensive brief (lever exposed + detection / hardening). `mode="redteam"` emits a
+  pretext-*design* contract — not a ready-to-send lure — and only when the named engagement
+  carries a non-empty scope (the same `rick_scope_check` flag). This is **deliberate
+  friction and an intent signal, not access control**: the scope flag lives in a local file
+  the operator controls and can set themselves. No scope → defense-only + a one-line reason.
+- **What the tool actually enforces (code + tests):** the mode gate; a fabrication
+  short-circuit that returns "insufficient evidence" when the input has no real content (so
+  it can't be coaxed into inventing an entire appraisal from nothing); deterministic output
+  structure; statelessness (nothing stored or profiled); and **no** benchmark / SOTA claim
+  anywhere — the lens makes no capability claim by design.
+- **What it relies on the caller to honor:** sourcing each concern to a genuine span (the
+  tool cannot confirm a cited span is real), and the hard-refusal policy (named
+  non-consenting individuals, vulnerable populations, coercion/harm of real people). A
+  coarse keyword tripwire downgrades the red-team path to defense-only on obvious
+  coercion/vulnerable terms — a speed bump, easily reworded around, not a real filter.
 - **Basis:** Ortony/Clore/Collins (1988, OCC), Lazarus (1991), Scherer (Component Process
-  Model). Public theory, our own vocabulary.
+  Model). Public theory, our own vocabulary. New `cognitive_appraisal` category in
+  `rick_capabilities`.
 - **Tests** — new `tests/test_appraisal.py`: input validation, the gating matrix
-  (unauthorized → defense-only; scoped engagement → pretext path), the fabrication guard,
-  confidence + refutation presence, deterministic structure, both output formats, the
-  no-benchmark-claim and clean-room-vocabulary contracts, and the `_safe_tool` wrapper.
+  (unauthorized → defense-only; scoped engagement → pretext path; coercion/vulnerable terms
+  → downgraded), the insufficient-evidence short-circuit, presence of the
+  confidence/refutation contract, deterministic structure, both output formats, and the
+  no-benchmark / clean-room-vocabulary checks. The tests cover the deterministic plumbing —
+  they do not (and cannot) grade the quality of a filled-in appraisal.
 
 ## [3.13.0] - 2026-06-07
 
