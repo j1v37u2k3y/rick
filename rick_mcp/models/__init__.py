@@ -1,6 +1,7 @@
 """Input models for rick_mcp tools."""
 
 from rick_mcp.models.inputs import (
+    AppraisalInput,
     AttackChainInput,
     C2CompareInput,
     CheatsheetInput,
@@ -47,6 +48,7 @@ from rick_mcp.models.inputs import (
 )
 
 __all__ = [
+    "AppraisalInput",
     "AttackChainInput",
     "C2CompareInput",
     "ChecklistInput",

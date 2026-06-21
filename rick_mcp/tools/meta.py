@@ -486,6 +486,12 @@ async def rick_capabilities() -> str:
                 "rick_code_review": "Builder's-eye scoring & verdict rubric (craftsmanship + security + architecture) — the standard the /rick-review skill applies to normalize findings into severity + verdict. The skill delegates to /code-review + /security-review when there's a diff.",
             },
         },
+        "cognitive_appraisal": {
+            "description": "Defense-first cognitive-appraisal reasoning — name the manipulation lever a situation exposes, then harden against it. Red-team pretext gated behind an authorized, scoped engagement.",
+            "tools": {
+                "rick_cognitive_appraisal": "Structured appraisal scaffold (OCC/Lazarus/Scherer) — per concern: relevance/congruence/agency-blame/certainty/coping → predicted tendency, evidence-cited, confidence-marked, with a refutation condition. Defense brief by default; red-team pretext requires a scoped engagement (composes with rick_scope_check).",
+            },
+        },
         "engagement_lifecycle": {
             "description": "The business side — from scoping to debrief",
             "tools": {

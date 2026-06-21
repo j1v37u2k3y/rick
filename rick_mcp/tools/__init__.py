@@ -1,5 +1,6 @@
 """Tool modules for rick_mcp."""
 
+from rick_mcp.tools.appraisal import rick_cognitive_appraisal
 from rick_mcp.tools.career import rick_compatibility_check, rick_cover_letter, rick_mentorship
 from rick_mcp.tools.code_review import rick_code_review
 from rick_mcp.tools.cve import rick_cve
@@ -36,6 +37,7 @@ from rick_mcp.tools.writeups import rick_writeups
 def register_all(mcp):
     """Register all tools on the MCP server."""
     from rick_mcp.tools import (
+        appraisal,
         career,
         code_review,
         cve,
@@ -54,6 +56,7 @@ def register_all(mcp):
     engagement.register(mcp)
     career.register(mcp)
     code_review.register(mcp)
+    appraisal.register(mcp)
     meta.register(mcp)
     cve.register(mcp)
     jarvis.register(mcp)
@@ -81,6 +84,7 @@ __all__ = [
     "rick_client_onboarding",
     "rick_cloud_attack_path",
     "rick_code_review",
+    "rick_cognitive_appraisal",
     "rick_compatibility_check",
     "rick_detection_rules",
     "rick_cover_letter",
