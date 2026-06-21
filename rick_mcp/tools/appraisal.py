@@ -1,17 +1,20 @@
 """Cognitive Appraisal — defense-first appraisal-theory reasoning scaffold.
 
 Clean-room build from public-domain cognitive-appraisal theory (OCC, Lazarus, Scherer).
-For an authorized (subject, situation) pair it emits a structured, falsifiable appraisal
-scaffold: per salient concern, the published appraisal checks → a predicted response
-tendency, each evidence-cited, confidence-marked, and carrying a refutation condition.
+For a (subject, situation) pair it emits a per-concern scaffold: the published appraisal
+checks → a predicted response tendency. The output contract asks the filler to cite each
+concern's evidence, mark a confidence level, and attach a refutation condition.
 
 Defense is the default deliverable (lever exposed + detection / hardening). Red-team
-(pretext) output is GATED behind an active, scoped engagement — it composes with the
-existing rick_scope_check authorization signal (engagement state with a non-empty scope).
+(pretext) output sits behind an operator-set scope gate: it appears only when the named
+engagement carries a non-empty scope (the same rick_scope_check flag). That's deliberate
+friction and an intent signal, not access control — the operator controls that flag.
 
-Like rick_code_review, this is a deterministic reasoning scaffold, not an analyzer: it
-echoes the in-scope evidence and lays out the framework + guards the caller fills in. It
-makes no capability claim, invents no backstory, and persists nothing.
+Like rick_code_review, this is a deterministic scaffold, not an analyzer: it echoes the
+in-scope evidence and lays out the framework the caller fills in. The tool itself enforces
+the mode gate, an insufficient-evidence short-circuit, deterministic structure, and
+statelessness, and makes no capability claim; sourcing each concern and honoring the
+hard-refusal policy are the caller's job — the tool can't verify them.
 """
 
 import re
@@ -27,10 +30,11 @@ _VALID_MODES = frozenset({"defense", "redteam"})
 # punctuation/noise. No letters in subject or situation → nothing to appraise.
 _WORD_RE = re.compile(r"[A-Za-z]{2,}")
 
-# Conservative tripwire on the OFFENSIVE path only. Defense output is never blocked by
-# these — detecting and hardening against coercion is the whole mission. These bound the
-# red-team brief so the lens never helps target a real person for harm or a vulnerable
-# population, even inside an authorized engagement.
+# Coarse keyword speed bump on the OFFENSIVE path only — defense output is never blocked
+# (detecting and hardening against coercion is the whole mission). It downgrades the
+# red-team brief to defense-only on obvious coercion/vulnerable terms, but it's easily
+# reworded around: friction, not a real filter. The scope gate is the actual control; the
+# hard-refusal policy in _GUARDS is what the caller must honor.
 _COERCION_RE = re.compile(
     r"\b(blackmail|extort|extortion|coerce|coercion|sextortion|stalk|stalking|"
     r"harass|harassment|intimidate|intimidation|doxx?|dox)\b",
@@ -107,7 +111,7 @@ _REDTEAM_BRIEF_CONTRACT = {
 }
 
 _GUARDS = {
-    "fabrication_guard": "Every concern and appraisal must cite a span from the evidence_base. No supporting span → mark 'insufficient evidence'. The lens never invents a backstory.",
+    "fabrication_guard": "Every concern and appraisal must cite a span from the evidence_base. No supporting span → mark 'insufficient evidence'. Never invent a backstory to fill a gap. (A rule for the filler — the tool can't verify your spans are real.)",
     "confidence_scale": {
         "stated": "Directly asserted in the evidence_base.",
         "high": "Strongly implied by the evidence; little else fits.",
@@ -130,9 +134,10 @@ _SOURCES = [
 ]
 
 _RICK_NOTE = (
-    "This is a lens, not a mind-reader. It tells you which lever a situation exposes and how to brace it — "
-    "cite the evidence or say you don't know. Defense is the default; the offensive frame stays locked behind "
-    "a scoped engagement. No invented backstories, no confidence you didn't earn."
+    "This is a lens, not a mind-reader — and a frame, not the analysis: it lays out the checks, you do the "
+    "reasoning. Cite the evidence or say you don't know. Defense is the default; the offensive frame sits "
+    "behind an operator-set scope gate — friction and intent, not a lock. No invented backstories, no "
+    "confidence you didn't earn."
 )
 
 

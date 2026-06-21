@@ -487,9 +487,9 @@ async def rick_capabilities() -> str:
             },
         },
         "cognitive_appraisal": {
-            "description": "Defense-first cognitive-appraisal reasoning — name the manipulation lever a situation exposes, then harden against it. Red-team pretext gated behind an authorized, scoped engagement.",
+            "description": "Defense-first cognitive-appraisal scaffold — names the manipulation lever a situation exposes so you can harden against it. Red-team pretext path sits behind an operator-set scope gate (deliberate friction, not access control).",
             "tools": {
-                "rick_cognitive_appraisal": "Structured appraisal scaffold (OCC/Lazarus/Scherer) — per concern: relevance/congruence/agency-blame/certainty/coping → predicted tendency, evidence-cited, confidence-marked, with a refutation condition. Defense brief by default; red-team pretext requires a scoped engagement (composes with rick_scope_check).",
+                "rick_cognitive_appraisal": "Appraisal scaffold (OCC/Lazarus/Scherer) — the tool emits the frame (per concern: relevance/congruence/agency-blame/certainty/coping → predicted tendency); the caller fills it, sourcing each line and marking confidence + a refutation condition. Defense brief by default; red-team pretext only when the named engagement carries a scope (operator-set, composes with rick_scope_check).",
             },
         },
         "engagement_lifecycle": {
