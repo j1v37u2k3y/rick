@@ -115,6 +115,24 @@ librosa requires <3.14) before installing audio/ML deps.
 - **No hardcoded identity**: All personal data comes from identity.yaml or soul files. Python source stays generic.
 - **Async**: All tools and resources are async functions.
 
+## External Content & Licensing
+
+`rick_mcp` is a public, forkable, **network-served** MCP server. Do NOT vendor third-party copyleft text or code into
+it — not the Python source, not `prompts.py` persona text, not the shipped `.claude/skills/`. Pasting
+AGPL/GPL/SSPL-licensed material (or a close derivative) and serving it can trip the source's copyleft — AGPL's **§13
+network/SaaS clause applies directly because this IS the network service** — and relicense the entire server plus
+every fork.
+
+- **Borrow the idea, never the expression.** Methods, algorithms-as-concepts, theories, and facts aren't
+  copyrightable — re-implement in your own words/code and you owe nothing. Only the source's *specific text or code* is
+  covered; copy that and the obligation attaches.
+- **Check the license before pulling anything in.** MIT / BSD / Apache-2.0 → generally safe to vendor with
+  attribution. (L)GPL / AGPL / SSPL → do NOT vendor; re-implement instead.
+- **Mirror of the content-repo rule.** The personal content repo `~/.rick_mcp/` carries the same guardrail (its
+  content is loaded + served by this server). See that repo's `CLAUDE.md` § External Content & Licensing.
+- **Worked example:** the MHH / "Webb Equation of Emotion" repo (AGPL-3.0) — its appraisal theory is free to reuse
+  (the basis for `rick_cognitive_appraisal`), but its text must never be pasted in.
+
 ## Claude Code Skills
 
 Skills live at `.claude/skills/<skill-name>/SKILL.md`. They auto-discover when Claude Code launches in this repo. Skills
