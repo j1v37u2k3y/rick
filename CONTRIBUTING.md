@@ -9,8 +9,7 @@ git clone https://github.com/j1v37u2k3y/rick.git
 cd rick
 python -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-pip install -e ".[dev]"
+pip install -r requirements-dev.txt
 pre-commit install
 ```
 
