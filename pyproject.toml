@@ -10,15 +10,9 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=1.0",
-    "pytest-cov>=7.1.0",
-    "ruff>=0.4",
-    "mypy>=1.20.1",
-    "hypothesis>=6.0",
-]
+# Dev/test dependencies are declared once in requirements-dev.txt (the file `make setup` and
+# CI install, and that Dependabot updates). This project isn't packaged for `pip install`, so
+# no `[project.optional-dependencies]` table — it would duplicate that list and drift from it.
 
 [tool.setuptools.dynamic]
 version = {attr = "__version__.__version__"}
