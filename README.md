@@ -226,7 +226,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 
 | Tool                       | What It Does                                                                                      |
 |----------------------------|---------------------------------------------------------------------------------------------------|
-| `rick_cognitive_appraisal` | Defense-first appraisal scaffold (OCC/Lazarus/Scherer) — levers exposed + detection/hardening; red-team pretext gated behind a scoped engagement |
+| `rick_cognitive_appraisal` | Defense-first appraisal **scaffold** (OCC/Lazarus/Scherer) — structures the reasoning (levers + detection/hardening); the model fills it in. Red-team pretext path behind an operator-set scope gate (deliberate friction, not access control) |
 
 ### Engagement Lifecycle
 
