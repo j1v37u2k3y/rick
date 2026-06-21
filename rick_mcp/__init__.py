@@ -16,6 +16,7 @@ from rick_mcp.constants import (
 from rick_mcp.formatting import _fmt, _read_md, _safe_tool, _sanitize
 from rick_mcp.logging_config import logger
 from rick_mcp.models import (
+    AppraisalInput,
     AttackChainInput,
     C2CompareInput,
     CheatsheetInput,
@@ -95,6 +96,7 @@ from rick_mcp.tools import (
     rick_client_onboarding,
     rick_cloud_attack_path,
     rick_code_review,
+    rick_cognitive_appraisal,
     rick_compare,
     rick_compatibility_check,
     rick_cover_letter,
@@ -151,6 +153,7 @@ __all__ = [
     "_sanitize",
     "logger",
     # Models
+    "AppraisalInput",
     "AttackChainInput",
     "C2CompareInput",
     "ChecklistInput",
@@ -232,6 +235,7 @@ __all__ = [
     "rick_client_onboarding",
     "rick_cloud_attack_path",
     "rick_code_review",
+    "rick_cognitive_appraisal",
     "rick_compare",
     "rick_compatibility_check",
     "rick_cover_letter",

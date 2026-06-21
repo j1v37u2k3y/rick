@@ -1,4 +1,4 @@
-# Rick MCP Server <!-- counts:version -->v3.13<!-- /counts:version -->
+# Rick MCP Server <!-- counts:version -->v3.14<!-- /counts:version -->
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
@@ -8,7 +8,7 @@
 
 A forkable security MCP platform. Load your identity, own your craft.
 
-<!-- counts:tools -->47<!-- /counts:tools --> tools. <!-- counts:resources -->36<!-- /counts:resources --> resources. <!-- counts:skills -->11<!-- /counts:skills --> Claude Code skills. Fork it, fill it, make it yours.
+<!-- counts:tools -->48<!-- /counts:tools --> tools. <!-- counts:resources -->36<!-- /counts:resources --> resources. <!-- counts:skills -->11<!-- /counts:skills --> Claude Code skills. Fork it, fill it, make it yours.
 
 <!-- Counts and version above are auto-synced by `scripts/refresh_counts.py`. Run `make refresh-counts` after adding tools / resources / skills, or `make check-counts` in CI. -->
 
@@ -38,7 +38,7 @@ A webpage sits there and waits to be read. Rick **responds**.
 
 Rick is a Model Context Protocol server that an AI can query, reason about, and use as a tool. An LLM can ask Rick
 who you are and get structured identity data back. It can pull your writing, your values, your methodology — all as
-structured resources an AI can reason over. And there are <!-- counts:tools -->47<!-- /counts:tools --> functional tools
+structured resources an AI can reason over. And there are <!-- counts:tools -->48<!-- /counts:tools --> functional tools
 that *do things* — generate ROE docs,
 model threats, look up CVEs, track engagements, recommend tools, write cover letters matched to job postings, generate
 IR playbooks, compare C2 frameworks, and scope entire engagements.
@@ -183,7 +183,7 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 }
 ```
 
-## Tools — <!-- counts:tools -->47<!-- /counts:tools --> Functional Tools
+## Tools — <!-- counts:tools -->48<!-- /counts:tools --> Functional Tools
 
 ### Offensive — Recon & Assessment
 
@@ -221,6 +221,12 @@ Add this to your Claude Desktop MCP config (`~/Library/Application Support/Claud
 | Tool               | What It Does                                                                                      |
 |--------------------|---------------------------------------------------------------------------------------------------|
 | `rick_code_review` | Builder's-eye scoring & verdict rubric (craftsmanship + security + architecture) — powers `/rick-review` |
+
+### Cognitive Appraisal
+
+| Tool                       | What It Does                                                                                      |
+|----------------------------|---------------------------------------------------------------------------------------------------|
+| `rick_cognitive_appraisal` | Defense-first appraisal scaffold (OCC/Lazarus/Scherer) — levers exposed + detection/hardening; red-team pretext gated behind a scoped engagement |
 
 ### Engagement Lifecycle
 
@@ -405,7 +411,7 @@ and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at the
 ### Run Tests
 
 ```bash
-make test        # <!-- counts:tests -->825<!-- /counts:tests --> tests
+make test        # <!-- counts:tests -->865<!-- /counts:tests --> tests
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -428,7 +434,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run <!-- counts:tests -->825<!-- /counts:tests --> tests    |
+| `make test`        | Run <!-- counts:tests -->865<!-- /counts:tests --> tests    |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |

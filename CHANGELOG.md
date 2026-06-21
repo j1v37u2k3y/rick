@@ -2,6 +2,38 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.14.0] - 2026-06-21
+
+### `rick_cognitive_appraisal` tool — defense-first cognitive-appraisal lens
+
+A clean-room, defense-first cognitive-appraisal reasoning tool. For an authorized
+`(subject, situation)` pair it emits a structured, falsifiable appraisal scaffold built
+entirely from public-domain appraisal theory — owing nothing to any copyleft source.
+
+- **`rick_cognitive_appraisal`** — per salient concern, the published appraisal checks
+  (relevance · congruence · agency/blame · certainty · coping potential) → a predicted
+  response tendency, each **evidence-cited**, **confidence-marked**
+  (`stated / high / medium / speculation`), and carrying a **refutation condition**. Like
+  `rick_code_review`, it's a deterministic reasoning scaffold, not an analyzer: it echoes
+  the in-scope evidence and lays out the framework + guards the caller fills in.
+- **Defense-first, red-team gated.** `mode="defense"` (default) emits the defensive brief
+  (lever exposed + detection / hardening). `mode="redteam"` emits a pretext-design contract
+  **only** under an active, scoped engagement — it composes with the existing
+  `rick_scope_check` authorization signal (engagement state with a non-empty scope). No
+  authorization → it refuses the offensive output and returns defense-only with a one-line
+  reason. A secondary tripwire blocks any pretext touching coercion/harm or vulnerable
+  populations, even inside an authorized engagement.
+- **Guards welded on:** fabrication guard (no in-scope evidence → "insufficient evidence",
+  never an invented backstory), mandatory confidence + refutation on every prediction,
+  hard-refusal policy, and statelessness (nothing stored or profiled). Makes **no**
+  benchmark / SOTA claim anywhere. New `cognitive_appraisal` category in `rick_capabilities`.
+- **Basis:** Ortony/Clore/Collins (1988, OCC), Lazarus (1991), Scherer (Component Process
+  Model). Public theory, our own vocabulary.
+- **Tests** — new `tests/test_appraisal.py`: input validation, the gating matrix
+  (unauthorized → defense-only; scoped engagement → pretext path), the fabrication guard,
+  confidence + refutation presence, deterministic structure, both output formats, the
+  no-benchmark-claim and clean-room-vocabulary contracts, and the `_safe_tool` wrapper.
+
 ## [3.13.0] - 2026-06-07
 
 ### `rick_code_review` tool + `/rick-review` skill — point Rick at a codebase
