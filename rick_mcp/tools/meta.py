@@ -486,6 +486,12 @@ async def rick_capabilities() -> str:
                 "rick_code_review": "Builder's-eye scoring & verdict rubric (craftsmanship + security + architecture) — the standard the /rick-review skill applies to normalize findings into severity + verdict. The skill delegates to /code-review + /security-review when there's a diff.",
             },
         },
+        "cognitive_appraisal": {
+            "description": "Defense-first cognitive-appraisal scaffold — names the manipulation lever a situation exposes so you can harden against it. Red-team pretext path sits behind an operator-set scope gate (deliberate friction, not access control).",
+            "tools": {
+                "rick_cognitive_appraisal": "Appraisal scaffold (OCC/Lazarus/Scherer) — the tool emits the frame (per concern: relevance/congruence/agency-blame/certainty/coping → predicted tendency); the caller fills it, sourcing each line and marking confidence + a refutation condition. Defense brief by default; red-team pretext only when the named engagement carries a scope (operator-set, composes with rick_scope_check).",
+            },
+        },
         "engagement_lifecycle": {
             "description": "The business side — from scoping to debrief",
             "tools": {
