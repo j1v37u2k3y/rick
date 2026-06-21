@@ -42,6 +42,33 @@ class CodeReviewInput(BaseModel):
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
+class AppraisalInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+    subject: str = Field(
+        ...,
+        description="Who/what is being appraised: role + context + the observable, in-scope concerns (goals/standards/attitudes). Free text.",
+        min_length=1,
+        max_length=2000,
+    )
+    situation: str = Field(
+        ...,
+        description="The event, message, or scenario the subject faces. Free text.",
+        min_length=1,
+        max_length=2000,
+    )
+    mode: str | None = Field(
+        default="defense",
+        description="'defense' (default — lever exposed + detection/hardening) or 'redteam' (pretext design; requires an authorized, scoped engagement).",
+        max_length=20,
+    )
+    engagement_id: str | None = Field(
+        default=None,
+        description="Authorized engagement ID — required for mode='redteam'. Verified against stored scope (rick_scope_check).",
+        max_length=100,
+    )
+    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
+
+
 class ROEInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     engagement_type: str = Field(
