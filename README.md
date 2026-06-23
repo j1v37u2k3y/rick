@@ -3,7 +3,7 @@
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-721%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-865%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
