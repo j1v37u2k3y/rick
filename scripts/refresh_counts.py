@@ -10,6 +10,9 @@ Tagged regions look like:
     Version <!-- counts:version -->v3.12<!-- /counts:version -->
     <!-- counts:tools -->46<!-- /counts:tools --> tools.
 
+Shield.io badges that mirror a count are synced too — the number lives inside the image URL
+where an HTML comment can't go, e.g. the `tests-721%20passed` badge tracks the test count.
+
 Run modes:
 
     python scripts/refresh_counts.py             # rewrite stale tags in place
@@ -113,6 +116,23 @@ def replace_tags(text: str, counts: dict[str, str]) -> str:
     return text
 
 
+# Shield.io badges embed a count directly in the image URL, where the `<!-- counts:* -->`
+# comment markers can't live. Each entry maps a count key to a regex with three capture
+# groups — (prefix)(number)(suffix) — and only the middle number is rewritten.
+BADGE_PATTERNS = {
+    "tests": re.compile(r"(tests-)(\d+)(%20passed)"),
+}
+
+
+def replace_badges(text: str, counts: dict[str, str]) -> str:
+    for key, pattern in BADGE_PATTERNS.items():
+        if key not in counts:
+            continue
+        value = counts[key]
+        text = pattern.sub(lambda m, v=value: f"{m.group(1)}{v}{m.group(3)}", text)
+    return text
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -135,7 +155,7 @@ def main() -> int:
     drift = False
     for path in TARGETS:
         original = path.read_text(encoding="utf-8")
-        updated = replace_tags(original, counts)
+        updated = replace_badges(replace_tags(original, counts), counts)
         rel = path.relative_to(ROOT)
         if original == updated:
             print(f"  OK    {rel}")
