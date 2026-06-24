@@ -4,12 +4,11 @@ dynamic = ["version"]
 description = "Rick MCP Server — A forkable security MCP platform. Load your identity, own your craft."
 requires-python = ">=3.10"
 license = "MIT"
-dependencies = [
-    "mcp[cli]>=1.0.0",
-    "pydantic>=2.0.0",
-    "pyyaml>=6.0",
-]
-
+# Runtime dependencies are declared once in requirements.txt — the file pip-audit scans and that
+# requirements-dev.txt pulls in via `-r`. This project isn't packaged for `pip install` (flat-layout
+# name collision between rick_mcp.py and rick_mcp/), so a `[project.dependencies]` table here would
+# never be installed and would just drift from requirements.txt.
+#
 # Dev/test dependencies are declared once in requirements-dev.txt (the file `make setup` and
 # CI install, and that Dependabot updates). This project isn't packaged for `pip install`, so
 # no `[project.optional-dependencies]` table — it would duplicate that list and drift from it.
