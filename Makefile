@@ -60,10 +60,10 @@ file-length:
 	if [ "$$FAIL" -eq 1 ]; then exit 1; fi
 	@echo "All Python files under $(MAX_FILE_LINES) lines."
 
-# Smoke test — fire every tool once, verify output
+# Smoke test — fire all non-network tools once (isolated HOME), verify output
 smoke:
 	@echo "═══════════════════════════════════════════════"
-	@echo " SMOKE TEST — Firing all tools"
+	@echo " SMOKE TEST — Firing all non-network tools (isolated HOME)"
 	@echo "═══════════════════════════════════════════════"
 	@$(VENV_PYTHON) smoke_test.py
 	@echo ""
