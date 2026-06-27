@@ -6,11 +6,19 @@ the /rick-review skill relies on (severity scale, verdict scale, scoring rules).
 """
 
 import json
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
 
 from rick_mcp import CodeReviewInput, ResponseFormat, rick_code_review
+from rick_mcp.tools.code_review import (
+    _DIMENSIONS,
+    _LANGUAGE_NOTES,
+    CODE_REVIEW_BUNDLED_PATH,
+    _load_rubric,
+)
 
 # ═══════════════════════════════════════════════════════════════
 #  Input model validation
@@ -144,3 +152,67 @@ class TestSafeToolWrapper:
         wrapped = _safe_tool(boom)
         result = await wrapped(None)
         assert "encountered an issue" in result
+
+
+# ═══════════════════════════════════════════════════════════════
+#  YAML loader — bundled rubric + ~/.rick_mcp/ override path
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestCodeReviewLoader:
+    def test_bundled_yaml_exists(self):
+        # Bundled rubric must ship with the package.
+        assert CODE_REVIEW_BUNDLED_PATH.exists()
+
+    def test_loader_returns_required_top_level_keys(self):
+        loaded = _load_rubric()
+        assert "dimensions" in loaded
+        assert "language_notes" in loaded
+
+    def test_bundled_yaml_parses_to_module_constants(self):
+        # When no override exists, the loader returns the bundled content; the
+        # module-level constants should match it byte-for-byte (output parity).
+        loaded = _load_rubric()
+        assert loaded["dimensions"] == _DIMENSIONS
+        assert loaded.get("language_notes", {}) == _LANGUAGE_NOTES
+
+    def test_bundled_has_all_three_dimensions(self):
+        loaded = _load_rubric()
+        assert set(loaded["dimensions"].keys()) == {"craftsmanship", "security", "architecture"}
+
+    def test_override_path_takes_precedence(self, tmp_path):
+        # Write a custom rubric at a fake override path and confirm the loader
+        # picks it up over the bundled file — the forkable-customization path.
+        custom = tmp_path / "code_review.yaml"
+        custom.write_text(
+            "dimensions:\n"
+            "  craftsmanship:\n"
+            '    builder_metaphor: "Custom metaphor"\n'
+            "    inspect:\n"
+            '      - "Custom inspect item"\n'
+            "    flag:\n"
+            '      - "Custom flag item"\n'
+            "language_notes:\n"
+            "  rust:\n"
+            '    - "Borrow checker is your friend"\n',
+            encoding="utf-8",
+        )
+        with patch("rick_mcp.tools.code_review.CODE_REVIEW_OVERRIDE_PATH", custom):
+            loaded = _load_rubric()
+        assert loaded["dimensions"]["craftsmanship"]["builder_metaphor"] == "Custom metaphor"
+        assert "rust" in loaded["language_notes"]
+
+    def test_loader_falls_back_when_override_malformed(self, tmp_path):
+        bad = tmp_path / "code_review.yaml"
+        bad.write_text("not: a: valid: yaml: structure: [", encoding="utf-8")
+        with patch("rick_mcp.tools.code_review.CODE_REVIEW_OVERRIDE_PATH", bad):
+            loaded = _load_rubric()
+        # Should silently fall through to bundled defaults.
+        assert set(loaded["dimensions"].keys()) == {"craftsmanship", "security", "architecture"}
+
+    def test_loader_falls_back_when_override_missing(self):
+        nonexistent = Path("/nonexistent/code_review.yaml")
+        with patch("rick_mcp.tools.code_review.CODE_REVIEW_OVERRIDE_PATH", nonexistent):
+            loaded = _load_rubric()
+        # Bundled defaults should load.
+        assert "craftsmanship" in loaded["dimensions"]
