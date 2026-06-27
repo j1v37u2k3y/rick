@@ -2,6 +2,25 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.14.1] - 2026-06-26
+
+### `rick_code_review` rubric is now overridable data
+
+The review rubric (scoring dimensions + language notes) moves out of a Python literal into a
+bundled YAML data file with a `~/.rick_mcp/` override path — the same two-layer pattern
+`rick_mcp/philosophy.py` already uses for operator philosophy. A fork can now retune the
+rubric (add language notes, adjust inspect/flag lists) by dropping in a
+`~/.rick_mcp/code_review.yaml` instead of editing source.
+
+- **`rick_code_review`** — `_DIMENSIONS` and `_LANGUAGE_NOTES` now load from
+  `rick_mcp/data/code_review.yaml` (override → bundled → minimal-baseline fallback, with a
+  pyyaml-missing guard). Default output is byte-identical to before (the rubric was ported
+  verbatim); with no override present, the bundled file is the source of truth. The tool
+  function stays pure — the load happens once at import, not per call.
+- **Voice stays in code.** The voiced scales (severity / verdict / scoring / inspection
+  method / closing note) remain Python literals — voice register, not rubric data. No
+  fleet-wide voice extraction.
+
 ## [3.14.0] - 2026-06-21
 
 ### `rick_cognitive_appraisal` tool — defense-first cognitive-appraisal scaffold
