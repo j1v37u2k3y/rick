@@ -183,6 +183,14 @@ $EDITOR ~/.rick_mcp/identity.yaml
 | `~/.rick_mcp/docs/`            | War stories and additional context                                    |
 | `~/.rick_mcp/vault/`           | Optional Obsidian Second Brain                                        |
 
+**Optional overrides (advanced).** Rick ships generic defaults for its framework data; drop either file in
+`~/.rick_mcp/` to retune it without touching source. Each is opt-in — if absent, the bundled default is used.
+
+| Path                            | Overrides                                                                |
+|---------------------------------|-------------------------------------------------------------------------|
+| `~/.rick_mcp/philosophy.yaml`   | Operator philosophy — core principles, decision filters, RoE rules (default: `rick_mcp/data/philosophy.yaml`) |
+| `~/.rick_mcp/code_review.yaml`  | `rick_code_review` rubric — scoring dimensions + language notes (default: `rick_mcp/data/code_review.yaml`)   |
+
 **Verify** the identity loaded:
 
 In Claude Code:
