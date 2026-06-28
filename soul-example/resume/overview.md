@@ -7,7 +7,7 @@
 US Air Force veteran turned offensive security consultant. Specializing in web application security, Active Directory
 attacks, cloud security, and red team operations.
 
-This MCP server is the resume. The 34 tools prove methodology. The resources tell the story. The code demonstrates the
+This MCP server is the resume. The <!-- counts:tools -->48<!-- /counts:tools --> tools prove methodology. The resources tell the story. The code demonstrates the
 craft. `make check` and it all lights up green.
 
 ## What I Do
