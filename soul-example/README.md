@@ -61,6 +61,19 @@ $EDITOR ~/.rick_mcp/identity.yaml
 
 5. **writeups/** are browsable via `rick_writeups`. Nest by category (htb/, ctf/, engagements/). Markdown only.
 
+## Optional Overrides (advanced)
+
+Beyond identity, Rick ships generic defaults for two framework-data files. Drop your own copy in `~/.rick_mcp/` to
+retune them without editing source — each is opt-in, and falls back to the bundled default if absent:
+
+- `~/.rick_mcp/philosophy.yaml` — operator philosophy (core principles, decision filters, RoE rules). Default:
+  `rick_mcp/data/philosophy.yaml`.
+- `~/.rick_mcp/code_review.yaml` — the `rick_code_review` rubric (scoring dimensions + language notes). Default:
+  `rick_mcp/data/code_review.yaml`.
+
+These aren't shipped in `soul-example/` — copy the bundled default from the repo as a starting point if you want to
+customize.
+
 ## What Happens Without Identity
 
 Rick works fine without any of these files. Tools fire, tests pass, everything is operational. You just get generic

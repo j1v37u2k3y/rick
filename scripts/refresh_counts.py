@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sync count placeholders in README.md and SKILLS.md.
+"""Sync count placeholders in README.md, SKILLS.md, and the soul-example resume files.
 
 Single source of truth for tool / resource / skill / test counts and version. Anything
 else (CLAUDE.md, ACHIEVEMENTS.md, etc.) should NOT duplicate these — point at
@@ -33,6 +33,8 @@ ROOT = Path(__file__).resolve().parent.parent
 TARGETS = [
     ROOT / "README.md",
     ROOT / ".claude" / "skills" / "SKILLS.md",
+    ROOT / "soul-example" / "resume" / "overview.md",
+    ROOT / "soul-example" / "resume" / "portfolio.md",
 ]
 
 
