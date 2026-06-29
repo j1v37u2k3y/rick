@@ -36,15 +36,15 @@ jobs:
       - name: File length (max 1500 lines)
         run: make file-length
 
-      - name: Counts drift (README / SKILLS in sync)
+      - name: Counts drift (README / SKILLS / badges in sync)
         if: matrix.python-version == '3.12'
         run: python scripts/refresh_counts.py --check
 
       - name: Type check (mypy)
-        run: mypy rick_mcp.py --ignore-missing-imports --no-strict-optional
+        run: mypy rick_mcp/
 
       - name: Tests with coverage
-        run: pytest tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=80
+        run: pytest tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=90
 
       - name: Docker build verification
         if: matrix.python-version == '3.12'
