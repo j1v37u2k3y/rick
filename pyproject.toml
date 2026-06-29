@@ -40,7 +40,10 @@ ignore_missing_imports = true
 # strict_optional stays ON (mypy default) — Optionals are narrowed at the call site.
 
 [tool.coverage.run]
-source = ["rick_mcp"]
+# rick_mcp = the server; scripts = repo tooling (refresh_counts). smoke_test.py is NOT here:
+# it's an integration script run by `make smoke` (pytest never imports it), guarded separately
+# by tests/test_smoke_coverage.py — measuring it under pytest --cov is the wrong tool.
+source = ["rick_mcp", "scripts"]
 omit = ["tests/*", "venv/*"]
 
 [tool.coverage.report]
