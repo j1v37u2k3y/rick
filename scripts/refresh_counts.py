@@ -12,7 +12,8 @@ Tagged regions look like:
 
 Shield.io badges that mirror a count are synced too — the number lives inside the image URL
 where an HTML comment can't go: the `tests-N%20passed` badge tracks the test count, and the
-`coverage-N%25` badge tracks total coverage (read from .coverage; needs a prior coverage run).
+`coverage-≥N%` badge tracks the enforced coverage floor (`fail_under`, not a point %, which
+isn't reproducible across environments).
 
 Run modes:
 
@@ -94,24 +95,19 @@ def count_tests() -> int:
     return int(m.group(1))
 
 
-def count_coverage() -> str | None:
-    """Read total coverage % from an existing .coverage via `coverage report --format=total`.
+def read_coverage_floor() -> str | None:
+    """Read the enforced coverage floor (`fail_under`) from pyproject.toml.
 
-    Returns the integer percentage as a string (e.g. "95"), or None if there's no coverage
-    data yet or coverage isn't available — in which case the badge is left untouched. Needs a
-    prior coverage run (`make coverage`); CI runs coverage before the counts check.
+    The coverage badge tracks the enforced *floor*, not a point measurement. A point % isn't
+    reproducible across environments — a CI Linux run and a local macOS run report different
+    totals for identical code — so an exact badge can't be CI-enforced without false failures.
+    The floor is a deterministic, repo-local value, so the badge ("coverage ≥N%") is always
+    honest (we enforce it), never drifts, and is CI-checkable. Returns the floor as a string
+    (e.g. "90"), or None if it can't be found.
     """
-    if not (ROOT / ".coverage").exists():
-        return None
-    cmd = [sys.executable, "-m", "coverage", "report", "--format=total"]
-    try:
-        result = subprocess.run(  # noqa: S603 — sys.executable (absolute) + literal flags, no untrusted input
-            cmd, cwd=ROOT, capture_output=True, text=True, check=False
-        )
-    except OSError:
-        return None
-    out = result.stdout.strip()
-    return out if result.returncode == 0 and out.isdigit() else None
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    m = re.search(r"^fail_under\s*=\s*(\d+)", text, re.MULTILINE)
+    return m.group(1) if m else None
 
 
 def compute_counts(skip_tests: bool, skip_coverage: bool = False) -> dict[str, str]:
@@ -126,9 +122,9 @@ def compute_counts(skip_tests: bool, skip_coverage: bool = False) -> dict[str, s
     if not skip_tests:
         counts["tests"] = str(count_tests())
     if not skip_coverage:
-        cov = count_coverage()
-        if cov is not None:
-            counts["coverage"] = cov
+        floor = read_coverage_floor()
+        if floor is not None:
+            counts["coverage"] = floor
     return counts
 
 
@@ -148,7 +144,8 @@ def replace_tags(text: str, counts: dict[str, str]) -> str:
 # groups — (prefix)(number)(suffix) — and only the middle number is rewritten.
 BADGE_PATTERNS = {
     "tests": re.compile(r"(tests-)(\d+)(%20passed)"),
-    "coverage": re.compile(r"(coverage-)(\d+)(%25)"),
+    # Coverage badge tracks the enforced floor → "coverage ≥N%" (%E2%89%A5 = ≥).
+    "coverage": re.compile(r"(coverage-%E2%89%A5)(\d+)(%25)"),
 }
 
 
