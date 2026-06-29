@@ -11,7 +11,8 @@ Tagged regions look like:
     <!-- counts:tools -->46<!-- /counts:tools --> tools.
 
 Shield.io badges that mirror a count are synced too — the number lives inside the image URL
-where an HTML comment can't go, e.g. the `tests-721%20passed` badge tracks the test count.
+where an HTML comment can't go: the `tests-N%20passed` badge tracks the test count, and the
+`coverage-N%25` badge tracks total coverage (read from .coverage; needs a prior coverage run).
 
 Run modes:
 
@@ -93,7 +94,27 @@ def count_tests() -> int:
     return int(m.group(1))
 
 
-def compute_counts(skip_tests: bool) -> dict[str, str]:
+def count_coverage() -> str | None:
+    """Read total coverage % from an existing .coverage via `coverage report --format=total`.
+
+    Returns the integer percentage as a string (e.g. "95"), or None if there's no coverage
+    data yet or coverage isn't available — in which case the badge is left untouched. Needs a
+    prior coverage run (`make coverage`); CI runs coverage before the counts check.
+    """
+    if not (ROOT / ".coverage").exists():
+        return None
+    cmd = [sys.executable, "-m", "coverage", "report", "--format=total"]
+    try:
+        result = subprocess.run(  # noqa: S603 — sys.executable (absolute) + literal flags, no untrusted input
+            cmd, cwd=ROOT, capture_output=True, text=True, check=False
+        )
+    except OSError:
+        return None
+    out = result.stdout.strip()
+    return out if result.returncode == 0 and out.isdigit() else None
+
+
+def compute_counts(skip_tests: bool, skip_coverage: bool = False) -> dict[str, str]:
     version_full = read_version()
     counts: dict[str, str] = {
         "version": short_version(version_full),
@@ -104,6 +125,10 @@ def compute_counts(skip_tests: bool) -> dict[str, str]:
     }
     if not skip_tests:
         counts["tests"] = str(count_tests())
+    if not skip_coverage:
+        cov = count_coverage()
+        if cov is not None:
+            counts["coverage"] = cov
     return counts
 
 
@@ -123,6 +148,7 @@ def replace_tags(text: str, counts: dict[str, str]) -> str:
 # groups — (prefix)(number)(suffix) — and only the middle number is rewritten.
 BADGE_PATTERNS = {
     "tests": re.compile(r"(tests-)(\d+)(%20passed)"),
+    "coverage": re.compile(r"(coverage-)(\d+)(%25)"),
 }
 
 
@@ -147,9 +173,14 @@ def main() -> int:
         action="store_true",
         help="Skip pytest collection (faster; the `tests` tag is left untouched).",
     )
+    parser.add_argument(
+        "--skip-coverage",
+        action="store_true",
+        help="Skip reading .coverage (the `coverage` badge is left untouched).",
+    )
     args = parser.parse_args()
 
-    counts = compute_counts(skip_tests=args.skip_tests)
+    counts = compute_counts(skip_tests=args.skip_tests, skip_coverage=args.skip_coverage)
     print("Counts:")
     for key, value in counts.items():
         print(f"  {key}: {value}")
