@@ -31,7 +31,7 @@ test:
 
 # Tests with coverage
 coverage:
-	$(PYTEST) tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=90
+	$(PYTEST) tests/ -v --cov=rick_mcp --cov=scripts --cov-report=term-missing --cov-fail-under=90
 	@echo ""
 	@echo "Coverage report above. 90% minimum enforced."
 
