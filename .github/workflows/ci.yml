@@ -44,7 +44,7 @@ jobs:
         run: mypy rick_mcp/
 
       - name: Tests with coverage
-        run: pytest tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=90
+        run: pytest tests/ -v --cov=rick_mcp --cov=scripts --cov-report=term-missing --cov-fail-under=90
 
       - name: Docker build verification
         if: matrix.python-version == '3.12'

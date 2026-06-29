@@ -1,15 +1,18 @@
 """Tests for scripts/refresh_counts.py — the count-sync tooling.
 
 This script is the single source of truth that keeps tool/resource/skill/test counts (and the
-test badge) synced across README, SKILLS.md, and the soul-example resume files — and CI's
-`refresh_counts.py --check` gate enforces it. It had no tests; these put a net under the pure
-helpers. Deliberately NOT exercised here: `count_tests()` (shells out to pytest — recursive)
-and `main()` (rewrites the real TARGETS).
+test + coverage-floor badges) synced across README, SKILLS.md, and the soul-example resume
+files — and CI's `refresh_counts.py --check` gate enforces it. `count_tests()` and `main()` are
+exercised via mocks (subprocess + patched TARGETS/ROOT), so the suite never shells out to a
+nested pytest or rewrites the real files.
 """
 
 import importlib.util
+import sys
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from __version__ import __version__
 
@@ -130,3 +133,61 @@ class TestCoverageBadge:
     def test_compute_counts_skip_coverage_omits_key(self):
         counts = rc.compute_counts(skip_tests=True, skip_coverage=True)
         assert "coverage" not in counts
+
+
+class TestCountTests:
+    def test_parses_collected_count(self):
+        fake = type("R", (), {"returncode": 0, "stdout": "noise\n917 tests collected in 0.5s\n", "stderr": ""})()
+        with patch.object(rc.subprocess, "run", return_value=fake):
+            assert rc.count_tests() == 917
+
+    def test_raises_on_nonzero_exit(self):
+        fake = type("R", (), {"returncode": 1, "stdout": "", "stderr": "boom"})()
+        with (
+            patch.object(rc.subprocess, "run", return_value=fake),
+            pytest.raises(RuntimeError, match="collection failed"),
+        ):
+            rc.count_tests()
+
+    def test_raises_on_empty_output(self):
+        fake = type("R", (), {"returncode": 0, "stdout": "   \n", "stderr": ""})()
+        with patch.object(rc.subprocess, "run", return_value=fake), pytest.raises(RuntimeError, match="no output"):
+            rc.count_tests()
+
+    def test_raises_on_unparseable_summary(self):
+        fake = type("R", (), {"returncode": 0, "stdout": "something unexpected\n", "stderr": ""})()
+        with patch.object(rc.subprocess, "run", return_value=fake), pytest.raises(RuntimeError, match="unparseable"):
+            rc.count_tests()
+
+
+class TestMain:
+    def _target(self, tmp_path, body):
+        f = tmp_path / "doc.md"
+        f.write_text(body, encoding="utf-8")
+        return f
+
+    def test_writes_when_drift(self, tmp_path, monkeypatch):
+        target = self._target(tmp_path, "<!-- counts:tools -->0<!-- /counts:tools -->")
+        monkeypatch.setattr(rc, "TARGETS", [target])
+        monkeypatch.setattr(rc, "ROOT", tmp_path)
+        monkeypatch.setattr(rc, "compute_counts", lambda **kw: {"tools": "48"})
+        monkeypatch.setattr(sys, "argv", ["refresh_counts.py"])
+        assert rc.main() == 0
+        assert "48" in target.read_text(encoding="utf-8")
+
+    def test_check_detects_drift_without_writing(self, tmp_path, monkeypatch):
+        target = self._target(tmp_path, "<!-- counts:tools -->0<!-- /counts:tools -->")
+        monkeypatch.setattr(rc, "TARGETS", [target])
+        monkeypatch.setattr(rc, "ROOT", tmp_path)
+        monkeypatch.setattr(rc, "compute_counts", lambda **kw: {"tools": "48"})
+        monkeypatch.setattr(sys, "argv", ["refresh_counts.py", "--check"])
+        assert rc.main() == 1  # drift → exit 1
+        assert "-->0<!--" in target.read_text(encoding="utf-8")  # untouched in check mode
+
+    def test_check_clean_when_synced(self, tmp_path, monkeypatch):
+        target = self._target(tmp_path, "<!-- counts:tools -->48<!-- /counts:tools -->")
+        monkeypatch.setattr(rc, "TARGETS", [target])
+        monkeypatch.setattr(rc, "ROOT", tmp_path)
+        monkeypatch.setattr(rc, "compute_counts", lambda **kw: {"tools": "48"})
+        monkeypatch.setattr(sys, "argv", ["refresh_counts.py", "--check"])
+        assert rc.main() == 0
