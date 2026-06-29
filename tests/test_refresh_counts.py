@@ -9,6 +9,7 @@ and `main()` (rewrites the real TARGETS).
 
 import importlib.util
 from pathlib import Path
+from unittest.mock import patch
 
 from __version__ import __version__
 
@@ -89,8 +90,58 @@ class TestComputeCounts:
         assert "tests" not in counts  # skipped → not computed
 
     def test_values_are_well_formed(self):
-        counts = rc.compute_counts(skip_tests=True)
+        counts = rc.compute_counts(skip_tests=True, skip_coverage=True)
         assert counts["version"].startswith("v")
         assert counts["version-full"] == __version__
         assert counts["tools"].isdigit() and int(counts["tools"]) > 0
         assert counts["resources"].isdigit() and int(counts["resources"]) > 0
+
+
+class TestCoverageBadge:
+    def test_replace_badges_syncs_coverage(self):
+        out = rc.replace_badges("img coverage-1%25 end", {"coverage": "95"})
+        assert "coverage-95%25" in out
+
+    def test_replace_badges_coverage_noop_when_key_absent(self):
+        text = "coverage-1%25"
+        assert rc.replace_badges(text, {"tests": "5"}) == text
+
+    def test_count_coverage_none_when_no_data(self, tmp_path):
+        with patch.object(rc, "ROOT", tmp_path):  # no .coverage in tmp dir
+            assert rc.count_coverage() is None
+
+    def test_count_coverage_parses_total(self, tmp_path):
+        (tmp_path / ".coverage").write_text("", encoding="utf-8")
+        fake = type("R", (), {"returncode": 0, "stdout": "95\n"})()
+        with (
+            patch.object(rc, "ROOT", tmp_path),
+            patch.object(rc.subprocess, "run", return_value=fake),
+        ):
+            assert rc.count_coverage() == "95"
+
+    def test_count_coverage_none_on_nonzero_exit(self, tmp_path):
+        (tmp_path / ".coverage").write_text("", encoding="utf-8")
+        fake = type("R", (), {"returncode": 1, "stdout": ""})()
+        with (
+            patch.object(rc, "ROOT", tmp_path),
+            patch.object(rc.subprocess, "run", return_value=fake),
+        ):
+            assert rc.count_coverage() is None
+
+    def test_count_coverage_none_on_nondigit_output(self, tmp_path):
+        (tmp_path / ".coverage").write_text("", encoding="utf-8")
+        fake = type("R", (), {"returncode": 0, "stdout": "No data to report.\n"})()
+        with (
+            patch.object(rc, "ROOT", tmp_path),
+            patch.object(rc.subprocess, "run", return_value=fake),
+        ):
+            assert rc.count_coverage() is None
+
+    def test_compute_counts_skip_coverage_omits_key(self):
+        counts = rc.compute_counts(skip_tests=True, skip_coverage=True)
+        assert "coverage" not in counts
+
+    def test_compute_counts_includes_coverage_when_available(self):
+        with patch.object(rc, "count_coverage", return_value="95"):
+            counts = rc.compute_counts(skip_tests=True)
+        assert counts["coverage"] == "95"
