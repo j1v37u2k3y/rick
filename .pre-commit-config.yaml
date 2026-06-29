@@ -28,7 +28,7 @@ repos:
 
       - id: mypy
         name: mypy
-        entry: bash -c 'source venv/bin/activate && python -m mypy rick_mcp.py --ignore-missing-imports --no-strict-optional'
+        entry: bash -c 'source venv/bin/activate && python -m mypy rick_mcp/'
         language: system
         types: [python]
         pass_filenames: false
