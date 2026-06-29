@@ -31,9 +31,9 @@ test:
 
 # Tests with coverage
 coverage:
-	$(PYTEST) tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=80
+	$(PYTEST) tests/ -v --cov=rick_mcp --cov-report=term-missing --cov-fail-under=90
 	@echo ""
-	@echo "Coverage report above. 80% minimum enforced."
+	@echo "Coverage report above. 90% minimum enforced."
 
 # Lint only
 lint:
