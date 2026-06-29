@@ -555,9 +555,10 @@ async def rick_capabilities() -> str:
         "resources": {
             "description": f"{resource_count()} identity resources — operator profile, queryable by AI",
             "categories": {
-                "profile://": "10 resources — summary, values, heritage, stack, methodology, mantras, human, entertainment, timeline, rick_and_jiveturkey",
+                "profile://": "11 resources — summary, values, heritage, craftsmanship, stack, methodology, mantras, human, entertainment, timeline, rick_and_jiveturkey",
                 "doc://": "9 resources — soul, the-book, working-with-me, profile, achievements, contributing, changelog, security, war-stories",
                 "resume://": "4 resources — overview, evidence, portfolio, contact",
+                "vault://": "12 resources — manual, index, log, status, identity/{hub,methodology,values,soul,rick}, engagements (+ /{codename}), templates/engagement (Obsidian projection; graceful stub when vault unconfigured)",
             },
         },
         "vault_integration": {
