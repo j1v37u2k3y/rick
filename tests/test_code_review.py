@@ -16,6 +16,7 @@ from rick_mcp import CodeReviewInput, ResponseFormat, rick_code_review
 from rick_mcp.tools.code_review import (
     _DIMENSIONS,
     _LANGUAGE_NOTES,
+    _MINIMAL_DEFAULTS,
     CODE_REVIEW_BUNDLED_PATH,
     _load_rubric,
 )
@@ -216,3 +217,27 @@ class TestCodeReviewLoader:
             loaded = _load_rubric()
         # Bundled defaults should load.
         assert "craftsmanship" in loaded["dimensions"]
+
+    def test_minimal_defaults_when_pyyaml_missing(self):
+        # Force `import yaml` inside _load_rubric to raise ImportError → minimal baseline.
+        with patch.dict("sys.modules", {"yaml": None}):
+            loaded = _load_rubric()
+        assert loaded == _MINIMAL_DEFAULTS
+
+    def test_override_without_dimensions_falls_through(self, tmp_path):
+        # Valid YAML dict but no 'dimensions' key → skip it, fall through to bundled.
+        bad = tmp_path / "code_review.yaml"
+        bad.write_text("foo: bar\n", encoding="utf-8")
+        with patch("rick_mcp.tools.code_review.CODE_REVIEW_OVERRIDE_PATH", bad):
+            loaded = _load_rubric()
+        assert set(loaded["dimensions"]) == {"craftsmanship", "security", "architecture"}
+        assert "Built to last" in loaded["dimensions"]["craftsmanship"]["builder_metaphor"]
+
+    def test_minimal_when_no_yaml_found(self, tmp_path):
+        # Both override and bundled absent → minimal baseline.
+        with (
+            patch("rick_mcp.tools.code_review.CODE_REVIEW_OVERRIDE_PATH", tmp_path / "nope_o.yaml"),
+            patch("rick_mcp.tools.code_review.CODE_REVIEW_BUNDLED_PATH", tmp_path / "nope_b.yaml"),
+        ):
+            loaded = _load_rubric()
+        assert loaded == _MINIMAL_DEFAULTS
