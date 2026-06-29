@@ -5,6 +5,8 @@ Reference handle throughout: j1v37u2k3y (the operator).
 """
 
 import json
+import os
+import time
 import urllib.error
 from unittest.mock import MagicMock, patch
 
@@ -12,6 +14,8 @@ import pytest
 from pydantic import ValidationError
 
 from rick_mcp import ReconHandleInput, ResponseFormat, rick_recon_handle
+from rick_mcp.tools import recon_handle as rh
+from rick_mcp.tools.recon_handle import _build_ctftime, _cache_get, _cache_set, _fetch_json
 
 REF_HANDLE = "j1v37u2k3y"
 
@@ -285,3 +289,121 @@ class TestRickReconHandle:
             assert "authorization" in parsed
             assert "AUTHORIZED" in parsed["authorization"]
             assert "harm" in parsed["authorization"].lower()
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Cache layer — real _cache_get / _cache_set (most tests patch these out)
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestReconHandleCache:
+    def test_set_then_get_roundtrip(self, tmp_path):
+        with patch.object(rh, "CACHE_DIR", tmp_path):
+            _cache_set("k1", {"x": 1})
+            assert _cache_get("k1") == {"x": 1}
+
+    def test_miss_returns_none(self, tmp_path):
+        with patch.object(rh, "CACHE_DIR", tmp_path):
+            assert _cache_get("absent") is None
+
+    def test_stale_entry_returns_none(self, tmp_path):
+        with patch.object(rh, "CACHE_DIR", tmp_path):
+            _cache_set("old", {"x": 1})
+            stale = time.time() - (rh.CACHE_TTL + 100)
+            os.utime(tmp_path / "old.json", (stale, stale))
+            assert _cache_get("old") is None
+
+    def test_corrupt_entry_returns_none(self, tmp_path):
+        with patch.object(rh, "CACHE_DIR", tmp_path):
+            (tmp_path / "bad.json").write_text("{not valid json", encoding="utf-8")
+            assert _cache_get("bad") is None
+
+
+# ═══════════════════════════════════════════════════════════════
+#  _fetch_json — HTTPS guard + auth header
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestFetchJson:
+    def test_rejects_non_https(self):
+        with pytest.raises(ValueError, match="HTTPS"):
+            _fetch_json("http://insecure.example.com")
+
+    def test_sends_bearer_token_header(self, tmp_path):
+        captured = {}
+
+        def fake_urlopen(req, *a, **kw):
+            captured["auth"] = req.get_header("Authorization")
+            return _opener({"ok": True})
+
+        with (
+            patch.object(rh, "CACHE_DIR", tmp_path),
+            patch("urllib.request.urlopen", side_effect=fake_urlopen),
+        ):
+            data, cache_hit = _fetch_json("https://api.github.com/x", token="secret123")  # noqa: S106 — test token
+        assert data == {"ok": True}
+        assert cache_hit is False
+        assert captured["auth"] == "Bearer secret123"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  GitHub + CTFTime error/degradation paths
+# ═══════════════════════════════════════════════════════════════
+
+
+def _bad_json_opener():
+    m = MagicMock()
+    m.__enter__ = lambda s: s
+    m.__exit__ = lambda s, *a: None
+    m.read.return_value = b"<<<not json>>>"
+    return m
+
+
+class TestFetchGithubErrorPaths:
+    @pytest.mark.asyncio
+    async def test_bad_json_is_graceful(self, tmp_path):
+        def dispatch(req, *a, **kw):
+            url = req.full_url
+            if "/repos" in url or "/events" in url:
+                return _opener([])
+            return _bad_json_opener()  # user URL → invalid JSON
+
+        with (
+            patch.object(rh, "CACHE_DIR", tmp_path),
+            patch("urllib.request.urlopen", side_effect=dispatch),
+        ):
+            parsed = json.loads(await rick_recon_handle(ReconHandleInput(handle=REF_HANDLE)))
+        assert parsed["github"]["found"] is False
+        assert "error" in parsed["github"]
+
+    @pytest.mark.asyncio
+    async def test_repos_events_failure_still_found(self, tmp_path):
+        def dispatch(req, *a, **kw):
+            url = req.full_url
+            if "/repos" in url or "/events" in url:
+                raise urllib.error.URLError("enrichment down")
+            return _opener(_github_user_payload())
+
+        with (
+            patch.object(rh, "CACHE_DIR", tmp_path),
+            patch("urllib.request.urlopen", side_effect=dispatch),
+        ):
+            parsed = json.loads(await rick_recon_handle(ReconHandleInput(handle=REF_HANDLE)))
+        assert parsed["github"]["found"] is True
+        assert parsed["github"]["top_repos"] == []
+        assert parsed["github"]["top_languages"] == []
+
+
+class TestBuildCtftime:
+    def test_enrichment_failure_returns_error(self, tmp_path):
+        def dispatch(req, *a, **kw):
+            raise urllib.error.URLError("ctftime down")
+
+        with (
+            patch.object(rh, "CACHE_DIR", tmp_path),
+            patch("urllib.request.urlopen", side_effect=dispatch),
+        ):
+            out = _build_ctftime(REF_HANDLE, 999)
+        assert out["id"] == 999
+        assert "error" in out
+        assert "CTFTime" in out["error"]

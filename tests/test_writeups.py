@@ -404,3 +404,107 @@ class TestWriteupCrossReferencing:
         assert "seen_in_writeups" not in result.lower()
         # But the cheatsheet itself still works
         assert "Nmap" in result
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Internals — heading parse, python search, ripgrep edges, index rebuild
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestWriteupsInternals:
+    def test_first_heading_h2_and_none(self):
+        from rick_mcp.tools.writeups import _first_heading
+
+        assert _first_heading("## Subheading only\nbody") == "Subheading only"
+        assert _first_heading("no markdown heading here\njust text") == ""
+
+    def test_python_search_respects_limit_and_skips_nonfiles(self, tmp_path):
+        from rick_mcp.tools.writeups import _python_search
+
+        for i in range(3):
+            (tmp_path / f"f{i}.md").write_text("needle here\nneedle again\n", encoding="utf-8")
+        (tmp_path / "dir.md").mkdir()  # a directory named *.md → must be skipped (is_file False)
+        out = _python_search(tmp_path, "needle", limit=2)
+        assert len(out) == 2  # stopped at the limit
+
+    def test_cite_writeups_python_fallback(self, tmp_path):
+        from rick_mcp.tools import writeups as wu
+        from rick_mcp.tools.writeups import cite_writeups
+
+        (tmp_path / "a.md").write_text("mentions kerberoasting here\n", encoding="utf-8")
+        with patch.object(wu, "_ripgrep_search", return_value=None):  # force python fallback
+            hits = cite_writeups("kerberoasting", base=tmp_path)
+        assert hits == ["a.md"]
+
+    def test_ripgrep_parse_skips_malformed_lines(self, tmp_path):
+        from rick_mcp.tools import writeups as wu
+        from rick_mcp.tools.writeups import _ripgrep_search
+
+        fake_stdout = "good.md:12:a real match\nmalformed-no-colons\nbad.md:notanumber:snippet\n"
+        completed = type("Completed", (), {"stdout": fake_stdout})()
+        with (
+            patch.object(wu.shutil, "which", return_value="/usr/bin/rg"),
+            patch.object(wu.subprocess, "run", return_value=completed),
+        ):
+            out = _ripgrep_search(tmp_path, "match", limit=10)
+        assert out == [("good.md", 12, "a real match")]  # malformed + bad-linenum lines dropped
+
+    def test_ripgrep_timeout_returns_none(self, tmp_path):
+        import subprocess
+
+        from rick_mcp.tools import writeups as wu
+        from rick_mcp.tools.writeups import _ripgrep_search
+
+        with (
+            patch.object(wu.shutil, "which", return_value="/usr/bin/rg"),
+            patch.object(wu.subprocess, "run", side_effect=subprocess.TimeoutExpired("rg", 15)),
+        ):
+            assert _ripgrep_search(tmp_path, "x", limit=5) is None
+
+    def test_python_search_skips_nonfile_and_unreadable(self, tmp_path):
+        from rick_mcp.tools.writeups import _python_search
+
+        (tmp_path / "sub.md").mkdir()  # directory named *.md → non-file skip
+        (tmp_path / "good.md").write_text("needle\n", encoding="utf-8")
+        (tmp_path / "bad.md").write_text("needle\n", encoding="utf-8")
+        orig = Path.read_text
+
+        def boom(self, *a, **kw):
+            if self.name == "bad.md":
+                raise OSError("unreadable")
+            return orig(self, *a, **kw)
+
+        with patch.object(Path, "read_text", boom):
+            out = _python_search(tmp_path, "needle", limit=10)
+        assert any("good.md" in p for p, _, _ in out)  # good matched; sub/bad skipped
+
+    def test_build_index_skips_nonfile_and_unreadable(self, tmp_path):
+        from rick_mcp.tools.writeups import _build_index
+
+        (tmp_path / "sub.md").mkdir()  # non-file skip
+        (tmp_path / "good.md").write_text("# Good\nnmap CVE-2021-1234 Linux\n", encoding="utf-8")
+        (tmp_path / "bad.md").write_text("# Bad\n", encoding="utf-8")
+        orig = Path.read_text
+
+        def boom(self, *a, **kw):
+            if self.name == "bad.md":
+                raise OSError("unreadable")
+            return orig(self, *a, **kw)
+
+        with patch.object(Path, "read_text", boom):
+            result = _build_index(tmp_path)
+        assert result["total_writeups"] >= 1  # good counted; bad read-errored; sub skipped
+
+    @pytest.mark.asyncio
+    async def test_index_rebuilds_on_corrupt_cache(self, tmp_path):
+        import json
+
+        from rick_mcp import ResponseFormat
+        from rick_mcp.models import WriteupInput
+        from rick_mcp.tools.writeups import rick_writeups
+
+        (tmp_path / "box.md").write_text("# Box\nnmap and CVE-2021-1234 and Linux\n", encoding="utf-8")
+        (tmp_path / ".index.json").write_text("{corrupt", encoding="utf-8")  # triggers rebuild
+        with patch(_PATCH_TARGET, tmp_path):
+            result = await rick_writeups(WriteupInput(action="index", response_format=ResponseFormat.JSON))
+        assert json.loads(result)["total_writeups"] == 1
