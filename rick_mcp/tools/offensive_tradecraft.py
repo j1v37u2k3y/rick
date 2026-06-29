@@ -1118,7 +1118,7 @@ async def rick_threat_model(params: ThreatModelInput) -> str:
     if not model:
         return f"Error: Unknown target '{t}'. Available: {', '.join(models.keys())}"
     if params.context:
-        model["context"] = _sanitize(params.context)
+        model["context"] = _sanitize(params.context) or ""
     model["methodology"] = "STRIDE (Microsoft Threat Modeling)"
     model["authorization"] = "Use for defensive security architecture and authorized assessments only."
     # Philosophy-aware enrichment — annotate each STRIDE category with the

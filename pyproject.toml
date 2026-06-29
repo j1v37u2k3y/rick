@@ -37,13 +37,7 @@ python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-no_strict_optional = true
-
-[[tool.mypy.overrides]]
-module = "rick_mcp"
-# FastMCP uses dict literals for tool annotations (ToolAnnotations type mismatch)
-# and dict .get() returns need type narrowing after guard clauses
-disable_error_code = ["arg-type", "assignment"]
+# strict_optional stays ON (mypy default) — Optionals are narrowed at the call site.
 
 [tool.coverage.run]
 source = ["rick_mcp"]
