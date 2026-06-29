@@ -98,50 +98,35 @@ class TestComputeCounts:
 
 
 class TestCoverageBadge:
-    def test_replace_badges_syncs_coverage(self):
-        out = rc.replace_badges("img coverage-1%25 end", {"coverage": "95"})
-        assert "coverage-95%25" in out
+    # The coverage badge tracks the enforced floor ("coverage ≥N%"), not a point measurement —
+    # a point % isn't reproducible across environments (CI Linux vs local macOS differ), so it
+    # can't be CI-enforced. The floor is deterministic + repo-local, so it can.
+    def test_replace_badges_syncs_coverage_floor(self):
+        out = rc.replace_badges("img coverage-%E2%89%A51%25 end", {"coverage": "90"})
+        assert "coverage-%E2%89%A590%25" in out
 
     def test_replace_badges_coverage_noop_when_key_absent(self):
-        text = "coverage-1%25"
+        text = "coverage-%E2%89%A51%25"
         assert rc.replace_badges(text, {"tests": "5"}) == text
 
-    def test_count_coverage_none_when_no_data(self, tmp_path):
-        with patch.object(rc, "ROOT", tmp_path):  # no .coverage in tmp dir
-            assert rc.count_coverage() is None
+    def test_read_coverage_floor_matches_pyproject(self):
+        import re as _re
 
-    def test_count_coverage_parses_total(self, tmp_path):
-        (tmp_path / ".coverage").write_text("", encoding="utf-8")
-        fake = type("R", (), {"returncode": 0, "stdout": "95\n"})()
-        with (
-            patch.object(rc, "ROOT", tmp_path),
-            patch.object(rc.subprocess, "run", return_value=fake),
-        ):
-            assert rc.count_coverage() == "95"
+        floor = rc.read_coverage_floor()
+        assert floor is not None and floor.isdigit()
+        text = (rc.ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        m = _re.search(r"^fail_under\s*=\s*(\d+)", text, _re.MULTILINE)
+        assert m and floor == m.group(1)
 
-    def test_count_coverage_none_on_nonzero_exit(self, tmp_path):
-        (tmp_path / ".coverage").write_text("", encoding="utf-8")
-        fake = type("R", (), {"returncode": 1, "stdout": ""})()
-        with (
-            patch.object(rc, "ROOT", tmp_path),
-            patch.object(rc.subprocess, "run", return_value=fake),
-        ):
-            assert rc.count_coverage() is None
+    def test_read_coverage_floor_none_when_absent(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text("[tool.foo]\nx = 1\n", encoding="utf-8")
+        with patch.object(rc, "ROOT", tmp_path):
+            assert rc.read_coverage_floor() is None
 
-    def test_count_coverage_none_on_nondigit_output(self, tmp_path):
-        (tmp_path / ".coverage").write_text("", encoding="utf-8")
-        fake = type("R", (), {"returncode": 0, "stdout": "No data to report.\n"})()
-        with (
-            patch.object(rc, "ROOT", tmp_path),
-            patch.object(rc.subprocess, "run", return_value=fake),
-        ):
-            assert rc.count_coverage() is None
+    def test_compute_counts_includes_coverage_floor(self):
+        counts = rc.compute_counts(skip_tests=True)
+        assert counts["coverage"] == rc.read_coverage_floor()
 
     def test_compute_counts_skip_coverage_omits_key(self):
         counts = rc.compute_counts(skip_tests=True, skip_coverage=True)
         assert "coverage" not in counts
-
-    def test_compute_counts_includes_coverage_when_available(self):
-        with patch.object(rc, "count_coverage", return_value="95"):
-            counts = rc.compute_counts(skip_tests=True)
-        assert counts["coverage"] == "95"

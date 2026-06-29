@@ -2,7 +2,7 @@
 
 ## This MCP Server
 
-The server itself is the primary portfolio piece. <!-- counts:tools -->48<!-- /counts:tools --> tools, <!-- counts:resources -->36<!-- /counts:resources --> resources, <!-- counts:tests -->919<!-- /counts:tests --> tests, full CI/CD pipeline. The code
+The server itself is the primary portfolio piece. <!-- counts:tools -->48<!-- /counts:tools --> tools, <!-- counts:resources -->36<!-- /counts:resources --> resources, <!-- counts:tests -->917<!-- /counts:tests --> tests, full CI/CD pipeline. The code
 demonstrates every skill claim in the resume.
 
 ## Open Source Contributions
