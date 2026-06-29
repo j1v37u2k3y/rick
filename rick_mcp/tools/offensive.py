@@ -206,7 +206,7 @@ async def rick_recon(params: ReconInput) -> str:
     if not p:
         return f"Error: Unknown target '{t}'. Available: {', '.join(pb.keys())}"
     if params.scope_notes:
-        p["scope_notes"] = _sanitize(params.scope_notes)
+        p["scope_notes"] = _sanitize(params.scope_notes) or ""
     p["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
     cites = cite_writeups(_RECON_CITE_TERMS.get(t, t))
     if cites:
@@ -398,7 +398,7 @@ async def rick_vuln_assess(params: VulnInput) -> str:
     if not f:
         return f"Error: Unknown category '{c}'. Available: {', '.join(fw.keys())}"
     if params.context:
-        f["context"] = _sanitize(params.context)
+        f["context"] = _sanitize(params.context) or ""
     f["authorization"] = "AUTHORIZED ENGAGEMENTS ONLY"
     cites = cite_writeups(_VULN_CITE_TERMS.get(c, c))
     if cites:
