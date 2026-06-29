@@ -45,7 +45,7 @@ format-check:
 
 # Type check
 typecheck:
-	$(MYPY) rick_mcp.py --ignore-missing-imports --no-strict-optional
+	$(MYPY) rick_mcp/
 
 # File length check — no Python file should exceed MAX_FILE_LINES
 file-length:
