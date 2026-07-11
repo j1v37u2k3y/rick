@@ -94,13 +94,15 @@ async def rick_cve(params: CVEInput) -> str:
                 severity = cvss_data.get("baseSeverity", "N/A")
                 break
 
-        # Extract CWEs
+        # Extract CWEs (dedup, order-preserving — NVD lists a CWE per weakness node,
+        # so the same CWE can repeat across nodes, e.g. CVE-2020-9488 → CWE-295 twice).
         weaknesses = cve.get("weaknesses", [])
-        cwes = []
+        cwes: list[str] = []
         for w in weaknesses:
             for desc_item in w.get("description", []):
-                if desc_item.get("value", "").startswith("CWE-"):
-                    cwes.append(desc_item["value"])
+                val = desc_item.get("value", "")
+                if val.startswith("CWE-") and val not in cwes:
+                    cwes.append(val)
 
         # Extract references (first 3)
         refs = cve.get("references", [])

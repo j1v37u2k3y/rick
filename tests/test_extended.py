@@ -102,6 +102,40 @@ class TestRickCVE:
             assert "10.0" in result
 
     @pytest.mark.asyncio
+    async def test_cve_dedupes_cwes(self):
+        # NVD lists a CWE per weakness node, so the same CWE can repeat across nodes
+        # (real example: CVE-2020-9488 returns CWE-295 twice). Output must dedup.
+        mock_response = json.dumps(
+            {
+                "totalResults": 1,
+                "vulnerabilities": [
+                    {
+                        "cve": {
+                            "id": "CVE-2020-9488",
+                            "descriptions": [{"lang": "en", "value": "Apache Log4j SMTP appender cert mismatch"}],
+                            "metrics": {"cvssMetricV31": [{"cvssData": {"baseScore": 3.7, "baseSeverity": "LOW"}}]},
+                            "weaknesses": [
+                                {"description": [{"value": "CWE-295"}]},
+                                {"description": [{"value": "CWE-295"}]},
+                            ],
+                            "references": [{"url": "https://example.com"}],
+                        }
+                    }
+                ],
+            }
+        ).encode()
+
+        with patch("urllib.request.urlopen") as mock_urlopen:
+            mock_urlopen.return_value.__enter__ = lambda s: s
+            mock_urlopen.return_value.__exit__ = lambda s, *a: None
+            mock_urlopen.return_value.read.return_value = mock_response
+
+            result = await rick_cve(CVEInput(query="CVE-2020-9488", response_format="json"))
+            data = json.loads(result)
+            cwes = data["results"][0]["cwes"]
+            assert cwes == ["CWE-295"], f"expected deduped CWEs, got {cwes}"
+
+    @pytest.mark.asyncio
     async def test_cve_keyword_mocked(self):
         mock_response = json.dumps(
             {
