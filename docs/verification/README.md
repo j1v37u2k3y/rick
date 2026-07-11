@@ -29,3 +29,5 @@ parameterized resolve · zero PII on the generic path.
   payload · wireless · cheatsheet · threat-model (#27)
 - [defensive.md](defensive.md) — 4 defensive tools: hardening · incident-response · detection-rules (Sigma/YARA) ·
   log-analysis (#28)
+- [engagement.md](engagement.md) — 7 engagement tools: roe · proposal · onboarding · report-template · scoping ·
+  debrief · tracker (stateful, isolated-vault verified) (#29)
