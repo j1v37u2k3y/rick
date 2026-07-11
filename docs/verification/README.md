@@ -25,3 +25,5 @@ parameterized resolve · zero PII on the generic path.
 - [resources.md](resources.md) — `profile://` / `resume://` / `doc://` / `vault://` (#34)
 - [network-live.md](network-live.md) — `rick_cve` (NVD) / `rick_recon_handle` (GitHub·CTFTime·HTB), fired against live
   APIs (#33)
+- [offensive.md](offensive.md) — 11 offensive tools: recon · vuln · tool-rec · attack-chain · pivot · c2 · cloud ·
+  payload · wireless · cheatsheet · threat-model (#27)
