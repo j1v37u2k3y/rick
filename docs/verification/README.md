@@ -27,3 +27,5 @@ parameterized resolve · zero PII on the generic path.
   APIs (#33)
 - [offensive.md](offensive.md) — 11 offensive tools: recon · vuln · tool-rec · attack-chain · pivot · c2 · cloud ·
   payload · wireless · cheatsheet · threat-model (#27)
+- [defensive.md](defensive.md) — 4 defensive tools: hardening · incident-response · detection-rules (Sigma/YARA) ·
+  log-analysis (#28)
