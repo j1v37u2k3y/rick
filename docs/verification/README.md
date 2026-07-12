@@ -33,3 +33,5 @@ parameterized resolve · zero PII on the generic path.
   debrief · tracker (stateful, isolated-vault verified) (#29)
 - [career-meta.md](career-meta.md) — 10 career/meta/code_review tools: compatibility · cover-letter · mentorship ·
   status · health · demo · mode · mantra · capabilities · code_review — fixed resource count 35→36, filed #58 (#30)
+- [jarvis.md](jarvis.md) — 12 JARVIS/stateful tools: full_auto · kill_chain · next_move · sitrep · notes · tag ·
+  timeline · compare · scope_check · checklist · rollback · export (isolated-state lifecycle) — filed #60, #61 (#31)
