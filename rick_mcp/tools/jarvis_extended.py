@@ -7,6 +7,7 @@ rick_checklist, rick_tag, rick_rollback.
 import copy
 import csv
 import io
+import ipaddress
 import json
 from datetime import datetime, timezone
 from typing import Any
@@ -290,6 +291,26 @@ async def rick_compare(params: CompareInput) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 
+def _ip_in_network(target: str, scope_item: str) -> bool | None:
+    """CIDR-aware scope membership.
+
+    Returns True/False when BOTH the target parses as an IP address and the scope
+    item parses as an IP network (single IPs become /32 or /128) — e.g. target
+    ``10.10.10.99`` in scope ``10.10.10.0/24`` → True. Returns None when the pair
+    isn't an IP-vs-network comparison (e.g. a hostname or wildcard), signalling the
+    caller to fall back to substring/wildcard matching.
+    """
+    try:
+        addr = ipaddress.ip_address(target)
+    except ValueError:
+        return None
+    try:
+        net = ipaddress.ip_network(scope_item, strict=False)
+    except ValueError:
+        return None
+    return addr in net
+
+
 async def rick_scope_check(params: ScopeCheckInput) -> str:
     """Check targets and actions against stored scope/ROE. Safety rail — know your boundaries."""
     eng_id = _sanitize(params.engagement_id) or params.engagement_id
@@ -341,7 +362,17 @@ async def rick_scope_check(params: ScopeCheckInput) -> str:
             matched_rule = None
             for scope_item in state["scope"]:
                 si = scope_item.lower()
-                # Substring/prefix match — covers IPs, hostnames, wildcards
+                # CIDR-aware first: an IP target inside a network scope item is in scope.
+                ip_match = _ip_in_network(target, si)
+                if ip_match is True:
+                    in_scope = True
+                    matched_rule = scope_item
+                    break
+                if ip_match is False:
+                    # Both are IP/network but target is not a member — this rule can't match.
+                    # Skip substring fallback (avoids "10.10.10.9" matching "10.10.10.99").
+                    continue
+                # Not an IP-vs-network comparison → hostname/wildcard substring match.
                 if target in si or si in target or (si.startswith("*.") and target.endswith(si[1:])):
                     in_scope = True
                     matched_rule = scope_item

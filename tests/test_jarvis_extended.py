@@ -350,6 +350,52 @@ class TestRickScopeCheck:
         assert "OUT OF SCOPE" in result
 
     @pytest.mark.asyncio
+    async def test_check_ip_in_cidr(self, tmp_path):
+        # Regression (#61): an IP inside an authorized CIDR must be IN SCOPE.
+        from rick_mcp.models import ScopeCheckInput
+        from rick_mcp.tools.jarvis_extended import rick_scope_check
+        from rick_mcp.tools.jarvis_state import _load_state, _save_state
+
+        _create_engagement(tmp_path)
+        with patch(_PATCH_TARGET, tmp_path):
+            state = _load_state("test-eng")
+            state["scope"] = ["10.10.10.0/24"]
+            _save_state("test-eng", state)
+            result = await rick_scope_check(ScopeCheckInput(engagement_id="test-eng", target="10.10.10.99"))
+        assert "IN SCOPE" in result
+
+    @pytest.mark.asyncio
+    async def test_check_ip_outside_cidr(self, tmp_path):
+        from rick_mcp.models import ScopeCheckInput
+        from rick_mcp.tools.jarvis_extended import rick_scope_check
+        from rick_mcp.tools.jarvis_state import _load_state, _save_state
+
+        _create_engagement(tmp_path)
+        with patch(_PATCH_TARGET, tmp_path):
+            state = _load_state("test-eng")
+            state["scope"] = ["10.10.10.0/24"]
+            _save_state("test-eng", state)
+            result = await rick_scope_check(ScopeCheckInput(engagement_id="test-eng", target="8.8.8.8"))
+        assert "OUT OF SCOPE" in result
+
+    @pytest.mark.asyncio
+    async def test_check_single_ip_scope(self, tmp_path):
+        # A bare IP scope item is treated as a /32 — exact host match, no substring bleed.
+        from rick_mcp.models import ScopeCheckInput
+        from rick_mcp.tools.jarvis_extended import rick_scope_check
+        from rick_mcp.tools.jarvis_state import _load_state, _save_state
+
+        _create_engagement(tmp_path)
+        with patch(_PATCH_TARGET, tmp_path):
+            state = _load_state("test-eng")
+            state["scope"] = ["10.10.10.99"]
+            _save_state("test-eng", state)
+            hit = await rick_scope_check(ScopeCheckInput(engagement_id="test-eng", target="10.10.10.99"))
+            miss = await rick_scope_check(ScopeCheckInput(engagement_id="test-eng", target="10.10.10.9"))
+        assert "IN SCOPE" in hit
+        assert "OUT OF SCOPE" in miss
+
+    @pytest.mark.asyncio
     async def test_check_no_scope(self, tmp_path):
         from rick_mcp.models import ScopeCheckInput
         from rick_mcp.tools.jarvis_extended import rick_scope_check
