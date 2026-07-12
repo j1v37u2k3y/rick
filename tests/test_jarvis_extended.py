@@ -753,6 +753,32 @@ class TestRickRollback:
         assert "No snapshots" in result
 
     @pytest.mark.asyncio
+    async def test_kill_chain_mutation_creates_snapshot(self, tmp_path):
+        # Regression (#60): a REAL rick_kill_chain mutation must create a snapshot so rollback
+        # works end-to-end — not only when a test hand-crafts one. Previously nothing ever
+        # passed snapshot=True, so rollback always reported "No snapshots."
+        from rick_mcp.models import KillChainInput, RollbackInput
+        from rick_mcp.tools.jarvis import rick_kill_chain
+        from rick_mcp.tools.jarvis_extended import rick_rollback
+        from rick_mcp.tools.jarvis_state import _load_state
+
+        def _findings(st):
+            return sum(len(p.get("findings", [])) for p in st.get("kill_chain", []))
+
+        _create_engagement(tmp_path)
+        with patch(_PATCH_TARGET, tmp_path):
+            await rick_kill_chain(
+                KillChainInput(action="add_finding", engagement_id="test-eng", phase=1, finding="probe")
+            )
+            after_add = _load_state("test-eng")
+            assert after_add.get("snapshots"), "add_finding must create a snapshot"
+            assert _findings(after_add) == 1
+            result = await rick_rollback(RollbackInput(engagement_id="test-eng", confirm=True))
+            reverted = _load_state("test-eng")
+        assert "ROLLED BACK" in result
+        assert _findings(reverted) == 0
+
+    @pytest.mark.asyncio
     async def test_rollback_no_engagement(self, tmp_path):
         from rick_mcp.models import RollbackInput
         from rick_mcp.tools.jarvis_extended import rick_rollback

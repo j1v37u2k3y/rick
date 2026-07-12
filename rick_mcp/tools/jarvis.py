@@ -278,7 +278,7 @@ async def rick_kill_chain(params: KillChainInput) -> str:
                 next_phase = next((p for p in state["kill_chain"] if p["status"] == "pending"), None)
                 if next_phase:
                     next_phase["status"] = "active"
-                    _save_state(eng_id, state)
+                    _save_state(eng_id, state, snapshot=True)
                     _add_mission_log(
                         eng_id, f"Advanced: Phase {phase_num} complete → Phase {next_phase['phase']} active"
                     )
@@ -293,7 +293,7 @@ async def rick_kill_chain(params: KillChainInput) -> str:
                         title=f"{CALLSIGN} Kill Chain — Advanced",
                     )
                 else:
-                    _save_state(eng_id, state)
+                    _save_state(eng_id, state, snapshot=True)
                     return _fmt(
                         {
                             "action": "COMPLETE",
@@ -309,7 +309,7 @@ async def rick_kill_chain(params: KillChainInput) -> str:
             # Advance specific phase
             idx = phase_num - 1
             state["kill_chain"][idx]["status"] = "active"
-            _save_state(eng_id, state)
+            _save_state(eng_id, state, snapshot=True)
             return _fmt(
                 {
                     "action": "ACTIVATED",
@@ -353,7 +353,7 @@ async def rick_kill_chain(params: KillChainInput) -> str:
             except ValueError as e:
                 return f"Error: {e}"
         state["kill_chain"][idx]["findings"].append(finding_entry)
-        _save_state(eng_id, state)
+        _save_state(eng_id, state, snapshot=True)
         _add_mission_log(eng_id, f"Finding logged in Phase {phase_num}: {finding[:80]}")
 
         return _fmt(
@@ -373,7 +373,7 @@ async def rick_kill_chain(params: KillChainInput) -> str:
             return f"No engagement '{eng_id}' to reset."
         state["kill_chain"] = [dict(p) for p in KILL_CHAIN_PHASES]
         state["reset_at"] = datetime.now(timezone.utc).isoformat()
-        _save_state(eng_id, state)
+        _save_state(eng_id, state, snapshot=True)
         return _fmt(
             {"action": "RESET", "engagement": eng_id, "status": "Kill chain reset. All phases pending."},
             fmt,
