@@ -266,7 +266,7 @@ async def rick_demo() -> str:
     from rick_mcp.server import resource_count, tool_count
     from rick_mcp.tools.career import rick_mentorship
     from rick_mcp.tools.defensive import rick_detection_rules, rick_hardening, rick_incident_response, rick_log_analysis
-    from rick_mcp.tools.engagement import rick_roe, rick_scoping
+    from rick_mcp.tools.engagement import rick_roe, rick_scoping, suppress_vault_writes
     from rick_mcp.tools.offensive import rick_recon, rick_tool_recommend, rick_vuln_assess
     from rick_mcp.tools.offensive_chains import rick_attack_chain
     from rick_mcp.tools.offensive_extended import rick_c2_compare
@@ -361,20 +361,26 @@ async def rick_demo() -> str:
         ),
     ]
 
-    for title, call, coro in demos:
-        result = await coro
-        sections.append("---")
-        sections.append(f"## {title}")
-        sections.append(f"**Call:** `{call}`")
-        sections.append("")
-        # Trim to first 40 lines to keep the tour digestible
-        result_lines = result.strip().splitlines()
-        if len(result_lines) > 40:
-            sections.extend(result_lines[:40])
-            sections.append(f"*... ({len(result_lines) - 40} more lines — run the full tool for complete output)*")
-        else:
-            sections.append(result)
-        sections.append("")
+    # Suppress vault side-effects for the tour — rick_scoping/rick_roe log to the vault when
+    # configured; the demo shows live output without mutating the operator's Second Brain (#58).
+    token = suppress_vault_writes.set(True)
+    try:
+        for title, call, coro in demos:
+            result = await coro
+            sections.append("---")
+            sections.append(f"## {title}")
+            sections.append(f"**Call:** `{call}`")
+            sections.append("")
+            # Trim to first 40 lines to keep the tour digestible
+            result_lines = result.strip().splitlines()
+            if len(result_lines) > 40:
+                sections.extend(result_lines[:40])
+                sections.append(f"*... ({len(result_lines) - 40} more lines — run the full tool for complete output)*")
+            else:
+                sections.append(result)
+            sections.append("")
+    finally:
+        suppress_vault_writes.reset(token)
 
     sections.append("---")
     sections.append("## What Else Rick Can Do")

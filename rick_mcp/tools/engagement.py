@@ -9,6 +9,7 @@ client+type). Tracker maintains its eng_id-anchored vault note with findings tab
 Fork-friendly: tools degrade gracefully to text-only when no vault is configured.
 """
 
+import contextvars
 import json
 from datetime import datetime
 from pathlib import Path
@@ -25,6 +26,12 @@ from rick_mcp.models import (
     ROEInput,
     ScopingInput,
     TrackerInput,
+)
+
+# When True (set by rick_demo's guided tour), engagement tools skip their vault side-effects
+# so the demo shows live output without mutating the operator's Second Brain. See #58.
+suppress_vault_writes: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "rick_suppress_vault_writes", default=False
 )
 
 # ── Vault body builders (Rick voice, AI-first wikilinks) ────────────────────────────────────
@@ -490,7 +497,7 @@ async def rick_roe(params: ROEInput) -> str:
     }
 
     # ── Vault integration: append ROE section to matching engagement note ────────────────
-    if vault._is_configured():
+    if not suppress_vault_writes.get() and vault._is_configured():
         client_str = _sanitize(params.client_name) or "Client"
         codename = _find_matching_engagement(client_str, params.engagement_type)
         if codename:
@@ -1185,7 +1192,7 @@ async def rick_scoping(params: ScopingInput) -> str:
     }
 
     # ── Vault integration: log calculator run (no client→note matching available here) ──
-    if vault._is_configured():
+    if not suppress_vault_writes.get() and vault._is_configured():
         vault.append_log_entry(
             "scoping",
             f"Calculator run — type: {et}, targets: {params.target_count}, complexity: {complexity}, "

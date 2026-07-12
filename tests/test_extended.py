@@ -1083,6 +1083,20 @@ class TestEngagementVaultIntegration:
         assert "red_team" in log_content
 
     @pytest.mark.asyncio
+    async def test_scoping_suppressed_skips_vault(self, configured_vault):
+        # Regression (#58): with suppress_vault_writes set (as rick_demo does during its tour),
+        # scoping must NOT log to the vault — live output without mutating the Second Brain.
+        from rick_mcp.tools.engagement import suppress_vault_writes
+
+        token = suppress_vault_writes.set(True)
+        try:
+            await rick_scoping(ScopingInput(engagement_type="red_team", target_count=2, complexity="high"))
+        finally:
+            suppress_vault_writes.reset(token)
+        log_content = (configured_vault / "log.md").read_text(encoding="utf-8")
+        assert "scoping | Calculator run" not in log_content
+
+    @pytest.mark.asyncio
     async def test_tracker_create_writes_vault_note(self, configured_vault):
         # Need to seed engagements/ dir for tracker
         (configured_vault.parent / "engagements").mkdir(exist_ok=True)

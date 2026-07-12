@@ -3,7 +3,7 @@
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-930%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-931%20passed-brightgreen.svg)]()
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A590%25-brightgreen.svg)]()
 
 A forkable security MCP platform. Load your identity, own your craft.
@@ -411,7 +411,7 @@ and identity.yaml stay canonical at `~/.rick_mcp/`; vault wikilinks point at the
 ### Run Tests
 
 ```bash
-make test        # <!-- counts:tests -->930<!-- /counts:tests --> tests
+make test        # <!-- counts:tests -->931<!-- /counts:tests --> tests
 make coverage    # Tests + coverage report (80%+ enforced)
 ```
 
@@ -434,7 +434,7 @@ make fix         # Auto-fix lint and formatting
 | `make setup`       | Install deps, pre-commit hooks, create private content dir  |
 | `make check`       | Full pipeline — lint, format, typecheck, file-length, tests |
 | `make fix`         | Auto-fix lint and format issues                             |
-| `make test`        | Run <!-- counts:tests -->930<!-- /counts:tests --> tests    |
+| `make test`        | Run <!-- counts:tests -->931<!-- /counts:tests --> tests    |
 | `make coverage`    | Tests with coverage report (80% minimum enforced)           |
 | `make typecheck`   | mypy static type analysis                                   |
 | `make lint`        | ruff lint check                                             |
