@@ -31,3 +31,5 @@ parameterized resolve · zero PII on the generic path.
   log-analysis (#28)
 - [engagement.md](engagement.md) — 7 engagement tools: roe · proposal · onboarding · report-template · scoping ·
   debrief · tracker (stateful, isolated-vault verified) (#29)
+- [career-meta.md](career-meta.md) — 10 career/meta/code_review tools: compatibility · cover-letter · mentorship ·
+  status · health · demo · mode · mantra · capabilities · code_review — fixed resource count 35→36, filed #58 (#30)

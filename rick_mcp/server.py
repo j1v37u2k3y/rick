@@ -32,8 +32,15 @@ def tool_count() -> int:
 
 
 def resource_count() -> int:
-    """Dynamic resource count from the MCP registry."""
-    return len(mcp._resource_manager.list_resources())
+    """Dynamic resource count from the MCP registry.
+
+    Includes both static resources and parameterized resource templates
+    (e.g. vault://engagements/{codename}) — list_resources() omits templates,
+    so counting statics alone under-reports by the template count and drifts
+    from the README/refresh_counts total.
+    """
+    rm = mcp._resource_manager
+    return len(rm.list_resources()) + len(rm.list_templates())
 
 
 def _build_banner() -> str:

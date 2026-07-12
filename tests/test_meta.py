@@ -47,6 +47,16 @@ class TestRickCapabilities:
         missing = [m for m in _CATEGORY_MARKERS if m not in out]
         assert not missing, f"capability map missing categories: {missing}"
 
+    def test_resource_count_includes_templates(self):
+        # Regression: resource_count() must count parameterized resource templates
+        # (e.g. vault://engagements/{codename}), not just static resources — otherwise
+        # rick_status/rick_capabilities under-report and drift from README/refresh_counts.
+        from rick_mcp.server import mcp
+
+        rm = mcp._resource_manager
+        assert resource_count() == len(rm.list_resources()) + len(rm.list_templates())
+        assert resource_count() > len(rm.list_resources())  # at least one template is counted
+
     async def test_closing_note_present(self):
         out = await rick_capabilities()
         assert "Don't just read the menu" in out
