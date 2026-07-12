@@ -35,3 +35,5 @@ parameterized resolve · zero PII on the generic path.
   status · health · demo · mode · mantra · capabilities · code_review — fixed resource count 35→36, filed #58 (#30)
 - [jarvis.md](jarvis.md) — 12 JARVIS/stateful tools: full_auto · kill_chain · next_move · sitrep · notes · tag ·
   timeline · compare · scope_check · checklist · rollback · export (isolated-state lifecycle) — filed #60, #61 (#31)
+- [appraisal-writeups.md](appraisal-writeups.md) — cognitive_appraisal (gating matrix + clean-room) · writeups
+  (corpus + path-traversal) — guardrails verified (#32) — **closes epic #35**
