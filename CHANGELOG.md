@@ -2,6 +2,24 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.14.2] - 2026-07-11
+
+### Bug fixes surfaced by the behavioral-verification pass (epic #35)
+
+Three defects the verification campaign caught that the unit tests were green on — the audit
+judged tool *behavior* against real inputs, not just structure.
+
+- **`rick_scope_check` now does CIDR matching (#61).** A target IP inside an authorized CIDR
+  (e.g. `10.10.10.99` in `10.10.10.0/24`) was flagged OUT OF SCOPE — matching was
+  substring/wildcard only. Added IP/network-aware membership via `ipaddress`, falling back to the
+  existing hostname/wildcard logic; a bare-IP scope item is treated as `/32` (no substring bleed).
+- **`rick_rollback` actually works now (#60).** Nothing ever created a snapshot, so rollback
+  always reported "No snapshots available." Every `rick_kill_chain` mutation (`advance`,
+  `add_finding`, `reset`) now captures a pre-mutation snapshot, so rollback restores prior state.
+- **`rick_demo` no longer mutates the vault (#58).** The guided tour fired `rick_scoping`, which
+  logged to `vault/log.md` on every run. Demo now runs under a `suppress_vault_writes` context so
+  it shows live output without writing to the operator's Second Brain.
+
 ## [3.14.1] - 2026-06-26
 
 ### `rick_code_review` rubric is now overridable data
