@@ -8,5 +8,5 @@ pytest-cov>=7.1.0
 ruff>=0.15.20
 mypy>=2.1.0
 types-PyYAML>=6.0.12.20260518
-hypothesis>=6.156.1
+hypothesis>=6.156.6
 pre-commit>=4.6.0
