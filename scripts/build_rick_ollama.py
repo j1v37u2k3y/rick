@@ -36,16 +36,16 @@ from rick_mcp.prompts import build_ollama_system  # noqa: E402  (path bootstrap 
 # (kept in your environment, never hardcoded here).
 DEFAULT_HOST = os.environ.get("RICK_HOST", "http://localhost:11434")
 
-# Known-good tuning for the local Rick model. Explicit (not just inherited) so a re-bake is
+# Sampling tuned for reliable MCP tool-calling. Explicit (not just inherited) so a re-bake is
 # reproducible and a forker deriving from a bare base model still gets sane sampling.
+# NOTE: no presence_penalty — a high value corrupts the structured tool-call format and causes
+# language drift on some bases (observed on qwen2.5: it skipped the tool and hallucinated a path).
 DEFAULT_PARAMS: dict = {
-    "temperature": 0.7,
+    "temperature": 0.5,
     "num_ctx": 16384,
     "top_k": 20,
     "top_p": 0.9,
-    "min_p": 0,
-    "repeat_penalty": 1.1,
-    "presence_penalty": 1.5,
+    "repeat_penalty": 1.05,
 }
 
 
