@@ -20,6 +20,10 @@ never drift.
   model + tuned params inherited by deriving `from` the existing model). Nothing is written to
   disk; the persona, which carries operator identity, lives only in memory and on the host. Host is
   `$RICK_HOST` or `http://localhost:11434` — never hardcoded.
+- **Sampling defaults tuned for tool-calling.** No `presence_penalty` — a high value corrupted the
+  structured tool-call format and caused language drift on some bases (a `qwen2.5` bake skipped the
+  vault tool and hallucinated a note path until it was removed). A non-"thinking" tool-caller
+  (`qwen2.5:14b`) is recommended over reasoning models for low-latency tool use.
 - **Guide:** `docs/ollama-rick.md`.
 
 ## [3.14.3] - 2026-08-05

@@ -19,7 +19,9 @@ resyncs. One source of truth; the local model and the MCP-served Rick never drif
 
 - An Ollama host reachable over HTTP. Defaults to `http://localhost:11434`; point at a remote or
   LAN box by exporting `RICK_HOST` (e.g. `export RICK_HOST=http://10.0.0.5:11434`).
-- A tool-capable base model pulled on that host (`qwen3.6`, `qwen2.5:14b`, `llama3.1`, …).
+- A tool-capable base model pulled on that host. Prefer a **non-"thinking" tool-caller**
+  (`qwen2.5:14b`, `llama3.1`, …) as your daily driver: reasoning models like `qwen3.x` work but
+  add multi-minute latency to every tool-use turn. (Bake `--from <base>` to choose; see below.)
 - This repo's venv — `make setup`.
 - Optional but recommended: `~/.rick_mcp/identity.yaml` + `~/.rick_mcp/soul/SOUL.md`. Without them
   you get the **neutral operator persona** (no personalization, no PII).
