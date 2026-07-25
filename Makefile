@@ -1,4 +1,4 @@
-.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts install-user-mcp install-user-skills uninstall-user-skills
+.PHONY: check fix test lint format-check typecheck coverage smoke clean file-length setup refresh-counts check-counts install-user-mcp install-user-skills uninstall-user-skills rick-ollama rick-ollama-print
 
 # Local venv — all targets use this so the dev experience is self-contained.
 # After `make setup`, every other make target works without manual activation.
@@ -207,6 +207,16 @@ refresh-counts:
 # CI-friendly: fail if any tagged count region is stale
 check-counts:
 	$(VENV_PYTHON) scripts/refresh_counts.py --check
+
+# Bake the local `rick` Ollama model from the single-source persona (build_ollama_system).
+# Renders the soul+identity persona and pushes it to the Ollama host (default $RICK_HOST) via
+# /api/create — swaps only the SYSTEM prompt, inherits base+tuned params. Nothing written to disk.
+rick-ollama:
+	$(VENV_PYTHON) scripts/build_rick_ollama.py
+
+# Preview the generated persona without touching the box.
+rick-ollama-print:
+	$(VENV_PYTHON) scripts/build_rick_ollama.py --print
 
 # Clean build/test artifacts
 clean:

@@ -2,6 +2,26 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.15.0] - 2026-07-25
+
+### Rick as a local Ollama model — single-source, repeatable
+
+The MCP persona can now be baked into a local Ollama model so `ollama run rick` *is* Rick, not a
+base model wearing the name. The system prompt is generated from the same `~/.rick_mcp/` soul +
+identity the server already uses — one source of truth, so the local model and the MCP-served Rick
+never drift.
+
+- **`build_ollama_system()`** (`prompts.py`) — a lean, local-model-tuned persona builder: soul +
+  identity + operational / tool-use / voice guidance, without the book dump, methodology JSON, or
+  one-shot activation closing that `be_rick` carries. Generic-safe — a fork with no `identity.yaml`
+  bakes the neutral operator persona.
+- **`scripts/build_rick_ollama.py`** + `make rick-ollama` / `make rick-ollama-print` — render the
+  persona and push it to an Ollama host via `/api/create`, swapping only the SYSTEM prompt (base
+  model + tuned params inherited by deriving `from` the existing model). Nothing is written to
+  disk; the persona, which carries operator identity, lives only in memory and on the host. Host is
+  `$RICK_HOST` or `http://localhost:11434` — never hardcoded.
+- **Guide:** `docs/ollama-rick.md`.
+
 ## [3.14.2] - 2026-07-11
 
 ### Bug fixes surfaced by the behavioral-verification pass (epic #35)
