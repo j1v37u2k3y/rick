@@ -2,6 +2,19 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.14.3] - 2026-08-05
+
+### Fix: cap `mcp` below 2.0.0 — fresh installs were silently broken
+
+`requirements.txt` pinned `mcp[cli]>=1.28.1` with no upper bound, so a fresh dependency resolve pulled
+**mcp 2.0.0**, which removed the bundled `mcp.server.fastmcp` module that `rick_mcp/server.py` imports. The
+result was a `ModuleNotFoundError` on import — breaking server startup, `pytest` collection, and any new
+`make setup` or fork. `main`'s CI stayed green only because its last run predated the 2.0.0 release.
+
+- **Capped `mcp[cli]>=1.28.1,<2.0.0`.** Resolves to mcp 1.x, which still ships the bundled FastMCP 1.x the
+  server imports — restoring clean collection and startup. No source changes.
+- Migrating the server onto standalone **FastMCP 2.x** (to take mcp 2.x and drop the cap) is tracked in #81.
+
 ## [3.14.2] - 2026-07-11
 
 ### Bug fixes surfaced by the behavioral-verification pass (epic #35)
