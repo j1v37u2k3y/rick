@@ -8,6 +8,13 @@ updates:
       prefix: "deps"
     labels:
       - "dependencies"
+    ignore:
+      # mcp 2.0.0 removed the bundled mcp.server.fastmcp module the server imports, so
+      # the ceiling is capped <2.0.0 in requirements.txt until the standalone-FastMCP-2.x
+      # migration lands (#81). Ignore major bumps so Dependabot stops re-proposing 2.x;
+      # patch/minor updates within 1.x still flow.
+      - dependency-name: "mcp"
+        update-types: [ "version-update:semver-major" ]
 
   - package-ecosystem: "github-actions"
     directory: "/"
