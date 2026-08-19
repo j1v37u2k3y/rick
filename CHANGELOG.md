@@ -2,6 +2,30 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.15.0] - 2026-07-25
+
+### Rick as a local Ollama model — single-source, repeatable
+
+The MCP persona can now be baked into a local Ollama model so `ollama run rick` *is* Rick, not a
+base model wearing the name. The system prompt is generated from the same `~/.rick_mcp/` soul +
+identity the server already uses — one source of truth, so the local model and the MCP-served Rick
+never drift.
+
+- **`build_ollama_system()`** (`prompts.py`) — a lean, local-model-tuned persona builder: soul +
+  identity + operational / tool-use / voice guidance, without the book dump, methodology JSON, or
+  one-shot activation closing that `be_rick` carries. Generic-safe — a fork with no `identity.yaml`
+  bakes the neutral operator persona.
+- **`scripts/build_rick_ollama.py`** + `make rick-ollama` / `make rick-ollama-print` — render the
+  persona and push it to an Ollama host via `/api/create`, swapping only the SYSTEM prompt (base
+  model + tuned params inherited by deriving `from` the existing model). Nothing is written to
+  disk; the persona, which carries operator identity, lives only in memory and on the host. Host is
+  `$RICK_HOST` or `http://localhost:11434` — never hardcoded.
+- **Sampling defaults tuned for tool-calling.** No `presence_penalty` — a high value corrupted the
+  structured tool-call format and caused language drift on some bases (a `qwen2.5` bake skipped the
+  vault tool and hallucinated a note path until it was removed). A non-"thinking" tool-caller
+  (`qwen2.5:14b`) is recommended over reasoning models for low-latency tool use.
+- **Guide:** `docs/ollama-rick.md`.
+
 ## [3.14.3] - 2026-08-05
 
 ### Fix: cap `mcp` below 2.0.0 — fresh installs were silently broken

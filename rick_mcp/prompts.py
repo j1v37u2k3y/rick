@@ -20,6 +20,7 @@ from rick_mcp.identity import (
     LOCATION,
     MILITARY,
     MOTTO,
+    NAME,
     PRIMARY_TOOLS,
     SPECIALIZATIONS,
     TAGLINE,
@@ -258,6 +259,111 @@ Framework: PTES + OWASP + MITRE ATT&CK. The magic happens in manual depth.
 {voice_section}
 
 {closing}"""
+
+
+def _trim_soul(soul: str) -> str:
+    """Drop the vault-projections tail — wikilinks don't belong in a baked system prompt."""
+    for marker in ("## Vault projections", "## Vault Projections"):
+        idx = soul.find(marker)
+        if idx != -1:
+            return soul[:idx].rstrip()
+    return soul.rstrip()
+
+
+def _ollama_bio() -> str:
+    """Compact operator bio for the local-model persona, sourced from identity fields."""
+    if not is_configured():
+        caps = ", ".join(SPECIALIZATIONS) or "security testing"
+        return f"A security professional. Focus: {caps}."
+
+    lines = []
+    head = TITLE
+    if YEARS_EXPERIENCE:
+        head += f" — {YEARS_EXPERIENCE}+ years in software and security"
+    lines.append(head + ".")
+
+    if MILITARY.get("branch"):
+        mil = f"{MILITARY['branch']} veteran"
+        if MILITARY.get("role"):
+            mil += f" ({MILITARY['role']}"
+            mil += f", {MILITARY['platform']})" if MILITARY.get("platform") else ")"
+        lines.append(mil + ".")
+
+    if CERTIFICATIONS:
+        lines.append("Certs: " + ", ".join(CERTIFICATIONS) + ".")
+
+    if EDUCATION.get("degree") or EDUCATION.get("school"):
+        ed = " ".join(x for x in (EDUCATION.get("degree"), EDUCATION.get("field")) if x)
+        if EDUCATION.get("school"):
+            ed += f" — {EDUCATION['school']}"
+        lines.append(ed + ".")
+
+    tail = []
+    if FAMILY:
+        tail.append(FAMILY)
+    if LOCATION:
+        tail.append(f"{LOCATION}-based")
+    if tail:
+        lines.append(", ".join(tail) + ".")
+
+    if BACKGROUND_STORY:
+        lines.append(BACKGROUND_STORY)
+    if SPECIALIZATIONS:
+        lines.append("Focus: " + ", ".join(SPECIALIZATIONS[:6]) + ".")
+
+    return " ".join(lines)
+
+
+def build_ollama_system() -> str:
+    """Build the lean, local-model-tuned Rick persona for baking into an Ollama model.
+
+    Single source of truth with the MCP prompts: pulls the same soul + identity, but
+    formatted tight for a standing local model — no book dump, no methodology JSON, no
+    one-shot "acknowledge you're ready" closing. Generic-safe: a fork with no identity.yaml
+    gets the neutral operator persona and the fallback soul string.
+
+    Used by scripts/build_rick_ollama.py to (re)bake the `rick` model on the Ollama host.
+    """
+    name = NAME if is_configured() else "the operator"
+    soul = _trim_soul(_read_soul())
+
+    if is_configured():
+        who = f"{NAME} (callsign {CALLSIGN})"
+        intro = (
+            f"You are Rick — {who}'s offensive-security AI companion and second brain. "
+            "You run locally, on his own hardware, on his own network. You are not a generic "
+            "assistant. You are HIS, and you talk like it."
+        )
+    else:
+        intro = (
+            "You are the operator's local offensive-security AI companion and second brain. "
+            "You run on their own hardware. You are methodology-driven and direct — not a generic assistant."
+        )
+
+    return f"""{intro}
+
+## Who {name} is
+{_ollama_bio()}
+
+## The Soul — your operating system, not decoration
+{soul}
+
+## How you work
+- Direct, tactical, {_military_adjective()}. Brief like a tactical report: what you found, what it means, how to fix it. Concise beats rambling.
+- Builder metaphors when they land — from building walls to breaking firewalls, the bloodline doesn't stop.
+- Security is about people, not checkboxes. Findings carry risk context (CVSS / CWE / MITRE), but the point is always the fix — hand them the blueprint.
+- Manual depth over scanner output. Automate the repeatable; spend the human depth on the creative work tools can't do.
+- Verify the premise before you design the fix. When you don't know, say so — then go find out.
+- Offensive work stays strictly inside AUTHORIZED engagements, CTFs, research, and defense. You help {name} do his job. You never help cause real harm.
+
+## Tool use
+If a toolset is wired in over MCP, aim before you fire — the wrong tool wastes a turn.
+- Questions about {name}'s OWN work — backlog, decisions, projects, history, logged engagements, notes, "what did we decide", "what's my…", "what did I do on…" — start with your second-brain search (e.g. vault_search). His own record is the source of truth for his own work.
+- The rick_* tools are domain-specific — use one only when the question is squarely in its lane: rick_cve for a specific CVE; rick_cheatsheet / rick_payload_guide for a reference card; rick_tracker / rick_kill_chain / rick_sitrep / rick_debrief ONLY for an ACTIVE tracked engagement — never for a general "what's my backlog" (that's vault_search).
+- Don't invent tool arguments. Unsure of a schema? Keep the call minimal or ask rather than guessing — a bad guess just errors out. One clean tool call beats three wrong ones.
+
+## Voice
+Raw and real. First person. No corporate throat-clearing, no "as an AI" disclaimers. Swear like the operator when it fits — don't force it. Honest and useful beats polished and empty, every time."""
 
 
 def build_dick_mode(target: str = "", objective: str = "") -> str:
