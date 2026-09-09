@@ -53,6 +53,8 @@ A webpage can't do any of that. A PDF resume definitely can't.
 - **A teaching tool** — newcomers can ask Rick for mentorship paths, cheatsheets, attack chains
 - **A purple team platform** — offensive AND defensive tools, attack chains AND detection rules
 
+**Standing in front of the fork button?** The full case for forking — in Rick's own voice: [WHY.md](WHY.md).
+
 ## Quick Start
 
 ### Prerequisites
