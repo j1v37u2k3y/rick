@@ -7,12 +7,12 @@ from rick_mcp.formatting import _fmt, _safe_tool
 from rick_mcp.identity import (
     BACKGROUND_STORY,
     CERTIFICATIONS,
+    CODING_SINCE,
     FAMILY,
     MILITARY,
     MOTTO,
     TAGLINE,
     TITLE,
-    YEARS_EXPERIENCE,
     is_configured,
     signature_line,
 )
@@ -24,9 +24,9 @@ def _military_branch() -> str:
     return MILITARY.get("branch", "") if MILITARY else ""
 
 
-def _years_str() -> str:
-    """Return years experience string like '22+' or fallback."""
-    return f"{YEARS_EXPERIENCE}+" if YEARS_EXPERIENCE else "extensive"
+def _experience_str() -> str:
+    """Return an experience phrase like 'since 2003', or a generic fallback."""
+    return f"since {CODING_SINCE}" if CODING_SINCE else "with extensive experience"
 
 
 def _cert_list_str(limit: int = 3) -> str:
@@ -142,7 +142,7 @@ async def rick_cover_letter(params: CoverInput) -> str:
     """Generate targeted cover letter. Auto-matches requirements to experience. 3 tones."""
     tone = (params.tone or "professional").lower()
     branch = _military_branch()
-    years = _years_str()
+    experience = _experience_str()
     hl = []
     if params.key_requirements:
         rq = params.key_requirements.lower()
@@ -198,9 +198,9 @@ async def rick_cover_letter(params: CoverInput) -> str:
         default_hl = []
         cert_str = _cert_list_str(2)
         if cert_str:
-            default_hl.append(f"{cert_str}-certified {TITLE.lower()}, {years} years experience.")
+            default_hl.append(f"{cert_str}-certified {TITLE.lower()}, in the field {experience}.")
         else:
-            default_hl.append(f"{TITLE}, {years} years experience.")
+            default_hl.append(f"{TITLE}, in the field {experience}.")
         if branch:
             default_hl.append(f"{branch} systematic methodology applied to security.")
         default_hl.append("Builder mindset — I don't just find vulnerabilities, I help build better defenses.")
@@ -217,22 +217,22 @@ async def rick_cover_letter(params: CoverInput) -> str:
         origin_phrase = "Self-taught, mission-driven, continuously evolving."
 
     if tone == "conversational":
-        op = f"Reaching out about the {r} role at {c}. Been breaking and building software for {years} years — {origin_phrase}"
+        op = f"Reaching out about the {r} role at {c}. Been breaking and building software {experience} — {origin_phrase}"
         bd = f"What I bring: {' '.join(hl[:3])}\n\nThorough, honest, every vuln comes with actionable remediation. Builder mindset — I understand architecture, not just attack surfaces."
         greeting = MOTTO if MOTTO else "Looking forward to connecting"
         cl = f"Would love to chat about contributing to {c}. {greeting}."
     elif tone == "executive":
-        op = f"Writing regarding the {r} position at {c}. {years} years progressive experience in software development and offensive security, with deep technical expertise."
+        op = f"Writing regarding the {r} position at {c}. Progressive experience in software development and offensive security {experience}, with deep technical expertise."
         bd = (
             "Key qualifications:\n"
             + "\n".join([f"- {h}" for h in hl[:4]])
-            + f"\n\nContinuous adaptation and growth across {years} years in the field."
+            + f"\n\nContinuous adaptation and growth in the field {experience}."
         )
         cl = f"Welcome the opportunity to discuss strategic alignment with {c}'s security objectives and long-term vision."
     else:
         cert_intro = f"{_cert_list_str(2)}-certified " if CERTIFICATIONS else ""
         branch_intro = f", {branch} veteran background" if branch else ""
-        op = f"Writing to express interest in the {r} at {c}. {cert_intro}{TITLE.lower()} with {years} years experience{branch_intro}, and builder's approach to security."
+        op = f"Writing to express interest in the {r} at {c}. {cert_intro}{TITLE.lower()} {experience}{branch_intro}, and builder's approach to security."
         bd = (
             "Relevant qualifications:\n"
             + "\n".join([f"- {h}" for h in hl[:4]])
@@ -262,7 +262,7 @@ async def rick_cover_letter(params: CoverInput) -> str:
 async def rick_mentorship(params: MentorInput) -> str:
     """Teaching newcomers the craft. Learning paths, mindset guidance, 'how I got here' wisdom. The MCP teaches."""
     branch = _military_branch()
-    years = _years_str()
+    experience = _experience_str()
 
     # Build dynamic personal fragments
     origin_story = (
@@ -594,7 +594,7 @@ async def rick_mentorship(params: MentorInput) -> str:
                 "thoroughness_over_speed": "Scanners are fast. Humans are thorough. Your value is in the manual analysis, the creative thinking, the business logic flaws that no tool finds.",
                 "document_everything": f"If it's not documented, it didn't happen. {doc_standard} Take notes obsessively. Screenshot everything. Your report IS your deliverable.",
                 "fail_forward": "You will fail. Exploits won't work. Shells will die. Access will get burned. Learn from every failure. Fix it. Move on. The whole point of coding. And existence.",
-                "stay_curious": f"{years} years in and still learning. The day you think you know enough is the day you become irrelevant.",
+                "stay_curious": f"In it {experience} and still learning. The day you think you know enough is the day you become irrelevant.",
                 "rewrite_the_script": "Don't accept 'that's how it's always been done.' Question. Experiment. Break the pattern. Rewrite the script.",
             },
             "operational_discipline": {
@@ -670,8 +670,8 @@ async def rick_mentorship(params: MentorInput) -> str:
         mentor_parts = [CALLSIGN]
         if CERTIFICATIONS:
             mentor_parts.append(" | ".join(CERTIFICATIONS[:2]))
-        if YEARS_EXPERIENCE:
-            mentor_parts.append(f"{YEARS_EXPERIENCE}+ Years")
+        if CODING_SINCE:
+            mentor_parts.append(f"Since {CODING_SINCE}")
         path["mentored_by"] = " — ".join(mentor_parts)
     else:
         path["mentored_by"] = CALLSIGN

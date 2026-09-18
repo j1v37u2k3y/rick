@@ -15,7 +15,7 @@ DEFAULTS: dict = {
     "callsign": "operator",
     "name": "Operator",
     "title": "Security Engineer",
-    "years_experience": 0,
+    "coding_since": None,
     "military": {},
     "education": {},
     "certifications": [],
@@ -67,7 +67,7 @@ _identity = _load_identity()
 CALLSIGN: str = _identity["callsign"]
 NAME: str = _identity["name"]
 TITLE: str = _identity["title"]
-YEARS_EXPERIENCE: int = _identity.get("years_experience", 0)
+CODING_SINCE: int | None = _identity.get("coding_since")
 MILITARY: dict = _identity.get("military", {})
 EDUCATION: dict = _identity.get("education", {})
 CERTIFICATIONS: list[str] = _identity.get("certifications", [])
@@ -109,8 +109,8 @@ def bio_summary() -> str:
     parts = [f"{NAME} ({CALLSIGN})"]
     if TITLE:
         parts.append(f"— {TITLE}")
-    if YEARS_EXPERIENCE:
-        parts.append(f"with {YEARS_EXPERIENCE}+ years of experience.")
+    if CODING_SINCE:
+        parts.append(f"coding since {CODING_SINCE}.")
     if CERTIFICATIONS:
         parts.append(f"Certifications: {', '.join(CERTIFICATIONS)}.")
     if MILITARY:
