@@ -14,6 +14,7 @@ from rick_mcp.identity import (
     BACKGROUND_STORY,
     CALLSIGN,
     CERTIFICATIONS,
+    CODING_SINCE,
     EDUCATION,
     FAMILY,
     LANGUAGES,
@@ -25,7 +26,6 @@ from rick_mcp.identity import (
     SPECIALIZATIONS,
     TAGLINE,
     TITLE,
-    YEARS_EXPERIENCE,
     is_configured,
 )
 
@@ -76,8 +76,8 @@ def _identity_block() -> str:
     title_line = TITLE
     if CERTIFICATIONS:
         title_line += f" | {', '.join(CERTIFICATIONS)}"
-    if YEARS_EXPERIENCE:
-        title_line += f" | {YEARS_EXPERIENCE}+ years"
+    if CODING_SINCE:
+        title_line += f" | since {CODING_SINCE}"
     lines.append(f"- {title_line}")
 
     # Military
@@ -278,8 +278,8 @@ def _ollama_bio() -> str:
 
     lines = []
     head = TITLE
-    if YEARS_EXPERIENCE:
-        head += f" — {YEARS_EXPERIENCE}+ years in software and security"
+    if CODING_SINCE:
+        head += f" — in software and security since {CODING_SINCE}"
     lines.append(head + ".")
 
     if MILITARY.get("branch"):
@@ -378,8 +378,8 @@ def build_dick_mode(target: str = "", objective: str = "") -> str:
     headline_parts = [f"{CALLSIGN}"]
     if CERTIFICATIONS:
         headline_parts.append(" | ".join(CERTIFICATIONS))
-    if YEARS_EXPERIENCE:
-        headline_parts.append(f"{YEARS_EXPERIENCE} years deep")
+    if CODING_SINCE:
+        headline_parts.append(f"in it since {CODING_SINCE}")
     headline = " — ".join(headline_parts)
 
     return f"""You are Dick. The alter ego. The one who opens all the doors.
@@ -459,8 +459,8 @@ def build_pentest_mode(target: str = "") -> str:
         headline_parts.append(", ".join(CERTIFICATIONS))
     if MILITARY and MILITARY.get("branch"):
         headline_parts.append(f"{MILITARY['branch']} veteran")
-    if YEARS_EXPERIENCE:
-        headline_parts.append(f"{YEARS_EXPERIENCE} years of craft")
+    if CODING_SINCE:
+        headline_parts.append(f"at the craft since {CODING_SINCE}")
     headline = ", ".join(headline_parts)
 
     return f"""Enter pentest operator mode. You are {headline}.{target_context}
@@ -506,8 +506,8 @@ def build_mentor_mode(student_level: str = "beginner") -> str:
 
     # Build identity headline for mentor intro
     headline_parts = [CALLSIGN]
-    if YEARS_EXPERIENCE:
-        headline_parts.append(f"{YEARS_EXPERIENCE} years in the craft")
+    if CODING_SINCE:
+        headline_parts.append(f"in the craft since {CODING_SINCE}")
     if CERTIFICATIONS:
         headline_parts.append(", ".join(CERTIFICATIONS[:2]) + " holder")
     if FAMILY:
@@ -585,8 +585,8 @@ def build_evaluate_fit(posting: str = "") -> str:
     title_line = TITLE
     if CERTIFICATIONS:
         title_line += f" | {', '.join(CERTIFICATIONS)}"
-    if YEARS_EXPERIENCE:
-        title_line += f" | {YEARS_EXPERIENCE}+ years"
+    if CODING_SINCE:
+        title_line += f" | since {CODING_SINCE}"
     profile_lines.append(f"- {title_line}")
 
     # Military
