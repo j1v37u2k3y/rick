@@ -85,4 +85,13 @@ jobs:
         # Audits the shipped dependency surface (requirements.txt) + transitives against
         # the advisory DB. Fails the build on a known vuln. If a transitive vuln has no
         # fix available, add `--ignore-vuln <ID>` here with a comment until it does.
-        run: pip-audit -r requirements.txt
+        #
+        # PYSEC-2026-2475 / PYSEC-2026-2476 (fastmcp): fix lands in fastmcp 3.2.0. We are
+        # pinned to fastmcp 2.x per project major-cap policy; bumping to 3.x is a tracked
+        # follow-up migration, not this PR's scope.
+        # PYSEC-2026-2447 (diskcache): transitive via fastmcp; no fix released yet.
+        run: >-
+          pip-audit -r requirements.txt
+          --ignore-vuln PYSEC-2026-2475
+          --ignore-vuln PYSEC-2026-2476
+          --ignore-vuln PYSEC-2026-2447
