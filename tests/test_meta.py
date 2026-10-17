@@ -54,8 +54,8 @@ class TestRickCapabilities:
         from rick_mcp.server import mcp
 
         rm = mcp._resource_manager
-        assert resource_count() == len(rm.list_resources()) + len(rm.list_templates())
-        assert resource_count() > len(rm.list_resources())  # at least one template is counted
+        assert resource_count() == len(rm._resources) + len(rm._templates)
+        assert resource_count() > len(rm._resources)  # at least one template is counted
 
     async def test_closing_note_present(self):
         out = await rick_capabilities()

@@ -2,6 +2,28 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.16.0] - 2026-10-17
+
+### Migrate off bundled `mcp.server.fastmcp` to standalone `fastmcp` 2.x
+
+The `mcp` 2.0.0 release removed the bundled `mcp.server.fastmcp` module the server imported, which
+forced `requirements.txt` to pin `mcp[cli]<2.0.0` and a Dependabot ignore rule to stop re-proposing
+major bumps (#81, follow-on from the 3.14.3 cap fix). This release drops that debt.
+
+- **Switched `rick_mcp/server.py` to `from fastmcp import FastMCP`** — the standalone package. The
+  public surface (`@mcp.tool`, `@mcp.resource`, `@mcp.prompt`, `annotations=`, `mcp.run()`) is
+  unchanged; no tool or resource definitions had to move.
+- **`tool_count()` / `resource_count()` now read `_tool_manager._tools` /
+  `_resource_manager._resources` + `_templates` directly.** The 1.x `list_tools()` /
+  `list_resources()` / `list_templates()` sync accessors are gone in 2.x (replaced by async
+  `get_*()` methods); the private dicts are still the right shape for a count. The downstream
+  mcpo denylist wrapper in `rick-server` depends on the same `_tool_manager` internal — it should
+  still work, but confirm on the next deploy.
+- **`requirements.txt`:** replaced `mcp[cli]>=1.28.1,<2.0.0` with `fastmcp>=2.0,<3`. `mcp` is a
+  transitive of `fastmcp` and no longer needs a direct pin.
+- **`.github/dependabot.yml`:** removed the `mcp` major-version ignore rule — the cap is gone, so
+  the guard is no longer needed.
+
 ## [3.15.0] - 2026-07-25
 
 ### Rick as a local Ollama model — single-source, repeatable

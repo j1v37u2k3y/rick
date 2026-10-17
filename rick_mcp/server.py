@@ -6,7 +6,7 @@ Load your identity from ~/.rick_mcp/identity.yaml.
 The tools are the craft. The identity is yours.
 """
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from __version__ import __version__
 
@@ -28,19 +28,19 @@ register_prompts(mcp)
 
 def tool_count() -> int:
     """Dynamic tool count from the MCP registry."""
-    return len(mcp._tool_manager.list_tools())
+    return len(mcp._tool_manager._tools)
 
 
 def resource_count() -> int:
     """Dynamic resource count from the MCP registry.
 
     Includes both static resources and parameterized resource templates
-    (e.g. vault://engagements/{codename}) — list_resources() omits templates,
-    so counting statics alone under-reports by the template count and drifts
-    from the README/refresh_counts total.
+    (e.g. vault://engagements/{codename}) — counting statics alone
+    under-reports by the template count and drifts from the
+    README/refresh_counts total.
     """
     rm = mcp._resource_manager
-    return len(rm.list_resources()) + len(rm.list_templates())
+    return len(rm._resources) + len(rm._templates)
 
 
 def _build_banner() -> str:
