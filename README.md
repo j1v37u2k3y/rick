@@ -1,4 +1,4 @@
-# Rick MCP Server <!-- counts:version -->v3.15<!-- /counts:version -->
+# Rick MCP Server <!-- counts:version -->v3.16<!-- /counts:version -->
 
 [![CI](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml/badge.svg)](https://github.com/j1v37u2k3y/rick/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)

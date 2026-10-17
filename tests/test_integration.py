@@ -13,108 +13,63 @@ def _params(**kwargs):
     return {"params": kwargs}
 
 
+def _text(result):
+    """Pull first TextContent out of a fastmcp 2.x ToolResult."""
+    return result.content[0].text
+
+
 class TestMCPProtocol:
     """Test tools through the MCP server's call_tool interface."""
 
     @pytest.mark.asyncio
     async def test_call_rick_recon(self):
-        result = await mcp.call_tool("rick_recon", _params(target_type="web_app"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
-        assert CALLSIGN in text
+        result = await mcp._tool_manager.call_tool("rick_recon", _params(target_type="web_app"))
+        assert CALLSIGN in _text(result)
 
     @pytest.mark.asyncio
     async def test_call_rick_status(self):
-        result = await mcp.call_tool("rick_status", {})
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
-        assert "rick_mcp" in text
+        result = await mcp._tool_manager.call_tool("rick_status", {})
+        assert "rick_mcp" in _text(result)
 
     @pytest.mark.asyncio
     async def test_call_rick_hardening(self):
-        result = await mcp.call_tool("rick_hardening", _params(technology="linux_server"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
+        result = await mcp._tool_manager.call_tool("rick_hardening", _params(technology="linux_server"))
+        text = _text(result)
         assert "SSH" in text or "ssh" in text
 
     @pytest.mark.asyncio
     async def test_call_rick_c2_compare(self):
-        result = await mcp.call_tool("rick_c2_compare", _params(scenario="budget"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
-        assert "Sliver" in text
+        result = await mcp._tool_manager.call_tool("rick_c2_compare", _params(scenario="budget"))
+        assert "Sliver" in _text(result)
 
     @pytest.mark.asyncio
     async def test_call_rick_incident_response(self):
-        result = await mcp.call_tool("rick_incident_response", _params(incident_type="ransomware"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
+        result = await mcp._tool_manager.call_tool("rick_incident_response", _params(incident_type="ransomware"))
+        text = _text(result)
         assert "containment" in text.lower() or "Containment" in text
 
     @pytest.mark.asyncio
     async def test_call_rick_scoping(self):
-        result = await mcp.call_tool("rick_scoping", _params(engagement_type="web_app_pentest"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
+        result = await mcp._tool_manager.call_tool("rick_scoping", _params(engagement_type="web_app_pentest"))
+        text = _text(result)
         assert "hours" in text.lower() or "Hours" in text
 
     @pytest.mark.asyncio
     async def test_call_rick_detection_rules(self):
-        result = await mcp.call_tool("rick_detection_rules", _params(attack_pattern="credential_dumping"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
+        result = await mcp._tool_manager.call_tool("rick_detection_rules", _params(attack_pattern="credential_dumping"))
+        text = _text(result)
         assert "sigma" in text.lower() or "Sigma" in text
 
     @pytest.mark.asyncio
     async def test_call_with_json_format(self):
-        result = await mcp.call_tool("rick_recon", _params(target_type="network", response_format="json"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
-        parsed = json.loads(text)
+        result = await mcp._tool_manager.call_tool("rick_recon", _params(target_type="network", response_format="json"))
+        parsed = json.loads(_text(result))
         assert "phase" in parsed
 
     @pytest.mark.asyncio
     async def test_call_invalid_input_returns_error(self):
-        result = await mcp.call_tool("rick_recon", _params(target_type="nonexistent_target"))
-        content = result[0] if not isinstance(result, tuple) else result[0]
-        text = (
-            content[0].text
-            if isinstance(content, list)
-            else (content.text if hasattr(content, "text") else str(content))
-        )
-        assert "Error" in text
+        result = await mcp._tool_manager.call_tool("rick_recon", _params(target_type="nonexistent_target"))
+        assert "Error" in _text(result)
 
 
 class TestMCPRegistration:
@@ -123,11 +78,11 @@ class TestMCPRegistration:
     def test_tool_count(self):
         from rick_mcp.server import tool_count
 
-        tool_names = [t.name for t in mcp._tool_manager.list_tools()]
+        tool_names = list(mcp._tool_manager._tools)
         assert len(tool_names) == tool_count()
 
     def test_new_tools_registered(self):
-        tool_names = [t.name for t in mcp._tool_manager.list_tools()]
+        tool_names = list(mcp._tool_manager._tools)
         new_tools = [
             "rick_c2_compare",
             "rick_payload_guide",
