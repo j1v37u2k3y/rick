@@ -27,6 +27,21 @@ from rick_mcp.models import (
     ScopingInput,
     TrackerInput,
 )
+from rick_mcp.tools.jarvis_state import _sanitize_engagement_id
+
+
+def _safe_eng_file(data_dir: Path, engagement_id: str) -> Path | None:
+    """Resolve ``<data_dir>/<engagement_id>.json`` with the shared id filter.
+
+    Returns ``None`` when the filtered id is empty — the caller must refuse the
+    request rather than touch a bare ``.json`` file. See
+    ``jarvis_state._sanitize_engagement_id`` for the filter rule.
+    """
+    safe_id = _sanitize_engagement_id(engagement_id or "")
+    if not safe_id:
+        return None
+    return data_dir / f"{safe_id}.json"
+
 
 # When True (set by rick_demo's guided tour), engagement tools skip their vault side-effects
 # so the demo shows live output without mutating the operator's Second Brain. See #58.
@@ -899,7 +914,10 @@ async def rick_tracker(params: TrackerInput) -> str:
         except json.JSONDecodeError:
             return "Error: Invalid JSON in data field."
 
-        eng_id = eng_data.get("id") or datetime.now().strftime("ENG-%Y%m%d-%H%M%S")
+        raw_id = eng_data.get("id") or datetime.now().strftime("ENG-%Y%m%d-%H%M%S")
+        eng_id = _sanitize_engagement_id(str(raw_id))
+        if not eng_id:
+            return "Error: engagement id must contain at least one alphanumeric, '-', or '_' character."
         engagement = {
             "id": eng_id,
             "client": _sanitize(eng_data.get("client", "[CLIENT]")),
@@ -912,7 +930,9 @@ async def rick_tracker(params: TrackerInput) -> str:
             "created_at": datetime.now().isoformat(),
         }
 
-        eng_file = data_dir / f"{eng_id}.json"
+        eng_file = _safe_eng_file(data_dir, eng_id)
+        if eng_file is None:
+            return "Error: engagement id must contain at least one alphanumeric, '-', or '_' character."
         eng_file.write_text(json.dumps(engagement, indent=2))
         logger.info(f"Engagement created: {eng_id}")
 
@@ -932,8 +952,8 @@ async def rick_tracker(params: TrackerInput) -> str:
         if not engagement_id:
             return "Error: engagement_id required for add_finding."
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         try:
@@ -974,8 +994,8 @@ async def rick_tracker(params: TrackerInput) -> str:
         if not engagement_id:
             return "Error: engagement_id required for update_finding."
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         try:
@@ -1046,8 +1066,8 @@ async def rick_tracker(params: TrackerInput) -> str:
                 title=f"{CALLSIGN} Engagement Overview",
             )
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         engagement = json.loads(eng_file.read_text())
@@ -1074,8 +1094,8 @@ async def rick_tracker(params: TrackerInput) -> str:
         if not engagement_id:
             return "Error: engagement_id required for export."
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         return eng_file.read_text()
@@ -1084,8 +1104,8 @@ async def rick_tracker(params: TrackerInput) -> str:
         if not engagement_id:
             return "Error: engagement_id required for export_csv."
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         eng = json.loads(eng_file.read_text())
@@ -1101,8 +1121,8 @@ async def rick_tracker(params: TrackerInput) -> str:
         if not engagement_id:
             return "Error: engagement_id required for export_markdown."
 
-        eng_file = data_dir / f"{engagement_id}.json"
-        if not eng_file.exists():
+        eng_file = _safe_eng_file(data_dir, engagement_id)
+        if eng_file is None or not eng_file.exists():
             return f"Error: Engagement '{engagement_id}' not found."
 
         eng = json.loads(eng_file.read_text())

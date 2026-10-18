@@ -31,10 +31,18 @@ _MAX_SNAPSHOTS = 10
 _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".pdf", ".webp"}
 
 
+def _sanitize_engagement_id(engagement_id: str) -> str:
+    """Filter an engagement id to a safe filename stem.
+
+    Keeps alphanumerics plus ``-`` and ``_``, truncated to 50 chars. Shared with
+    ``rick_mcp.tools.engagement`` so both state stores apply the same rule.
+    """
+    return "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
+
+
 def _state_file(engagement_id: str) -> Path:
     """Get the state file path for an engagement."""
-    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
-    return _STATE_DIR / f"{safe_id}.json"
+    return _STATE_DIR / f"{_sanitize_engagement_id(engagement_id)}.json"
 
 
 def _load_state(engagement_id: str) -> dict[str, Any]:
@@ -55,8 +63,7 @@ def _load_tracker_state(engagement_id: str) -> dict[str, Any]:
     tracker-side metadata (client, target) when the kill-chain side lacks it.
     Returns an empty dict if the tracker record doesn't exist.
     """
-    safe_id = "".join(c for c in engagement_id if c.isalnum() or c in "-_")[:50]
-    path = Path.home() / ".rick_mcp" / "engagements" / f"{safe_id}.json"
+    path = Path.home() / ".rick_mcp" / "engagements" / f"{_sanitize_engagement_id(engagement_id)}.json"
     if path.exists():
         try:
             result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))

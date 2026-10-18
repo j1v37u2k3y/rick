@@ -477,6 +477,83 @@ class TestRickTracker:
         result = await rick_tracker(TrackerInput(action="export_markdown"))
         assert "Error" in result
 
+    @pytest.mark.asyncio
+    async def test_create_rejects_traversal_id(self, tracker_dir, tmp_path):
+        """`create` with a traversal id must never write outside the engagements dir."""
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = await rick_tracker(
+                TrackerInput(
+                    action="create",
+                    data=json.dumps({"id": "../../../../tmp/evil", "client": "X"}),
+                )
+            )
+        # Nothing escapes the engagements directory.
+        traversal_target = tmp_path.parent.parent.parent.parent / "tmp" / "evil.json"
+        assert not traversal_target.exists()
+        # And no file with a path-separator in its name was written anywhere under tmp_path.
+        for p in tmp_path.rglob("*.json"):
+            assert "/" not in p.name and ".." not in p.name
+        # The stored id (if any) is the sanitized stem, not the attacker string.
+        assert "../" not in result
+
+    @pytest.mark.asyncio
+    async def test_create_rejects_absolute_path_id(self, tracker_dir, tmp_path):
+        """`create` with an absolute-path id never lands at the absolute path."""
+        absolute_target = tmp_path.parent / "absolute-evil-target"
+        absolute_id = str(absolute_target)
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            await rick_tracker(
+                TrackerInput(
+                    action="create",
+                    data=json.dumps({"id": absolute_id, "client": "X"}),
+                )
+            )
+        assert not absolute_target.with_suffix(".json").exists()
+        assert not absolute_target.exists()
+
+    @pytest.mark.asyncio
+    async def test_create_rejects_empty_filtered_id(self, tracker_dir, tmp_path):
+        """`create` with an id that filters to empty is refused with a clear error."""
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = await rick_tracker(TrackerInput(action="create", data=json.dumps({"id": "../../", "client": "X"})))
+        assert "Error" in result
+        assert list(tracker_dir.glob("*.json")) == []
+
+    @pytest.mark.asyncio
+    async def test_status_rejects_traversal_id(self, tracker_dir, tmp_path):
+        """`status` with a traversal id cannot read a sibling file outside the engagements dir."""
+        # Plant a decoy file one level up that an unsafe join would reach.
+        decoy = tmp_path / ".rick_mcp" / "secret.json"
+        decoy.write_text(json.dumps({"id": "SECRET", "findings": []}))
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = await rick_tracker(TrackerInput(action="status", engagement_id="../secret"))
+        assert "SECRET" not in result
+        assert "not found" in result or "Error" in result
+
+    @pytest.mark.asyncio
+    async def test_export_rejects_traversal_id(self, tracker_dir, tmp_path):
+        decoy = tmp_path / ".rick_mcp" / "secret.json"
+        decoy.write_text(json.dumps({"id": "SECRET", "findings": []}))
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            for action in ("export", "export_csv", "export_markdown"):
+                result = await rick_tracker(TrackerInput(action=action, engagement_id="../secret"))
+                assert "SECRET" not in result
+
+    @pytest.mark.asyncio
+    async def test_normal_id_round_trips_unchanged(self, tracker_dir, tmp_path):
+        """A benign id survives create → status unchanged."""
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            created = await rick_tracker(
+                TrackerInput(
+                    action="create",
+                    data=json.dumps({"id": "ENG-NORMAL-01", "client": "AcmeCorp"}),
+                )
+            )
+            assert "ENG-NORMAL-01" in created
+            status = await rick_tracker(TrackerInput(action="status", engagement_id="ENG-NORMAL-01"))
+        assert "ENG-NORMAL-01" in status
+        assert (tracker_dir / "ENG-NORMAL-01.json").exists()
+
 
 # ═══════════════════════════════════════════════════════════════
 #  C2 COMPARE — Framework comparison tool
