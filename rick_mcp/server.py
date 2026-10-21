@@ -26,9 +26,18 @@ register_tools(mcp)
 register_prompts(mcp)
 
 
+# Registered components live in a single dict on the local provider, keyed by
+# "<kind>:<identity>@" — `tool:`, `resource:`, `template:`, `prompt:`.
+# The public `list_*()` methods are async; the banner and `rick_status` call
+# these counters synchronously, so we filter the component dict directly.
+def _count_components(kind: str) -> int:
+    prefix = f"{kind}:"
+    return sum(1 for k in mcp._local_provider._components if k.startswith(prefix))
+
+
 def tool_count() -> int:
     """Dynamic tool count from the MCP registry."""
-    return len(mcp._tool_manager._tools)
+    return _count_components("tool")
 
 
 def resource_count() -> int:
@@ -39,8 +48,7 @@ def resource_count() -> int:
     under-reports by the template count and drifts from the
     README/refresh_counts total.
     """
-    rm = mcp._resource_manager
-    return len(rm._resources) + len(rm._templates)
+    return _count_components("resource") + _count_components("template")
 
 
 def _build_banner() -> str:
