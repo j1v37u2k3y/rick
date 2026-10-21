@@ -53,9 +53,11 @@ class TestRickCapabilities:
         # rick_status/rick_capabilities under-report and drift from README/refresh_counts.
         from rick_mcp.server import mcp
 
-        rm = mcp._resource_manager
-        assert resource_count() == len(rm._resources) + len(rm._templates)
-        assert resource_count() > len(rm._resources)  # at least one template is counted
+        comps = mcp._local_provider._components
+        statics = sum(1 for k in comps if k.startswith("resource:"))
+        templates = sum(1 for k in comps if k.startswith("template:"))
+        assert resource_count() == statics + templates
+        assert resource_count() > statics  # at least one template is counted
 
     async def test_closing_note_present(self):
         out = await rick_capabilities()

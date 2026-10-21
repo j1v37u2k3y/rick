@@ -17,7 +17,7 @@ _SMOKE = Path(__file__).resolve().parent.parent / "smoke_test.py"
 
 def test_every_registered_tool_is_wired_into_smoke():
     src = _SMOKE.read_text(encoding="utf-8")
-    registered = sorted(mcp._tool_manager._tools)
+    registered = sorted(k[len("tool:") : -1] for k in mcp._local_provider._components if k.startswith("tool:"))
     missing = [name for name in registered if not re.search(rf"\b{re.escape(name)}\b", src)]
     assert not missing, (
         f"{len(missing)} registered tool(s) absent from smoke_test.py — fire them in the "

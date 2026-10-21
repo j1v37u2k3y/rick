@@ -2,6 +2,40 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.17.0] - 2026-10-20
+
+### Upgrade `fastmcp` from 2.x to 4.x
+
+Clears the three parked security advisories (`PYSEC-2026-2475`, `PYSEC-2026-2476` on fastmcp 2.14.7
+with fixes landing only in fastmcp 3.2.0+; `PYSEC-2026-2447` on the diskcache transitive) that
+commit `209fbb9` had deferred as "tech-debt for a follow-up PR." The `--ignore-vuln` entries in
+`.github/workflows/ci.yml` are removed. Also silences the AuthlibDeprecationWarnings that fastmcp
+2.14.7 emitted on load.
+
+- **`requirements.txt`:** `fastmcp>=2.0,<3` → `fastmcp>=4.1,<5` (installed: fastmcp 4.1.3). The 4.x
+  line drops `diskcache` from the dep tree entirely, so `PYSEC-2026-2447` disappears from the
+  audit; `pip-audit -r requirements.txt` is now green with no ignores.
+- **4.x > 3.x rationale:** the `_tool_manager` / `_resource_manager` removal happened at fastmcp
+  3.0, so staying on 3.x does not avoid the migration. 4.1.3 is current upstream, drops the same
+  diskcache dep, and has no new advisories against this project's surface. The 4.0 server-side
+  removals (`ctx.sample`, `ctx.sample_step`, `ctx.list_roots`) and the 4.1 upgrade-check items
+  (MultiAuth, Regex tool search, Skill files, OpenAPI, HTTP sessions, CodeMode) do not touch
+  rick_mcp.
+- **`rick_mcp/server.py`:** `tool_count()` / `resource_count()` now count by prefix in the
+  consolidated `_local_provider._components` dict (`tool:` / `resource:` / `template:`). The old
+  `_tool_manager._tools` and `_resource_manager._resources` + `_templates` structures were removed
+  at fastmcp 3.0 in favor of async `list_*()` methods; the sync count path keeps the startup
+  banner and the sync callers of `tool_count()` (notably `build_be_rick` in `prompts.py`) working
+  without an `asyncio.run` round-trip.
+- **Tests:** `tests/test_integration.py` replaces `mcp._tool_manager.call_tool(name, args)` with
+  `(await mcp._get_tool(name)).run(args)`; the returned `ToolResult` still carries
+  `.content[0].text` the same way. `tests/test_meta.py` and `tests/test_smoke_coverage.py` move
+  the same prefix-scan onto `_local_provider._components`.
+- The public decorator surface (`@mcp.tool(name=..., annotations={...})`, `@mcp.resource(...)`
+  including the `vault://engagements/{codename}` URI template, `@mcp.prompt(...)`,
+  `mcp.run()` for stdio, `mcp.name`) is unchanged under fastmcp 4.1.3; the stdio handshake with an
+  MCP client (initialize → tools/list → tools/call) was re-verified locally.
+
 ## [3.16.0] - 2026-10-17
 
 ### Migrate off bundled `mcp.server.fastmcp` to standalone `fastmcp` 2.x
