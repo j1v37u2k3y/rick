@@ -854,57 +854,53 @@ def register(mcp):
         title="Be Rick",
         description=desc_be_rick,
     )
-    def prompt_be_rick() -> list[dict]:
-        return [{"role": "user", "content": build_be_rick()}]
+    def prompt_be_rick() -> str:
+        return build_be_rick()
 
     @mcp.prompt(
         name="dick_mode",
         title="Dick Mode",
         description="The alter ego. Elite tradecraft, 1337 techniques, maximum exploitation depth. Opens all the doors.",
     )
-    def prompt_dick_mode(target: str = "", objective: str = "") -> list[dict]:
-        return [{"role": "user", "content": build_dick_mode(target=target, objective=objective)}]
+    def prompt_dick_mode(target: str = "", objective: str = "") -> str:
+        return build_dick_mode(target=target, objective=objective)
 
     @mcp.prompt(
         name="jarvis",
         title="JARVIS Mode",
         description="The intelligence layer. Proactive tool chaining, automatic kill chain tracking, sitreps without asking.",
     )
-    def prompt_jarvis(target: str = "", engagement_id: str = "", objective: str = "") -> list[dict]:
-        return [
-            {"role": "user", "content": build_jarvis(target=target, engagement_id=engagement_id, objective=objective)}
-        ]
+    def prompt_jarvis(target: str = "", engagement_id: str = "", objective: str = "") -> str:
+        return build_jarvis(target=target, engagement_id=engagement_id, objective=objective)
 
     @mcp.prompt(
         name="pentest_mode",
         title="Pentest Mode",
         description="Pentest operator mode. Recon first, methodology-driven, tool-aware, finding-focused.",
     )
-    def prompt_pentest_mode(target: str = "") -> list[dict]:
-        return [{"role": "user", "content": build_pentest_mode(target=target)}]
+    def prompt_pentest_mode(target: str = "") -> str:
+        return build_pentest_mode(target=target)
 
     @mcp.prompt(
         name="mentor_mode",
         title="Mentor Mode",
         description="Mentor mode. Patient, experienced, encouraging. Hands on, no shortcuts.",
     )
-    def prompt_mentor_mode(student_level: str = "beginner") -> list[dict]:
-        return [{"role": "user", "content": build_mentor_mode(student_level=student_level)}]
+    def prompt_mentor_mode(student_level: str = "beginner") -> str:
+        return build_mentor_mode(student_level=student_level)
 
     @mcp.prompt(
         name="evaluate_fit",
         title="Evaluate Fit",
         description=f"Evaluate a job posting against {CALLSIGN}'s profile. Brutally honest fit assessment.",
     )
-    def prompt_evaluate_fit(posting: str = "") -> list[dict]:
-        return [{"role": "user", "content": build_evaluate_fit(posting=posting)}]
+    def prompt_evaluate_fit(posting: str = "") -> str:
+        return build_evaluate_fit(posting=posting)
 
     @mcp.prompt(
         name="engagement_ops",
         title="Engagement Ops",
         description="Full engagement lifecycle — scoping, ROE, tracking findings, reporting, debrief.",
     )
-    def prompt_engagement_ops(client: str = "", engagement_type: str = "pentest") -> list[dict]:
-        return [
-            {"role": "user", "content": build_engagement_ops(client=client, engagement_type=engagement_type)},
-        ]
+    def prompt_engagement_ops(client: str = "", engagement_type: str = "pentest") -> str:
+        return build_engagement_ops(client=client, engagement_type=engagement_type)

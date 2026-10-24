@@ -31,10 +31,18 @@ commit `209fbb9` had deferred as "tech-debt for a follow-up PR." The `--ignore-v
   `(await mcp._get_tool(name)).run(args)`; the returned `ToolResult` still carries
   `.content[0].text` the same way. `tests/test_meta.py` and `tests/test_smoke_coverage.py` move
   the same prefix-scan onto `_local_provider._components`.
-- The public decorator surface (`@mcp.tool(name=..., annotations={...})`, `@mcp.resource(...)`
-  including the `vault://engagements/{codename}` URI template, `@mcp.prompt(...)`,
-  `mcp.run()` for stdio, `mcp.name`) is unchanged under fastmcp 4.1.3; the stdio handshake with an
-  MCP client (initialize → tools/list → tools/call) was re-verified locally.
+- The decorator *registration* surface (`@mcp.tool(name=..., annotations={...})`,
+  `@mcp.resource(...)` including the `vault://engagements/{codename}` URI template,
+  `@mcp.prompt(...)`, `mcp.run()` for stdio, `mcp.name`) is unchanged under fastmcp 4.1.3 — but the
+  prompt handler *return shape* did change; see the next bullet. The stdio tool handshake
+  (initialize → tools/list → tools/call) was re-verified locally.
+- **`rick_mcp/prompts.py` — prompt handler return shape:** fastmcp 4.x validates what a
+  `@mcp.prompt` handler returns and no longer coerces the raw `[{"role": "user", "content": ...}]`
+  list that 2.x accepted, so each of the 7 handlers now returns its builder string directly
+  (`return build_*(...)`, annotated `-> str`) instead of a one-element message-dict list. Without
+  this, `prompts/get` raised `ProtocolError: messages[0] must be Message or str, got dict`. Prompt
+  content is unchanged, and `tests/test_prompts.py` (which asserts on the `build_*()` strings, not
+  the handler return shape) stays valid.
 
 ## [3.16.0] - 2026-10-17
 
