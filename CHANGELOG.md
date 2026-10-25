@@ -2,6 +2,19 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.19.0] - 2026-10-25
+
+### Release checkpoint: bring the published release line up to date
+
+Cuts a tagged release of current `main`. The last tagged GitHub Release was `3.14.2` (2026-07-12);
+the version string advanced through `3.17.0`/`3.18.0` in code without ever being tagged, so the
+published releases had lagged the shipped code. This release re-aligns the two. The notable work
+since `3.14.2` — the `fastmcp` 2.x → 4.x upgrade (#110), the fastmcp-4 prompt return-shape fix
+(#111), and the consolidated dependency floor bumps (#115) — is detailed in the sections below.
+
+- **Dependency floors (#115):** `pydantic>=2.14.1`, `ruff>=0.17.0`, `hypothesis>=6.168.5`, and
+  `types-PyYAML>=6.0.12.20260906`.
+
 ## [3.18.0] - 2026-10-24
 
 ### `be_rick` persona: inject a lean voice excerpt instead of the raw memoir
