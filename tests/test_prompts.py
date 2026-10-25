@@ -141,14 +141,14 @@ class TestBuildBeRickPhilosophy:
         result = build_be_rick()
         assert "## Decision Filters" not in result
 
-    def test_philosophy_appears_after_book_before_methodology(self):
+    def test_philosophy_appears_after_voice_before_methodology(self):
         from rick_mcp.prompts import build_be_rick
 
         result = build_be_rick()
-        book_idx = result.index("## The Book")
+        voice_idx = result.index("## The Voice")
         philosophy_idx = result.index("## Operator Philosophy")
         methodology_idx = result.index("## Your Methodology")
-        assert book_idx < philosophy_idx < methodology_idx
+        assert voice_idx < philosophy_idx < methodology_idx
 
 
 class TestBuildMentorModePhilosophy:
@@ -217,3 +217,55 @@ class TestBuildOtherPromptsUntouched:
 
         result = build_engagement_ops()
         assert "## Operator Philosophy" not in result
+
+
+class TestBeRickVoiceInjection:
+    """be_rick injects the lean voice excerpt + trimmed soul, NOT the raw memoir.
+
+    Regression guard for the safety-classifier cut-offs: the raw book's crisis-coded
+    passages must never reach the be_rick system prompt. See CHANGELOG 3.18.0.
+    """
+
+    def test_voice_excerpt_injected_not_raw_book(self):
+        from rick_mcp.prompts import build_be_rick
+
+        # Neutral sentinel standing in for whatever the raw book returns.
+        book_sentinel = "RAW_BOOK_SENTINEL_MUST_NOT_APPEAR"
+        with patch("rick_mcp.prompts._read_book", return_value=book_sentinel):
+            with patch("rick_mcp.prompts._read_voice", return_value="VOICE_EXCERPT_MARKER"):
+                result = build_be_rick()
+
+        assert "## The Voice" in result
+        assert "VOICE_EXCERPT_MARKER" in result
+        # The raw book is never injected into be_rick anymore.
+        assert book_sentinel not in result
+        assert "## The Book" not in result
+
+    def test_soul_is_trimmed_in_be_rick(self):
+        from rick_mcp.prompts import build_be_rick
+
+        soul = "SOUL_BODY_SENTINEL\n\n## Vault projections\n- [[vault/x]]\n"
+        with patch("rick_mcp.prompts._read_soul", return_value=soul):
+            result = build_be_rick()
+
+        assert "SOUL_BODY_SENTINEL" in result  # body survives
+        assert "## Vault projections" not in result  # wikilink tail dropped
+
+    def test_voice_fallback_flows_into_prompt(self, tmp_path, monkeypatch):
+        """No voice.md on disk (fork case) → generic fallback renders, no crash."""
+        from rick_mcp.prompts import _read_voice, build_be_rick
+
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+
+        # Fallback is a fixed generic string baked into prompts.py — no identity
+        # interpolation, so there is nothing personal it could leak.
+        fallback = _read_voice()
+        assert fallback == (
+            "Direct. Honest. Facts, not opinions. No sugar-coating, no checkbox compliance. "
+            "Methodology over guesswork. Every finding comes with a fix."
+        )
+
+        result = build_be_rick()
+        assert "## The Voice" in result
+        assert "Methodology over guesswork" in result
+        assert "## Your Methodology" in result
