@@ -255,7 +255,12 @@ class TestBeRickVoiceInjection:
         """No voice.md on disk (fork case) → generic fallback renders, no crash."""
         from rick_mcp.prompts import _read_voice, build_be_rick
 
-        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+        # SOUL_DIR is bound at import (prompts.py), so monkeypatching Path.home()
+        # would not affect it. Patch the module attribute directly, pointing it at
+        # an empty dir so no voice.md is found and _read_voice() deterministically
+        # returns its generic fallback — regardless of whether a real soul/voice.md
+        # exists on this machine (it will once the private content repo is pulled).
+        monkeypatch.setattr("rick_mcp.prompts.SOUL_DIR", tmp_path)
 
         # Fallback is a fixed generic string baked into prompts.py — no identity
         # interpolation, so there is nothing personal it could leak.

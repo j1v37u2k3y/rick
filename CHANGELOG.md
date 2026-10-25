@@ -23,8 +23,9 @@ offensive-security content was never the trigger.
   `build_ollama_system`) in place of the full soul. The `## The Book — Memoirs` section is now
   `## The Voice (from soul/voice.md)`. The personal memoir and soul files are left byte-for-byte
   untouched — this is a leaner, honest injection, not classifier evasion.
-- **Scope:** `be_rick` only (the primary persona). `jarvis` still injects the raw book/soul —
-  a deliberate, flagged carve-out, not drift; revisit separately if it exhibits the same issue.
+- **Scope:** `be_rick` only (the primary persona). `jarvis` (raw book + soul) and
+  `build_mentor_mode` (raw book) still inject the untrimmed personal content — a deliberate,
+  flagged carve-out, not drift; revisit those separately if they exhibit the same issue.
   `dick_mode` and the other persona builders are untouched.
 - **Tests:** `tests/test_prompts.py` adds `TestBeRickVoiceInjection` (voice injected / raw book
   absent, soul trimmed, generic fallback path) and updates the be_rick ordering test for the
