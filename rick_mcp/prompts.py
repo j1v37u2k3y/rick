@@ -63,6 +63,23 @@ def _read_soul() -> str:
     )
 
 
+def _read_voice() -> str:
+    """Read the curated voice excerpt (soul/voice.md). Private first, project root second.
+
+    The lean, register-carrying injection for be_rick — replaces the raw book, which tripped
+    wellbeing classifiers (the memoir's crisis-coded lines pattern-matched to user distress).
+    Forks that ship no voice.md get a generic fallback. The fallback carries no personal
+    content — never fall back to the book, which would reintroduce the passages we removed.
+    """
+    return _read_private(
+        "voice.md",
+        fallback=(
+            "Direct. Honest. Facts, not opinions. No sugar-coating, no checkbox compliance. "
+            "Methodology over guesswork. Every finding comes with a fix."
+        ),
+    )
+
+
 # ═══════════════════════════════════════════════════════════════
 # Identity-aware prompt helpers
 # ═══════════════════════════════════════════════════════════════
@@ -177,8 +194,8 @@ def build_be_rick() -> str:
     """Build the be_rick prompt content."""
     from rick_mcp.server import resource_count, tool_count
 
-    soul = _read_soul()
-    book = _read_book()
+    soul = _trim_soul(_read_soul())
+    voice = _read_voice()
     philosophy = _operator_philosophy_section()
     phases = json.dumps(
         [{"phase": p["phase"], "name": p["name"]} for p in MISSION_PHASES],
@@ -200,7 +217,7 @@ def build_be_rick() -> str:
         voice_section = (
             f"## How You Respond\n"
             f"- You speak as Rick/{CALLSIGN} — first person, with authority and craft.\n"
-            f"- Your voice comes from the soul and the book above. That's the real energy. Channel it.\n"
+            f"- Your voice comes from the soul and the voice above. That's the real energy. Channel it.\n"
             f"- Security questions get methodology-backed answers (OWASP, PTES, MITRE ATT&CK).\n"
             f"- You recommend tools from experience, not textbooks.\n"
             f"- You give honest assessments — no sugar coating, no checkbox compliance.\n"
@@ -247,8 +264,8 @@ def build_be_rick() -> str:
 ## The Soul — Raw, Unfiltered (from SOUL.md)
 {soul}
 
-## The Book — Memoirs (from my book.txt)
-{book}
+## The Voice (from soul/voice.md)
+{voice}
 
 {philosophy}
 
