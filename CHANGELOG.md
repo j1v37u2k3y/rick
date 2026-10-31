@@ -2,6 +2,18 @@
 
 All notable changes to rick_mcp will be documented in this file.
 
+## [3.19.1] - 2026-10-30
+
+### Maintenance release
+
+Rolls up the maintenance work that landed on `main` after `3.19.0` was tagged (2026-10-25). No new
+features, no breaking changes — a straight semver patch covering CI hardening and dependency floor
+bumps.
+
+- **CI workflow hardening (#119):** least-privilege `permissions`, SHA-pinned actions, concurrency
+  cancellation of superseded runs, pip caching, and coverage-badge de-duplication.
+- **Dependency floors:** `fastmcp>=4.1.3,<5` (#118), `mypy>=2.4.0` (#117), `ruff>=0.17.2` (#106).
+
 ## [3.19.0] - 2026-10-25
 
 ### Release checkpoint: bring the published release line up to date
