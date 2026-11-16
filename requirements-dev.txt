@@ -3,10 +3,10 @@
 # declared floors match what CI actually resolves. Runtime deps live in requirements.txt.
 -r requirements.txt
 pytest>=9.2.0
-pytest-asyncio>=1.4.0
+pytest-asyncio>=1.5.0
 pytest-cov>=7.1.0
 mypy>=2.4.1
-ruff>=0.17.3
-types-PyYAML>=6.0.12.20261030
+ruff>=0.17.5
+types-PyYAML>=6.0.12.20261113
 hypothesis>=6.168.5
 pre-commit>=4.6.2
